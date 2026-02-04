@@ -1,0 +1,1 @@
+import{aR as t,aS as u}from"./DhOLkSnF.js";function r(){return t.get(u.rbacMenuList)}function a(e){return t.post(u.rbacMenuAdd,e)}function o(e){return t.post(u.rbacMenuEdit,e)}function s(e){return t.post(u.rbacMenuRemove,e)}function c(e){return t.post(u.rbacGroupAdd,e)}function i(e){return t.get(u.rbacGroupMenu,e)}export{c as a,i as b,a as c,s as d,r as g,o as u};
