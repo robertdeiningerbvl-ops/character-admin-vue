@@ -4,7 +4,7 @@ import { omit } from '@nuxt/ui/utils'
 import { useAuthStore, useRouteStore } from '@/store'
 
 useSeoMeta({
-  title: '幻欲之梦 - 管理员登录'
+  title: '青丘山 - 管理员登录'
 })
 
 const loading = ref(false)
@@ -79,7 +79,7 @@ async function onSubmit(payload: any) {
           </div>
 
           <div class="brand-section">
-            <h1 class="brand-name">幻欲之梦</h1>
+            <h1 class="brand-name">青丘山</h1>
             <p class="brand-desc">ADMIN CONTROL SYSTEM</p>
             <div class="divider-line" />
           </div>
