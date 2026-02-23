@@ -62,7 +62,6 @@ export const baseColumns: TableColumnList = [
   {
     accessorKey: 'name',
     header: '等级名称',
-    searchPlaceholder: '筛选名称',
     cell: ({ row }) => {
       return h('div', undefined, [
         h('p', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.name),

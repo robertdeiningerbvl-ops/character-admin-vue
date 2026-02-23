@@ -2,129 +2,97 @@ import type { DataTableColumn } from '@/types/table'
 
 export type TableColumnList = DataTableColumn<any>[]
 
-const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
+const UTooltip = resolveComponent('UTooltip')
 
-const actionEnum: any = {
-  1: ['登录', 'info'],
-  2: ['新增', 'success'],
-  3: ['修改', 'warning'],
-  4: ['删除', 'error'],
-  5: ['查看', 'neutral'],
-  6: ['导出', 'primary'],
-  7: ['其他', 'secondary']
+const getModuleColor = (module: string): string => {
+  if (module?.includes('edit')) return 'warning'
+  if (module?.includes('add') || module?.includes('create')) return 'success'
+  if (module?.includes('del') || module?.includes('remove')) return 'error'
+  if (module?.includes('login')) return 'info'
+  return 'neutral'
 }
 
 export const baseColumns: TableColumnList = [
   {
-    accessorKey: 'id',
+    accessorKey: 'username',
+    searchPlaceholder: '筛选管理员',
+    header: '操作人',
     meta: {
       class: {
-        th: 'w-[80px]',
-        td: 'w-[80px]'
+        th: 'w-[140px]',
+        td: 'w-[140px]'
       }
     },
-    header: () => {
-      return h(UButton, {
-        color: 'neutral',
-        variant: 'ghost',
-        label: 'ID',
-        class: '-mx-2.5 hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent'
-      })
+    cell: ({ row }) => {
+      return h('div', { class: 'flex items-center gap-2' }, [
+        h('div', { class: 'w-8 h-8 rounded-full bg-(--ui-bg-elevated) flex items-center justify-center' }, [
+          h('span', { class: 'text-sm font-medium text-(--ui-text-muted)' }, row.original.username?.charAt(0) || 'U')
+        ]),
+        h('div', { class: 'flex flex-col' }, [
+          h('span', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.username || '-'),
+          h('span', { class: 'text-xs text-(--ui-text-muted)' }, `UID: ${row.original.uid || '-'}`)
+        ])
+      ])
     }
   },
   {
-    accessorKey: 'username',
-    searchPlaceholder: '筛选管理员',
-    header: '管理员',
+    accessorKey: 'content',
+    header: '操作内容',
+    searchPlaceholder: '筛选操作内容',
     meta: {
       class: {
         th: 'w-[120px]',
         td: 'w-[120px]'
-      }
-    },
-    cell: ({ row }) => {
-      return h('div', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.username || '-')
-    }
-  },
-  {
-    accessorKey: 'action',
-    header: '操作类型',
-    searchPlaceholder: '筛选操作类型',
-    meta: {
-      class: {
-        th: 'w-[100px]',
-        td: 'w-[100px]'
-      }
-    },
-    formItemProps: {
-      component: 'Select',
-      componentProps: {
-        options: [
-          {
-            label: '登录',
-            value: 1
-          },
-          {
-            label: '新增',
-            value: 2
-          },
-          {
-            label: '修改',
-            value: 3
-          },
-          {
-            label: '删除',
-            value: 4
-          },
-          {
-            label: '查看',
-            value: 5
-          },
-          {
-            label: '导出',
-            value: 6
-          },
-          {
-            label: '其他',
-            value: 7
-          }
-        ]
       }
     },
     cell: ({ row }) => {
       return h(UBadge, {
         class: 'capitalize',
         variant: 'subtle',
-        color: actionEnum[row.original.action]?.[1] || 'neutral'
-      }, () => actionEnum[row.original.action]?.[0] || row.original.action || '-')
+        color: getModuleColor(row.original.module)
+      }, () => row.original.content || '-')
     }
   },
   {
     accessorKey: 'module',
-    searchPlaceholder: '筛选模块',
     header: '操作模块',
     meta: {
       class: {
-        th: 'w-[120px]',
-        td: 'w-[120px]'
+        th: 'w-[180px]',
+        td: 'w-[180px]'
       }
+    },
+    cell: ({ row }) => {
+      return h('code', {
+        class: 'px-2 py-1 rounded bg-(--ui-bg-elevated) text-xs font-mono text-(--ui-text-muted)'
+      }, row.original.module || '-')
     }
   },
   {
-    accessorKey: 'description',
-    header: '操作详情',
+    accessorKey: 'params',
+    header: '操作参数',
+    meta: {
+      class: {
+        th: 'w-[200px]',
+        td: 'w-[200px]'
+      }
+    },
     cell: ({ row }) => {
-      const desc = row.original.description || row.original.remark || '-'
-      return h('div', {
-        class: 'truncate max-w-[300px] text-sm text-(--ui-text-muted)',
-        title: desc
-      }, desc)
+      const params = row.original.params || '-'
+      if (params === '-') return h('span', { class: 'text-(--ui-text-muted)' }, '-')
+
+      const shortParams = params.length > 50 ? params.substring(0, 50) + '...' : params
+      return h(UTooltip, {
+        text: params,
+        class: 'max-w-md'
+      }, () => h('code', {
+        class: 'px-2 py-1 rounded bg-(--ui-bg-elevated) text-xs font-mono text-(--ui-text-muted) truncate block max-w-[180px] cursor-help'
+      }, shortParams))
     }
   },
   {
     accessorKey: 'ip',
-    searchPlaceholder: '筛选IP',
     header: 'IP地址',
     meta: {
       class: {
@@ -133,11 +101,14 @@ export const baseColumns: TableColumnList = [
       }
     },
     cell: ({ row }) => {
-      return h('div', { class: 'font-mono text-sm' }, row.original.ip || '-')
+      return h('div', { class: 'flex items-center gap-2' }, [
+        h('span', { class: 'i-lucide-globe w-4 h-4 text-(--ui-text-muted)' }),
+        h('span', { class: 'font-mono text-sm' }, row.original.ip || '-')
+      ])
     }
   },
   {
-    accessorKey: 'created_at',
+    accessorKey: 'ctime',
     header: '操作时间',
     meta: {
       class: {
@@ -145,6 +116,15 @@ export const baseColumns: TableColumnList = [
         td: 'w-[180px]'
       }
     },
-    cell: ({ row }) => formatToDateTime(row.original.created_at)
+    cell: ({ row }) => {
+      const time = row.original.ctime || row.original.created_at
+      if (!time || time === '0001-01-01T00:00:00Z') {
+        return h('span', { class: 'text-(--ui-text-muted)' }, '-')
+      }
+      return h('div', { class: 'flex items-center gap-2' }, [
+        h('span', { class: 'i-lucide-clock w-4 h-4 text-(--ui-text-muted)' }),
+        h('span', { class: 'text-sm' }, formatToDateTime(time))
+      ])
+    }
   }
 ]

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import * as z from 'zod'
 import { cloneDeep } from 'lodash-es'
 import { uploadFile, updateMemberLevel } from '@/api'
 
@@ -29,38 +28,15 @@ const closeModal = () => {
 const formRef = useTemplateRef('formRef')
 const fileRef = ref<HTMLInputElement>()
 
-const schema = z.object({
-  name: z.string().nonempty(),
-  remark: z.string().nonempty(),
-  battery: z.number().min(0),
-  divided: z.number().min(0),
-  state: z.number().min(0),
-  logo: z.string()
-})
-
 const stateOptions = [
-  {
-    label: '启用',
-    value: 2
-  },
-  {
-    label: '待审核',
-    value: 1
-  },
-  {
-    label: '已删除',
-    value: 4
-  }
+  { label: '启用', value: 2 },
+  { label: '待审核', value: 1 },
+  { label: '已删除', value: 4 }
 ]
+
 const dividedOptions = [
-  {
-    label: '是',
-    value: 1
-  },
-  {
-    label: '否',
-    value: 0
-  }
+  { label: '是', value: 1 },
+  { label: '否', value: 0 }
 ]
 
 const state = reactive({
@@ -119,120 +95,98 @@ watch(
 <template>
   <UModal
     v-model:open="drawerVisible"
-    :title="currentForm.id ? '修改' : '新增'"
-    :dismissible="false"
-    :ui="{ footer: 'justify-end' }"
+
+    :ui="{ footer: 'justify-end', content: 'sm:max-w-xl' }"
   >
+    <template #header>
+      <div class="flex items-center gap-2">
+        <UIcon name="i-lucide-award" class="w-5 h-5 text-(--ui-primary)" />
+        <span class="font-semibold">{{ currentForm.id ? '编辑等级' : '新增等级' }}</span>
+      </div>
+    </template>
+
     <template #body>
       <UForm
         ref="formRef"
-        :schema="schema"
         :state="state.form"
-        class="flex flex-col gap-4"
+        class="space-y-5"
         @submit="onSubmit"
       >
-        <UFormField label="等级名称" name="name" required>
-          <UInput
-            v-model.trim="state.form.name"
-            placeholder="请输入"
-            class="w-full"
-            :ui="{ trailing: 'pe-1' }"
-          >
-            <template #trailing>
-              <UButton
-                v-if="state.form.name"
-                color="neutral"
-                variant="link"
-                size="sm"
-                icon="i-lucide-circle-x"
-                @click="state.form.name = ''"
+        <!-- 基本信息 -->
+        <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border) space-y-4">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-info" class="w-4 h-4 text-(--ui-primary)" />
+            <span class="text-sm font-medium text-(--ui-text-highlighted)">基本信息</span>
+          </div>
+          <UFormField label="等级名称" name="name" required>
+            <UInput v-model.trim="state.form.name" placeholder="请输入等级名称" class="w-full" />
+          </UFormField>
+          <div class="grid grid-cols-2 gap-4">
+            <UFormField label="所需电量" name="battery" required>
+              <UInput
+                v-model.number="state.form.battery"
+                placeholder="请输入"
+                type="number"
+                min="0"
+                class="w-full"
               />
-            </template>
-          </UInput>
-        </UFormField>
-        <UFormField label="所需电量" name="battery" required>
-          <UInput
-            v-model.trim="state.form.battery"
-            placeholder="请输入"
-            class="w-full"
-            :ui="{ trailing: 'pe-1' }"
-            type="number"
-            min="0"
-          >
-            <template #trailing>
-              <UButton
-                v-if="state.form.battery"
-                color="neutral"
-                variant="link"
-                size="sm"
-                icon="i-lucide-circle-x"
-                @click="state.form.battery = ''"
+            </UFormField>
+            <UFormField label="参与分成" name="divided" required>
+              <USelect
+                v-model="state.form.divided"
+                :items="dividedOptions"
+                placeholder="请选择"
+                class="w-full"
               />
-            </template>
-          </UInput>
-        </UFormField>
-        <UFormField label="参与分成?" name="divided" required>
-          <USelect
-            v-model="state.form.divided"
-            :items="dividedOptions"
-            placeholder="请选择"
-            class="w-full"
-          />
-        </UFormField>
-        <UFormField label="备注" name="remark">
-          <UInput
-            v-model.trim="state.form.remark"
-            placeholder="请输入"
-            class="w-full"
-            :ui="{ trailing: 'pe-1' }"
-          >
-            <template #trailing>
-              <UButton
-                v-if="state.form.remark"
-                color="neutral"
-                variant="link"
-                size="sm"
-                icon="i-lucide-circle-x"
-                @click="state.form.remark = ''"
-              />
-            </template>
-          </UInput>
-        </UFormField>
-        <UFormField label="状态" name="state" required>
-          <USelect
-            v-model="state.form.state"
-            :items="stateOptions"
-            placeholder="请选择"
-            class="w-full"
-          />
-        </UFormField>
-        <UFormField
-          label="icon"
-          name="logo"
-          description="JPG, JPEG or PNG. 1MB Max."
-          class="flex max-sm:flex-col justify-between sm:items-center gap-4"
-        >
-          <div class="flex flex-wrap items-center gap-3">
-            <UAvatar
-              :src="state.form.logo"
-              :alt="state.form.name"
-              size="xl"
+            </UFormField>
+          </div>
+          <UFormField label="状态" name="state" required>
+            <USelect
+              v-model="state.form.state"
+              :items="stateOptions"
+              placeholder="请选择"
+              class="w-full"
             />
-            <UButton
-              :loading="state.avatarLoading"
-              label="上传"
-              color="neutral"
-              @click="onFileClick"
+          </UFormField>
+          <UFormField label="备注" name="remark">
+            <UTextarea
+              v-model.trim="state.form.remark"
+              placeholder="请输入备注"
+              class="w-full"
+              :rows="2"
             />
+          </UFormField>
+        </div>
+
+        <!-- 图标上传 -->
+        <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border) space-y-4">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-image" class="w-4 h-4 text-(--ui-warning)" />
+            <span class="text-sm font-medium text-(--ui-text-highlighted)">等级图标</span>
+          </div>
+          <div class="flex items-center gap-4">
+            <UAvatar :src="state.form.logo" :alt="state.form.name" size="xl" />
+            <div>
+              <UButton
+                :loading="state.avatarLoading"
+                label="上传图标"
+                color="neutral"
+                variant="soft"
+                @click="onFileClick"
+              />
+              <p class="text-xs text-(--ui-text-muted) mt-1">
+                支持 JPG、PNG，最大 1MB
+              </p>
+            </div>
             <input
               ref="fileRef"
               type="file"
               class="hidden"
-              accept=".jpg, .jpeg, .png"
+              accept=".jpg,.jpeg,.png"
               @change="onFileChange"
             >
           </div>
-        </UFormField>
+        </div>
       </UForm>
     </template>
 

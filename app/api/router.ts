@@ -34,7 +34,7 @@ export const apiRoute = {
   commonCoinsList: 'common-coins',
   commonCoinsAdd: 'common-coins-add',
   commonCoinsEdit: 'common-coins-edit',
-  commonCcoinsRemove: 'common-coins-remove',
+  commonCoinsRemove: 'common-coins-remove',
 
   // 标签
   commonTagList: 'common-tag-list',
@@ -46,6 +46,7 @@ export const apiRoute = {
   commonModelList: 'common-model-list',
   commonModelEdit: 'common-model-edit',
   commonModelAdd: 'common-model-add',
+  commonModelTest: 'common-model-test',
 
   // 模型预设
   commonModelPresetList: 'common-model-preset-list',
@@ -84,7 +85,7 @@ export const apiRoute = {
   paymentTypeList: 'payment-type-list',
   paymentTypeAdd: 'payment-type-add',
   paymentTypeEdit: 'payment-type-edit',
-  paymentTyperemove: 'payment-type-remove',
+  paymentTypeRemove: 'payment-type-remove',
 
   // 支付订单
   paymentOrderList: 'payment-order-list',
@@ -95,22 +96,43 @@ export const apiRoute = {
   /** amusement */
   // 角色卡
   amusementList: 'amusement-list',
-  amusementDetail: 'amusement-detail',
+  amusementDetail: 'amusement-edit-info',
   amusementAdd: 'amusement-add',
   amusementEdit: 'amusement-edit',
   amusementRemove: 'amusement-remove',
+  amusementStateEdit: 'amusement-state-edit',
+  amusementSubmit: 'amusement-submit',
+  amusementVersionDetail: 'amusement-version-detail',
+  amusementVersionAdd: 'amusement-version-add',
+  amusementVersionEdit: 'amusement-version-edit',
+  amusementVersionRemove: 'amusement-version-remove',
 
   // 角色卡分类
-  AmusementCategoryList: 'amusement-category-list',
-  AmusementCategoryAdd: 'amusement-category-add',
-  AmusementCategoryEdit: 'amusement-category-edit',
-  AmusementCategoryRemove: 'amusement-category-remove',
+  amusementCategoryList: 'amusement-category-list',
+  amusementCategoryAdd: 'amusement-category-add',
+  amusementCategoryEdit: 'amusement-category-edit',
+  amusementCategoryRemove: 'amusement-category-remove',
 
   // 游戏参数
   amusementParameterList: 'amusement-parameter-list',
   amusementParameterAdd: 'amusement-parameter-add',
   amusementParameterEdit: 'amusement-parameter-edit',
   amusementParameterRemove: 'amusement-parameter-remove',
+
+  // 助手(角色卡)
+  assistantList: 'assistant-list',
+  assistantDetail: 'assistant-detail',
+  assistantEdit: 'assistant-edit',
+  assistantRemove: 'assistant-remove',
+  assistantStateEdit: 'assistant-state-edit',
+
+  // 聊天历史
+  chatHistory: 'amusement-history',
+
+  // 聊天消息和摘要
+  amusementChatMessage: 'amusement-chat-message',
+  amusementChatSummary: 'amusement-chat-summary',
+  amusementChatHistory: 'amusement-chat-history-list',
 
   /** amusement end */
 
@@ -131,9 +153,9 @@ export const apiRoute = {
   commonSensitiveRemove: 'common-sensitive-remove',
 
   // 反馈日志
-  CommonFeedList: 'common-feed-list',
-  CommonFeedEdit: 'common-feed-edit', // 回复反馈
-  CommonFeedRemove: 'common-feed-remove',
+  commonFeedList: 'common-feed-list',
+  commonFeedEdit: 'common-feed-edit',
+  commonFeedRemove: 'common-feed-remove',
 
   // 账号
   adminLogin: 'login',

@@ -4,8 +4,9 @@ export type TableColumnList = DataTableColumn<any>[]
 
 const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
-const UAvatar = resolveComponent('UAvatar')
 const UTooltip = resolveComponent('UTooltip')
+const ImagePreview = resolveComponent('ImagePreview')
+const USwitch = resolveComponent('USwitch')
 
 const stateEnum: Record<number, [string, 'warning' | 'success' | 'error' | 'info']> = {
   0: ['提交', 'info'],
@@ -14,44 +15,7 @@ const stateEnum: Record<number, [string, 'warning' | 'success' | 'error' | 'info
   4: ['已删除', 'error']
 }
 
-const dayEnum: any = {
-  2: ['是', 'success'],
-  0: ['否', 'error']
-}
-const anonymousEnum: any = {
-  2: ['隐私', 'success'],
-  0: ['公开', 'info']
-}
-
-// 图片预览函数
-const previewImage = (imageUrl: string) => {
-  const overlay = document.createElement('div')
-  overlay.className = 'fixed inset-0 z-50 bg-black/80 flex items-center justify-center cursor-pointer'
-  overlay.onclick = () => overlay.remove()
-
-  const imgContainer = document.createElement('div')
-  imgContainer.className = 'relative max-w-[90vw] max-h-[90vh] p-4'
-
-  const closeBtn = document.createElement('button')
-  closeBtn.innerHTML = '✕'
-  closeBtn.className = 'absolute -top-2 -right-2 w-8 h-8 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center text-xl font-bold z-10 text-gray-900 dark:text-white'
-  closeBtn.onclick = (e) => {
-    e.stopPropagation()
-    overlay.remove()
-  }
-
-  const img = document.createElement('img')
-  img.src = imageUrl
-  img.className = 'max-w-full max-h-[85vh] rounded-lg shadow-2xl'
-  img.onclick = e => e.stopPropagation()
-
-  imgContainer.appendChild(closeBtn)
-  imgContainer.appendChild(img)
-  overlay.appendChild(imgContainer)
-  document.body.appendChild(overlay)
-}
-
-export const baseColumns: TableColumnList = [
+export const getBaseColumns = (updateStatus: (id: number, field: string, value: any) => Promise<void>): TableColumnList => [
   {
     accessorKey: 'id',
     meta: {
@@ -86,17 +50,13 @@ export const baseColumns: TableColumnList = [
         }, 'N/A')
       }
 
-      return h('div', {
-        class: 'cursor-pointer hover:opacity-80 transition-opacity',
-        onClick: () => previewImage(logo)
-      }, [
-        h(UAvatar, {
-          src: logo,
-          alt: '卡片封面图',
-          size: 'lg',
-          class: 'ring-1 ring-gray-200 dark:ring-gray-700'
-        })
-      ])
+      return h(ImagePreview, {
+        src: logo,
+        alt: '卡片封面图',
+        width: 'w-10',
+        height: 'h-10',
+        class: 'rounded'
+      })
     }
   },
   {
@@ -120,11 +80,17 @@ export const baseColumns: TableColumnList = [
               h(
                 UBadge,
                 { size: 'xs', color: 'neutral', variant: 'soft' },
-                () => `作者： ${row.original.member?.username || '-'}`
+                () => `作者：${row.original.member?.username || '-'} | UID：${row.original.uid || '-'}`
               )
             ])
         }
       )
+  },
+  {
+    accessorKey: 'uid',
+    header: 'UID',
+    searchPlaceholder: '筛选UID',
+    hideInTable: true
   },
   {
     accessorKey: 'battery',
@@ -223,6 +189,10 @@ export const baseColumns: TableColumnList = [
       componentProps: {
         options: [
           {
+            label: '全部',
+            value: ''
+          },
+          {
             label: '隐私',
             value: 2
           },
@@ -234,9 +204,13 @@ export const baseColumns: TableColumnList = [
       }
     },
     cell: ({ row }) => {
-      return h(UBadge, { class: 'capitalize', variant: 'subtle', color: anonymousEnum[row.original.anonymous]?.[1] }, () =>
-        anonymousEnum[row.original.anonymous]?.[0]
-      )
+      return h(USwitch, {
+        'modelValue': row.original.anonymous === 2,
+        'onUpdate:modelValue': async (val: boolean) => {
+          const newValue = val ? 2 : 0
+          await updateStatus(row.original.id, 'anonymous', newValue)
+        }
+      })
     }
   },
   {
@@ -248,7 +222,7 @@ export const baseColumns: TableColumnList = [
       }
     },
     header: '是否日推',
-    searchPlaceholder: '筛选状态',
+    searchPlaceholder: '筛选日推',
     formItemProps: {
       component: 'Select',
       componentProps: {
@@ -265,9 +239,13 @@ export const baseColumns: TableColumnList = [
       }
     },
     cell: ({ row }) => {
-      return h(UBadge, { class: 'capitalize', variant: 'subtle', color: dayEnum[row.original.day_recommend]?.[1] }, () =>
-        dayEnum[row.original.day_recommend]?.[0]
-      )
+      return h(USwitch, {
+        'modelValue': row.original.day_recommend === 2,
+        'onUpdate:modelValue': async (val: boolean) => {
+          const newValue = val ? 2 : 0
+          await updateStatus(row.original.id, 'day_recommend', newValue)
+        }
+      })
     }
   },
   {

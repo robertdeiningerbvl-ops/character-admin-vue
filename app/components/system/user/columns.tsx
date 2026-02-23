@@ -2,9 +2,9 @@ import type { DataTableColumn } from '@/types/table'
 
 export type TableColumnList = DataTableColumn<any>[]
 
-const UButton = resolveComponent('UButton')
 const UAvatar = resolveComponent('UAvatar')
 const UBadge = resolveComponent('UBadge')
+const UTooltip = resolveComponent('UTooltip')
 
 const groupEnum: any = {
   1: ['管理员', 'warning'],
@@ -15,40 +15,33 @@ const groupEnum: any = {
 const stateEnum: any = {
   1: ['禁用', 'error'],
   2: ['正常', 'success'],
-  4: ['已删除', 'error']
+  4: ['已删除', 'neutral']
 }
 
 export const baseColumns: TableColumnList = [
   {
-    accessorKey: 'id',
+    accessorKey: 'username',
+    header: '用户信息',
+    searchPlaceholder: '筛选账号',
     meta: {
       class: {
-        th: 'w-[100px]',
-        td: 'w-[100px]'
+        th: 'w-[200px]',
+        td: 'w-[200px]'
       }
     },
-    header: () => {
-      return h(UButton, {
-        color: 'neutral',
-        variant: 'ghost',
-        label: 'ID',
-        class: '-mx-2.5 hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent text-(--ui-text-highlighted) font-semibold'
-      })
-    }
-  },
-  {
-    accessorKey: 'username',
-    header: '账号',
-    searchPlaceholder: '筛选账号',
     cell: ({ row }) => {
+      const { username, avatar, id, email } = row.original
       return h('div', { class: 'flex items-center gap-3' }, [
         h(UAvatar, {
-          src: row.original.avatar,
-          alt: row.original.username,
-          size: 'lg'
+          src: avatar,
+          alt: username,
+          size: 'lg',
+          class: 'shrink-0'
         }),
-        h('div', undefined, [
-          h('p', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.username)
+        h('div', { class: 'flex flex-col min-w-0' }, [
+          h('span', { class: 'font-medium text-(--ui-text-highlighted) truncate' }, username),
+          h('span', { class: 'text-xs text-(--ui-text-muted)' }, `ID: ${id}`),
+          email && h('span', { class: 'text-xs text-(--ui-text-dimmed) truncate' }, email)
         ])
       ])
     }
@@ -56,68 +49,93 @@ export const baseColumns: TableColumnList = [
   {
     accessorKey: 'created_at',
     header: '注册时间',
-    cell: ({ row }) => formatToDateTime(row.original.created_at)
+    meta: {
+      class: {
+        th: 'w-[160px]',
+        td: 'w-[160px]'
+      }
+    },
+    cell: ({ row }) => {
+      return h('div', { class: 'flex items-center gap-2' }, [
+        h('span', { class: 'i-lucide-calendar w-4 h-4 text-(--ui-text-muted)' }),
+        h('span', { class: 'text-sm' }, formatToDateTime(row.original.created_at))
+      ])
+    }
   },
   {
-    accessorKey: 'ip',
-    header: '登录IP'
+    accessorKey: 'last_ip',
+    header: '登录IP',
+    meta: {
+      class: {
+        th: 'w-[150px]',
+        td: 'w-[150px]'
+      }
+    },
+    cell: ({ row }) => {
+      const lastIp = row.original.last_ip || row.original.ip
+      if (!lastIp) return h('span', { class: 'text-(--ui-text-muted)' }, '-')
+      return h('div', { class: 'flex items-center gap-2' }, [
+        h('span', { class: 'i-lucide-globe w-4 h-4 text-(--ui-text-muted)' }),
+        h('code', { class: 'text-xs font-mono bg-(--ui-bg-elevated) px-2 py-1 rounded' }, lastIp)
+      ])
+    }
   },
   {
     accessorKey: 'group_id',
     header: '角色',
     searchPlaceholder: '筛选角色',
+    meta: {
+      class: {
+        th: 'w-[120px]',
+        td: 'w-[120px]'
+      }
+    },
     formItemProps: {
       component: 'Select',
       componentProps: {
         options: [
-          {
-            label: '管理员',
-            value: 1
-          },
-          {
-            label: '运营',
-            value: 5
-          },
-          {
-            label: '超级管理员',
-            value: 99
-          }
+          { label: '管理员', value: 1 },
+          { label: '运营', value: 5 },
+          { label: '超级管理员', value: 99 }
         ]
       }
     },
     cell: ({ row }) => {
-      return h(UBadge, { class: 'capitalize', variant: 'subtle', color: groupEnum[row.original.group_id]?.[1] }, () =>
-        groupEnum[row.original.group_id]?.[0]
-      )
+      const group = groupEnum[row.original.group_id]
+      return h(UBadge, {
+        class: 'capitalize',
+        variant: 'subtle',
+        color: group?.[1] || 'neutral'
+      }, () => group?.[0] || '未知')
     }
   },
   {
     accessorKey: 'state',
     header: '状态',
     searchPlaceholder: '筛选状态',
+    meta: {
+      class: {
+        th: 'w-[100px]',
+        td: 'w-[100px]'
+      }
+    },
     formItemProps: {
       component: 'Select',
       componentProps: {
         options: [
-          {
-            label: '正常',
-            value: 2
-          },
-          {
-            label: '禁用',
-            value: 1
-          },
-          {
-            label: '已删除',
-            value: 4
-          }
+          { label: '正常', value: 2 },
+          { label: '禁用', value: 1 },
+          { label: '已删除', value: 4 }
         ]
       }
     },
     cell: ({ row }) => {
-      return h(UBadge, { class: 'capitalize', variant: 'subtle', color: stateEnum[row.original.state]?.[1] }, () =>
-        stateEnum[row.original.state]?.[0]
-      )
+      const state = stateEnum[row.original.state]
+      return h(UBadge, {
+        class: 'capitalize',
+        variant: 'subtle',
+        color: state?.[1] || 'neutral'
+      }, () => state?.[0] || '未知')
     }
   }
 ]

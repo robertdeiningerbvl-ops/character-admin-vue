@@ -80,7 +80,7 @@ watch(
   <UModal
     v-model:open="drawerVisible"
     title="分配权限"
-    :dismissible="false"
+
     :ui="{ footer: 'justify-end' }"
   >
     <template #body>

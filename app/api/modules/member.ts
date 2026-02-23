@@ -49,3 +49,18 @@ export function getConductCollectList(params?: any) {
 export function getMemberMarketingInviteList(params?: any) {
   return request.get<any>(apiRoute.memberMarketingInviteList, params)
 }
+
+/** 获取用户聊天消息列表 */
+export function getAmusementChatMessage(params?: any) {
+  return request.get<any>(apiRoute.amusementChatMessage, params)
+}
+
+/** 获取用户聊天摘要列表 */
+export function getAmusementChatSummary(params?: any) {
+  return request.get<any>(apiRoute.amusementChatSummary, params)
+}
+
+/** 获取用户聊天历史列表 */
+export function getAmusementChatHistory(params?: any) {
+  return request.get<any>(apiRoute.amusementChatHistory, params)
+}

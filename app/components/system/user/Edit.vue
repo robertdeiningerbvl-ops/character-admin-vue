@@ -121,10 +121,16 @@ watch(
 <template>
   <UModal
     v-model:open="drawerVisible"
-    :title="currentForm.id ? '修改' : '新增'"
-    :dismissible="false"
-    :ui="{ footer: 'justify-end' }"
+
+    :ui="{ footer: 'justify-end', content: 'sm:max-w-lg' }"
   >
+    <template #header>
+      <div class="flex items-center gap-2">
+        <UIcon name="i-lucide-user-cog" class="w-5 h-5 text-(--ui-primary)" />
+        <span class="font-semibold">{{ currentForm.id ? '修改用户' : '新增用户' }}</span>
+      </div>
+    </template>
+
     <template #body>
       <UForm
         ref="formRef"
@@ -133,42 +139,21 @@ watch(
         class="flex flex-col gap-4"
         @submit="onSubmit"
       >
-        <UFormField label="用户名" name="username" required>
-          <UInput
-            v-model.trim="state.form.username"
-            :disabled="currentForm.id ? true : false"
-            placeholder="请输入"
-            class="w-full"
-            :ui="{ trailing: 'pe-1' }"
-          >
-            <template #trailing>
-              <UButton
-                v-if="!currentForm.id && state.form.username"
-                color="neutral"
-                variant="link"
-                size="sm"
-                icon="i-lucide-circle-x"
-                @click="state.form.username = ''"
-              />
-            </template>
-          </UInput>
-        </UFormField>
-        <UFormField
-          label="头像"
-          name="avatar"
-          description="JPG, JPEG or PNG. 1MB Max."
-          class="flex max-sm:flex-col justify-between sm:items-center gap-4"
-        >
-          <div class="flex flex-wrap items-center gap-3">
-            <UAvatar
-              :src="state.form.avatar"
-              :alt="state.form.username"
-              size="xl"
-            />
+        <!-- 头像区域 -->
+        <div class="flex items-center gap-4 p-4 rounded-lg bg-(--ui-bg) border border-(--ui-border)">
+          <UAvatar :src="state.form.avatar" :alt="state.form.username" size="xl" />
+          <div class="flex-1">
+            <p class="text-sm font-medium text-(--ui-text-highlighted) mb-1">
+              用户头像
+            </p>
+            <p class="text-xs text-(--ui-text-muted) mb-2">
+              支持 JPG、PNG 格式，最大 1MB
+            </p>
             <UButton
               :loading="state.avatarLoading"
-              label="上传"
+              label="上传头像"
               color="neutral"
+              size="xs"
               @click="onFileClick"
             />
             <input
@@ -179,47 +164,62 @@ watch(
               @change="onFileChange"
             >
           </div>
-        </UFormField>
-        <UFormField label="密码" name="password" help="初始值为：12345677，不填则不修改">
+        </div>
+
+        <UFormField label="用户名" name="username" required>
           <UInput
-            v-model.trim="state.form.password"
-            placeholder="请输入"
+            v-model.trim="state.form.username"
+            :disabled="!!currentForm.id"
+            placeholder="请输入用户名"
             class="w-full"
-            :ui="{ trailing: 'pe-1' }"
           >
-            <template #trailing>
-              <UButton
-                v-if="state.form.password"
-                color="neutral"
-                variant="link"
-                size="sm"
-                icon="i-lucide-circle-x"
-                @click="state.form.password = ''"
-              />
+            <template #leading>
+              <UIcon name="i-lucide-user" class="w-4 h-4 text-(--ui-text-muted)" />
             </template>
           </UInput>
         </UFormField>
-        <UFormField
-          v-if="auth.userInfo.group_id == 99"
-          label="角色"
-          name="group_id"
-          required
-        >
-          <USelect
-            v-model="state.form.group_id"
-            :items="state.groupOptions"
-            placeholder="请选择"
+
+        <UFormField label="密码" name="password" :help="currentForm.id ? '不填则不修改密码' : '默认密码：12345677'">
+          <UInput
+            v-model.trim="state.form.password"
+            type="password"
+            placeholder="请输入密码（至少8位）"
             class="w-full"
-          />
+          >
+            <template #leading>
+              <UIcon name="i-lucide-lock" class="w-4 h-4 text-(--ui-text-muted)" />
+            </template>
+          </UInput>
         </UFormField>
-        <UFormField label="状态" name="state" required>
-          <USelect
-            v-model="state.form.state"
-            :items="state.stateOptions"
-            placeholder="请选择"
-            class="w-full"
-          />
-        </UFormField>
+
+        <div class="grid grid-cols-2 gap-4">
+          <UFormField
+            v-if="auth.userInfo.group_id == 99"
+            label="角色"
+            name="group_id"
+            required
+          >
+            <USelect
+              v-model="state.form.group_id"
+              :items="state.groupOptions"
+              placeholder="请选择"
+              class="w-full"
+            />
+          </UFormField>
+          <UFormField
+            label="状态"
+            name="state"
+            required
+            :class="auth.userInfo.group_id != 99 ? 'col-span-2' : ''"
+          >
+            <USelect
+              v-model="state.form.state"
+              :items="state.stateOptions"
+              placeholder="请选择"
+              class="w-full"
+            />
+          </UFormField>
+        </div>
       </UForm>
     </template>
 

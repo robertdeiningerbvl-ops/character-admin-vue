@@ -2,7 +2,7 @@
 import { extractPNGChunk, buildCharacterFromCard } from '@/utils/character'
 import * as z from 'zod'
 import { cloneDeep } from 'lodash-es'
-import { uploadFile, updateAmusement, addAmusement, getAmusementDetail } from '@/api'
+import { uploadFile, updateAmusement, addAmusement, getAmusementDetail, updateAmusementState } from '@/api'
 import { useAuthStore } from '@/store'
 
 // 获取当前用户信息
@@ -34,7 +34,7 @@ const closeModal = () => {
 }
 
 /* ================= Tabs ================= */
-type Tab = 'card' | 'info' | 'dialogue' | 'world' | 'regex'
+type Tab = 'card' | 'info' | 'dialogue' | 'world' | 'regex' | 'status'
 const tab = ref<Tab>('card')
 
 const tabItems = computed(() => {
@@ -42,7 +42,8 @@ const tabItems = computed(() => {
     ['info', '基础信息'],
     ['dialogue', '对话'],
     ['world', '世界书'],
-    ['regex', '正则']
+    ['regex', '正则'],
+    ['status', '状态管理']
   ]
 
   // 新增时才显示角色卡选项
@@ -70,11 +71,15 @@ const anonymousOptions = [
   { label: '公开', value: 0 }
 ]
 
-const stateOptions = [
-  { label: '删除', value: 4 },
-  { label: '待审核', value: 1 },
-  { label: '正常', value: 2 },
-  { label: '提交', value: 0 }
+const positionOptions = [
+  { label: '角色定义前', value: '0-0' },
+  { label: '角色定义后', value: '1-0' },
+  { label: '角色定义后-1', value: '2-0' },
+  { label: '角色定义后-2', value: '3-0' },
+  { label: '智能插入', value: '4-0' },
+  { label: '智能插入-User', value: '4-1' },
+  { label: '智能插入-AI', value: '4-2' },
+  { label: '智能插入-System', value: '4-3' }
 ]
 
 /* ================= 核心状态（唯一数据源） ================= */
@@ -139,6 +144,136 @@ function createDefaultForm(data: any = {}) {
     regex_enabled: false,
     regex_rules: [],
     ...data
+  }
+}
+
+// 添加世界书条目
+function addCharacterBookEntry() {
+  state.form.character_book.entries.push({
+    keys: [''],
+    secondary_keys: [],
+    content: '',
+    enabled: true,
+    constant: false,
+    selective: false,
+    use_regex: false,
+    insertion_order: 0,
+    priority: 0,
+    extensions: {
+      depth: 4,
+      position: 0,
+      role: 0,
+      probability: 100,
+      scan_depth: null
+    }
+  })
+}
+
+// 删除世界书条目
+function removeCharacterBookEntry(index: string | number) {
+  state.form.character_book.entries.splice(Number(index), 1)
+}
+
+// 添加关键词
+function addKey(entry: any) {
+  if (!entry.keys) entry.keys = []
+  entry.keys.push('')
+}
+
+// 删除关键词
+function removeKey(entry: any, index: string | number) {
+  entry.keys?.splice(Number(index), 1)
+}
+
+// 获取插入位置的值
+function getPositionValue(entry: any) {
+  if (!entry.extensions) return '0-0'
+  const position = entry.extensions.position || 0
+  const role = entry.extensions.role || 0
+  return `${position}-${role}`
+}
+
+// 更新插入位置
+function updatePosition(entry: any, value: string) {
+  if (!entry.extensions) {
+    entry.extensions = {}
+  }
+  if (value) {
+    const [position, role] = value.split('-').map(Number)
+    entry.extensions.position = position
+    entry.extensions.role = role
+  }
+}
+
+// 切换 placement 选项
+function togglePlacement(rule: any, value: number) {
+  if (!rule.placement) {
+    rule.placement = []
+  }
+  const index = rule.placement.indexOf(value)
+  if (index > -1) {
+    rule.placement.splice(index, 1)
+  } else {
+    rule.placement.push(value)
+  }
+}
+
+// 检查 placement 是否选中
+function isPlacementSelected(rule: any, value: number) {
+  return rule.placement && rule.placement.includes(value)
+}
+
+// 添加正则规则
+function addRegexRule() {
+  state.form.regex_rules.push({
+    id: String(state.form.regex_rules.length),
+    scriptName: '',
+    findRegex: '',
+    replaceString: '',
+    trimStrings: [],
+    placement: [],
+    disabled: false,
+    markdownOnly: false,
+    promptOnly: false,
+    runOnEdit: false,
+    substituteRegex: 0,
+    minDepth: null,
+    maxDepth: null
+  })
+}
+
+// 删除正则规则
+function removeRegexRule(index: string | number) {
+  state.form.regex_rules.splice(Number(index), 1)
+}
+
+/* ================= 状态管理 ================= */
+// 处理状态管理标签页中的开关变化
+async function handleStatusToggle(field: string, value: any) {
+  if (!state.form.id) {
+    toast.add({ title: '请先保存角色卡', color: 'warning' })
+    return
+  }
+
+  // 先更新本地状态
+  state.form[field] = value
+
+  const { error } = await updateAmusementState({
+    id: state.form.id,
+    [field]: value
+  })
+
+  if (!error) {
+    toast.add({ title: '更新成功', color: 'success' })
+    emit('refresh')
+  } else {
+    toast.add({ title: '更新失败', color: 'error' })
+    // 恢复原值
+    if (field === 'state') {
+      state.form[field] = value === 2 ? 4 : 2
+    } else {
+      state.form[field] = value ? 0 : 1
+    }
   }
 }
 
@@ -345,12 +480,8 @@ watch(
     v-model:open="drawerVisible"
     :title="state.form.id ? '编辑' : '新增'"
     :description="state.form.id ? '编辑角色' : '新增角色'"
-    :dismissible="false"
-    :ui="{
-      content: 'sm:max-w-4xl',
-      body: 'p-0',
-      footer: 'justify-end bg-gray-50 dark:bg-gray-900'
-    }"
+
+    :ui="{ content: 'sm:max-w-4xl', footer: 'justify-end' }"
   >
     <template #body>
       <!-- 标签页导航 -->
@@ -480,7 +611,7 @@ watch(
                   />
                 </UFormField>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
                   <UFormField label="来源" name="source" required>
                     <USelect
                       v-model="state.form.source"
@@ -491,10 +622,22 @@ watch(
                     />
                   </UFormField>
 
-                  <UFormField label="状态" name="state" required>
+                  <UFormField label="标签" name="tag">
                     <USelect
-                      v-model="state.form.state"
-                      :items="stateOptions"
+                      v-model="state.form.tag"
+                      :items="tagsOptions"
+                      multiple
+                      placeholder="请选择标签"
+                      class="w-full"
+                      clearable
+                      size="lg"
+                    />
+                  </UFormField>
+
+                  <UFormField label="隐私" name="anonymous" required>
+                    <USelect
+                      v-model="state.form.anonymous"
+                      :items="anonymousOptions"
                       placeholder="请选择"
                       class="w-full"
                       size="lg"
@@ -532,30 +675,6 @@ watch(
                     </template>
                   </UInput>
                 </UFormField>
-
-                <div class="grid grid-cols-2 gap-4">
-                  <UFormField label="标签" name="tag">
-                    <USelect
-                      v-model="state.form.tag"
-                      :items="tagsOptions"
-                      multiple
-                      placeholder="请选择标签"
-                      class="w-full"
-                      clearable
-                      size="lg"
-                    />
-                  </UFormField>
-
-                  <UFormField label="隐私" name="anonymous" required>
-                    <USelect
-                      v-model="state.form.anonymous"
-                      :items="anonymousOptions"
-                      placeholder="请选择"
-                      class="w-full"
-                      size="lg"
-                    />
-                  </UFormField>
-                </div>
               </div>
 
               <!-- 封面图片卡片 -->
@@ -719,44 +838,149 @@ watch(
             </div>
 
             <!-- 世界条目 -->
-            <div
-              v-for="(item, i) in state.form.character_book.entries"
-              :key="i"
-              class="rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 space-y-4 hover:border-purple-300 dark:hover:border-purple-700 hover:shadow-md transition-all"
-            >
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                    <span class="font-bold text-purple-600 dark:text-purple-400">{{ Number(i) + 1 }}</span>
+            <div class="space-y-4">
+              <div
+                v-for="(entry, i) in state.form.character_book.entries"
+                :key="i"
+                class="bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
+              >
+                <!-- 标题栏 -->
+                <div class="flex items-center justify-between mb-4">
+                  <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                      <span class="font-semibold text-purple-600 dark:text-purple-400 text-sm">{{ Number(i) + 1 }}</span>
+                    </div>
+                    <span class="font-medium text-gray-900 dark:text-white">条目 {{ Number(i) + 1 }}</span>
                   </div>
-                  <span class="font-medium text-gray-700 dark:text-gray-300">条目 {{ Number(i) + 1 }}</span>
+                  <UButton
+                    icon="i-material-symbols-delete-outline"
+                    size="sm"
+                    variant="ghost"
+                    color="error"
+                    @click="removeCharacterBookEntry(i)"
+                  />
                 </div>
-                <UButton
-                  icon="i-material-symbols-delete-outline"
-                  size="md"
-                  variant="ghost"
-                  color="error"
-                  @click="state.form.character_book.entries.splice(i, 1)"
-                />
-              </div>
-              <div class="space-y-4">
-                <UFormField label="触发关键词">
-                  <UInput
-                    v-model="item.keys[0]"
-                    placeholder="请输入触发关键词"
-                    class="w-full"
-                    size="lg"
-                  />
-                </UFormField>
-                <UFormField label="内容">
-                  <UTextarea
-                    v-model="item.content"
-                    placeholder="请输入详细内容..."
-                    :rows="5"
-                    class="w-full"
-                    size="lg"
-                  />
-                </UFormField>
+
+                <!-- 表单字段 -->
+                <div class="space-y-5">
+                  <UFormField label="备注" class="w-full">
+                    <UInput
+                      v-model="entry.comment"
+                      placeholder="备注说明"
+                      size="lg"
+                      class="w-full"
+                    />
+                  </UFormField>
+
+                  <UFormField label="触发关键词" required class="w-full">
+                    <div class="space-y-2">
+                      <div v-for="(key, ki) in entry.keys" :key="ki" class="flex gap-2">
+                        <UInput
+                          v-model="entry.keys[ki]"
+                          placeholder="输入关键词"
+                          size="lg"
+                          class="flex-1"
+                        />
+                        <UButton
+                          icon="i-material-symbols-close"
+                          size="lg"
+                          variant="ghost"
+                          color="error"
+                          @click="removeKey(entry, ki)"
+                        />
+                      </div>
+                      <UButton variant="soft" size="sm" @click="addKey(entry)">
+                        <template #leading>
+                          <UIcon name="i-material-symbols-add" />
+                        </template>
+                        添加关键词
+                      </UButton>
+                    </div>
+                  </UFormField>
+
+                  <UFormField label="内容" required class="w-full">
+                    <UTextarea
+                      v-model="entry.content"
+                      placeholder="输入世界书内容..."
+                      :rows="4"
+                      size="lg"
+                      class="w-full"
+                    />
+                  </UFormField>
+
+                  <div class="grid grid-cols-3 gap-4">
+                    <UFormField label="优先级" class="w-full">
+                      <UInput
+                        v-model.number="entry.insertion_order"
+                        type="number"
+                        placeholder="0"
+                        size="lg"
+                        class="w-full"
+                      />
+                    </UFormField>
+                    <UFormField label="触发概率 (0%-100%)" class="w-full">
+                      <UInput
+                        v-model.number="entry.extensions.probability"
+                        type="number"
+                        min="0"
+                        max="100"
+                        placeholder="100"
+                        size="lg"
+                        class="w-full"
+                      />
+                    </UFormField>
+                    <UFormField label="记录深度" class="w-full">
+                      <UInput
+                        v-model.number="entry.extensions.depth"
+                        type="number"
+                        placeholder="4"
+                        size="lg"
+                        class="w-full"
+                      />
+                    </UFormField>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-4">
+                    <UFormField label="深度扫描" class="w-full">
+                      <UInput
+                        v-model.number="entry.extensions.scan_depth"
+                        type="number"
+                        placeholder="留空使用默认值"
+                        size="lg"
+                        class="w-full"
+                      />
+                    </UFormField>
+                    <UFormField label="插入位置" class="w-full">
+                      <USelect
+                        :model-value="getPositionValue(entry)"
+                        :items="positionOptions"
+                        placeholder="请选择插入位置"
+                        size="lg"
+                        class="w-full"
+                        @update:model-value="updatePosition(entry, $event)"
+                      />
+                    </UFormField>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-4">
+                    <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <UCheckbox v-model="entry.enabled" />
+                      <span class="text-sm font-medium text-gray-700 dark:text-gray-300">启用条目</span>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <UCheckbox v-model="entry.constant" />
+                      <span class="text-sm font-medium text-gray-700 dark:text-gray-300">常驻内存</span>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <UCheckbox v-model="entry.selective" />
+                      <span class="text-sm font-medium text-gray-700 dark:text-gray-300">选择性注入</span>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <UCheckbox v-model="entry.use_regex" />
+                      <span class="text-sm font-medium text-gray-700 dark:text-gray-300">使用正则</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -766,7 +990,7 @@ watch(
                 color="primary"
                 size="lg"
                 block
-                @click="state.form.character_book.entries.push({ keys: [''], content: '', enabled: true, insertion_order: 0 })"
+                @click="addCharacterBookEntry"
               >
                 <template #leading>
                   <UIcon name="i-material-symbols-add-circle-outline" />
@@ -801,45 +1025,109 @@ watch(
             <div v-if="state.form.regex_enabled" class="space-y-4">
               <div
                 v-for="(rule, i) in state.form.regex_rules"
-                :key="i"
-                class="rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 space-y-4 hover:border-orange-300 dark:hover:border-orange-700 hover:shadow-md transition-all"
+                :key="rule.id || i"
+                class="bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
               >
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                      <span class="font-bold text-orange-600 dark:text-orange-400">{{ Number(i) + 1 }}</span>
+                <!-- 标题栏 -->
+                <div class="flex items-center justify-between mb-4">
+                  <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                      <span class="font-semibold text-orange-600 dark:text-orange-400 text-sm">{{ Number(i) + 1 }}</span>
                     </div>
-                    <span class="font-medium text-gray-700 dark:text-gray-300">规则 {{ Number(i) + 1 }}</span>
+                    <span class="font-medium text-gray-900 dark:text-white">规则 {{ Number(i) + 1 }}</span>
                   </div>
                   <UButton
                     icon="i-material-symbols-delete-outline"
-                    size="md"
+                    size="sm"
                     variant="ghost"
                     color="error"
-                    @click="state.form.regex_rules.splice(i, 1)"
+                    @click="removeRegexRule(i)"
                   />
                 </div>
-                <UFormField label="正则表达式">
-                  <UInput
-                    v-model="rule.pattern"
-                    placeholder="例如：^hello|你好"
-                    class="w-full font-mono"
-                    size="lg"
-                  >
-                    <template #leading>
-                      <UIcon name="i-material-symbols-code" class="w-5 h-5 text-gray-400" />
-                    </template>
-                  </UInput>
-                </UFormField>
-                <UFormField label="回复内容">
-                  <UTextarea
-                    v-model="rule.reply"
-                    placeholder="匹配成功后的回复内容..."
-                    :rows="3"
-                    class="w-full"
-                    size="lg"
-                  />
-                </UFormField>
+
+                <!-- 表单字段 -->
+                <div class="space-y-5">
+                  <UFormField label="脚本名称" class="w-full">
+                    <UInput
+                      v-model="rule.scriptName"
+                      placeholder="输入脚本名称"
+                      size="lg"
+                      class="w-full"
+                    />
+                  </UFormField>
+
+                  <UFormField label="查找正则" required class="w-full">
+                    <UInput
+                      v-model="rule.findRegex"
+                      placeholder="输入正则表达式"
+                      size="lg"
+                      class="w-full"
+                    />
+                  </UFormField>
+
+                  <UFormField label="替换字符串" class="w-full">
+                    <UInput
+                      v-model="rule.replaceString"
+                      placeholder="输入替换内容"
+                      size="lg"
+                      class="w-full"
+                    />
+                  </UFormField>
+
+                  <UFormField label="应用位置" class="w-full">
+                    <div class="grid grid-cols-2 gap-3">
+                      <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <UCheckbox
+                          :model-value="isPlacementSelected(rule, 0)"
+                          @update:model-value="togglePlacement(rule, 0)"
+                        />
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">用户输入</span>
+                      </div>
+                      <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <UCheckbox
+                          :model-value="isPlacementSelected(rule, 1)"
+                          @update:model-value="togglePlacement(rule, 1)"
+                        />
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">AI 输出</span>
+                      </div>
+                      <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <UCheckbox
+                          :model-value="isPlacementSelected(rule, 2)"
+                          @update:model-value="togglePlacement(rule, 2)"
+                        />
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">快捷命令</span>
+                      </div>
+                      <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <UCheckbox
+                          :model-value="isPlacementSelected(rule, 3)"
+                          @update:model-value="togglePlacement(rule, 3)"
+                        />
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">世界信息</span>
+                      </div>
+                    </div>
+                  </UFormField>
+
+                  <UFormField label="其他选项" class="w-full">
+                    <div class="grid grid-cols-2 gap-3">
+                      <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <UCheckbox v-model="rule.disabled" />
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">禁用</span>
+                      </div>
+                      <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <UCheckbox v-model="rule.markdownOnly" />
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">仅 Markdown</span>
+                      </div>
+                      <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <UCheckbox v-model="rule.promptOnly" />
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">仅提示词</span>
+                      </div>
+                      <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <UCheckbox v-model="rule.runOnEdit" />
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">编辑时运行</span>
+                      </div>
+                    </div>
+                  </UFormField>
+                </div>
               </div>
             </div>
 
@@ -849,13 +1137,76 @@ watch(
                 color="primary"
                 size="lg"
                 block
-                @click="state.form.regex_rules.push({ pattern: '', reply: '' })"
+                @click="addRegexRule"
               >
                 <template #leading>
                   <UIcon name="i-material-symbols-add-circle-outline" />
                 </template>
                 新增规则
               </UButton>
+            </div>
+          </div>
+
+          <!-- 状态管理 -->
+          <div v-if="tab === 'status'" class="space-y-4">
+            <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-3">
+              <div class="flex items-center gap-2 mb-1">
+                <UIcon name="i-material-symbols-settings-outline" class="w-5 h-5 text-primary-600" />
+                <h4 class="font-semibold text-gray-900 dark:text-white">
+                  状态管理
+                </h4>
+              </div>
+
+              <!-- 状态开关 -->
+              <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div>
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">
+                    状态
+                  </p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    {{ state.form.state === 2 ? '正常' : '已删除' }}
+                  </p>
+                </div>
+                <USwitch
+                  :model-value="state.form.state === 2"
+                  size="lg"
+                  @update:model-value="handleStatusToggle('state', $event ? 2 : 4)"
+                />
+              </div>
+
+              <!-- 推荐开关 -->
+              <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div>
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">
+                    推荐
+                  </p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    {{ state.form.recommend ? '已推荐' : '未推荐' }}
+                  </p>
+                </div>
+                <USwitch
+                  :model-value="!!state.form.recommend"
+                  size="lg"
+                  @update:model-value="handleStatusToggle('recommend', $event ? 1 : 0)"
+                />
+              </div>
+
+              <!-- 每日推荐开关 -->
+              <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div>
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">
+                    每日推荐
+                  </p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    {{ state.form.day_recommend ? '已推荐' : '未推荐' }}
+                  </p>
+                </div>
+                <USwitch
+                  :model-value="!!state.form.day_recommend"
+                  size="lg"
+                  @update:model-value="handleStatusToggle('day_recommend', $event ? 1 : 0)"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -865,7 +1216,7 @@ watch(
       <div class="flex items-center justify-between w-full">
         <div class="text-sm text-gray-500 dark:text-gray-400">
           <UIcon name="i-material-symbols-info-outline" class="inline w-4 h-4" />
-          {{ state.form.id ? '修改后将更新角色信息' : '确认后将创建新角色' }}
+          {{ tab === 'status' ? '状态管理通过开关直接更新' : (state.form.id ? '修改后将更新角色信息' : '确认后将创建新角色') }}
         </div>
         <div class="flex gap-3">
           <UButton
@@ -881,6 +1232,7 @@ watch(
           </UButton>
           <UButton
             :loading="state.loading"
+            :disabled="tab === 'status'"
             label="确认保存"
             variant="solid"
             size="lg"

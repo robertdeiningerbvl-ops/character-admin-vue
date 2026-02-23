@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { cloneDeep } from 'lodash-es'
-import { getConfig, updateConfig } from '@/api'
-import { EditorContent, useEditor } from '@tiptap/vue-3'
-import StarterKit from '@tiptap/starter-kit'
+import { getConfig, updateConfig, getCommonModelList } from '@/api'
 
 definePageMeta({ layout: 'app' })
 defineOptions({ name: 'SystemConfig' })
@@ -77,7 +75,9 @@ const configGroups = reactive([
     items: [
       { key: 'PAY', label: '支付配置', icon: 'lucide:credit-card' },
       { key: 'INVITE', label: '邀请配置', icon: 'lucide:user-plus' },
-      { key: 'OS', label: '系统优化', icon: 'lucide:cpu' }
+      { key: 'OS', label: '系统优化', icon: 'lucide:cpu' },
+      { key: 'KNOT', label: '聊天总结', icon: 'lucide:message-circle' },
+      { key: 'DOCTOR_CONFIG', label: '创作管理', icon: 'lucide:pen-tool' }
     ]
   }
 ])
@@ -87,9 +87,10 @@ const fetchConfig = async (key: string) => {
   try {
     const { data, error } = await getConfig({ key })
     if (!error) {
+      const useNumericOpen = ['KNOT', 'DOCTOR_CONFIG'].includes(key)
       const form: ConfigForm = {
         ...cloneDeep(data),
-        open: Boolean(data.open),
+        open: useNumericOpen ? Number(data.open) : Boolean(data.open),
         ip: Array.isArray(data.ip) ? data.ip : [],
         desc: data.desc
           ? typeof data.desc === 'string' || Array.isArray(data.desc)
@@ -154,9 +155,10 @@ const selectConfig = async (key: string) => {
     await fetchConfig(key)
   } else {
     const data = state.configs[key]
+    const useNumericOpen = ['KNOT', 'DOCTOR_CONFIG'].includes(key)
     state.currentForm = {
       ...cloneDeep(data),
-      open: Boolean(data.open),
+      open: useNumericOpen ? Number(data.open) : Boolean(data.open),
       remarks: data.remarks || '',
       ip: Array.isArray(data.ip) ? data.ip : [],
       desc: data.desc
@@ -170,13 +172,6 @@ const selectConfig = async (key: string) => {
           : { ...data.content }
         : ''
     }
-  }
-  // 同步到 TipTap
-  if (editor.value && typeof state.currentForm.content === 'string') {
-    editor.value.commands.setContent(state.currentForm.content, {
-      parseOptions: {},
-      emitUpdate: false
-    })
   }
 }
 
@@ -216,14 +211,14 @@ const delHelpItem = (id: number) => {
   state.currentForm.desc = state.currentForm.desc?.filter((i: HelpItem) => i.id !== id)
 }
 
-/* ================= 富文本编辑器 ================= */
-const editor = useEditor({
-  extensions: [StarterKit],
-  content: '',
-  onUpdate({ editor }) {
-    state.currentForm.content = editor.getHTML()
-  }
-})
+/* ================= 模型列表 ================= */
+const modelOptions = ref<{ label: string; value: number }[]>([])
+const modelOptionsTy1 = ref<{ label: string; value: number }[]>([])
+const fetchModelList = async () => {
+  const [res0, res1] = await Promise.all([getCommonModelList({ ty: 0 }), getCommonModelList({ ty: 1 })])
+  if (res0.data?.list) modelOptions.value = res0.data.list.map((m: any) => ({ label: m.name, value: m.id }))
+  if (res1.data?.list) modelOptionsTy1.value = res1.data.list.map((m: any) => ({ label: m.name, value: m.id }))
+}
 
 /* ================= 当前菜单项标签 ================= */
 const activeLabel = computed(() => {
@@ -236,6 +231,7 @@ const activeLabel = computed(() => {
 
 /* ================= 初始化 ================= */
 const init = async () => {
+  await fetchModelList()
   await selectConfig(state.activeConfigKey)
 }
 
@@ -243,8 +239,8 @@ onActivated(() => init())
 </script>
 
 <template>
-  <DashboardLayout>
-    <div class="flex gap-6 p-4">
+  <ConfigLayout>
+    <div class="flex gap-6 p-6">
       <!-- 左侧导航 -->
       <nav class="w-56 shrink-0 space-y-1">
         <template v-for="group in configGroups" :key="group.label">
@@ -279,7 +275,7 @@ onActivated(() => init())
             </p>
           </div>
           <USwitch
-            v-if="state.currentForm.open !== undefined"
+            v-if="state.currentForm.open !== undefined && !['DOCTOR_CONFIG', 'KNOT'].includes(state.activeConfigKey)"
             v-model="state.currentForm.open"
           />
         </div>
@@ -288,9 +284,27 @@ onActivated(() => init())
 
         <!-- SMS -->
         <div v-if="state.activeConfigKey === 'SMS'" class="space-y-4">
+          <!-- 说明卡片 -->
+          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
+              <div class="text-sm text-(--ui-text-muted)">
+                <p class="font-medium text-(--ui-text-highlighted) mb-1">
+                  短信服务配置说明
+                </p>
+                <p>配置短信服务商账号信息，用于发送验证码、通知等短信。支持配置多个账号实现负载均衡和故障转移。</p>
+              </div>
+            </div>
+          </div>
+
           <div v-for="row in state.currentForm.content" :key="row.id" class="flex items-center gap-3">
             <UInput v-model="row.username" placeholder="邮箱 / 账号" class="flex-1" />
-            <UInput v-model="row.password" placeholder="密码" class="flex-1" />
+            <UInput
+              v-model="row.password"
+              placeholder="密码"
+              type="password"
+              class="flex-1"
+            />
             <UButton
               size="sm"
               color="error"
@@ -303,7 +317,12 @@ onActivated(() => init())
           <div class="rounded-lg border border-dashed border-(--ui-border) p-4 space-y-3">
             <div class="flex gap-3">
               <UInput v-model="newSMS.username" placeholder="邮箱 / 账号" class="flex-1" />
-              <UInput v-model="newSMS.password" placeholder="密码" class="flex-1" />
+              <UInput
+                v-model="newSMS.password"
+                placeholder="密码"
+                type="password"
+                class="flex-1"
+              />
             </div>
             <div class="flex justify-end">
               <UButton
@@ -324,10 +343,33 @@ onActivated(() => init())
 
         <!-- GOOGLE_AUTH -->
         <div v-if="state.activeConfigKey === 'GOOGLE_AUTH'" class="space-y-4">
-          <UFormField label="Client ID">
+          <!-- 说明卡片 -->
+          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
+              <div class="text-sm text-(--ui-text-muted) space-y-2">
+                <p class="font-medium text-(--ui-text-highlighted)">
+                  Google 认证配置说明
+                </p>
+                <p>用于实现 Google 第三方登录功能。需要在 Google Cloud Console 创建 OAuth 2.0 凭据获取 Client ID。</p>
+                <div class="mt-2 p-3 rounded bg-(--ui-bg) text-xs space-y-1">
+                  <p class="font-medium text-(--ui-text)">
+                    获取步骤：
+                  </p>
+                  <p>1. 访问 Google Cloud Console (console.cloud.google.com)</p>
+                  <p>2. 创建项目或选择已有项目</p>
+                  <p>3. 进入「API 和服务」→「凭据」</p>
+                  <p>4. 创建 OAuth 2.0 客户端 ID</p>
+                  <p>5. 配置授权重定向 URI</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <UFormField label="Client ID" hint="Google OAuth 2.0 客户端 ID">
             <UInput
               v-model="state.currentForm.content"
-              placeholder="Google OAuth Client ID"
+              placeholder="例如: xxxxx.apps.googleusercontent.com"
               class="w-full"
             />
           </UFormField>
@@ -342,14 +384,35 @@ onActivated(() => init())
         </div>
 
         <!-- IP 白名单 (IP_S / IP_SS) -->
-        <div v-if="state.activeConfigKey === 'IP_S' || state.activeConfigKey === 'IP_SS'" class="space-y-3">
+        <div v-if="state.activeConfigKey === 'IP_S' || state.activeConfigKey === 'IP_SS'" class="space-y-4">
+          <!-- 说明卡片 -->
+          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-shield-alert" class="w-5 h-5 text-(--ui-warning) shrink-0 mt-0.5" />
+              <div class="text-sm text-(--ui-text-muted)">
+                <p class="font-medium text-(--ui-text-highlighted) mb-1">
+                  {{ state.activeConfigKey === 'IP_S' ? 'IP 白名单（后台）' : 'IP 白名单（前台）' }}配置说明
+                </p>
+                <p v-if="state.activeConfigKey === 'IP_S'">
+                  限制后台管理系统的访问 IP，只有白名单内的 IP 才能访问管理后台。留空则不限制。
+                </p>
+                <p v-else>
+                  限制前台接口的访问 IP，用于 API 调用限制。留空则不限制。
+                </p>
+                <p class="mt-2 text-xs text-(--ui-text-dimmed)">
+                  支持单个 IP（如 192.168.1.1）或 IP 段（如 192.168.1.0/24）
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div
             v-for="(row, index) in state.currentForm.ip"
             :key="index"
             class="flex items-center gap-3"
           >
-            <UInput v-model="row.addr" placeholder="IP 地址" class="flex-1" />
-            <UInput v-model="row.remarks" placeholder="备注" class="flex-1" />
+            <UInput v-model="row.addr" placeholder="IP 地址，如 192.168.1.1" class="flex-1" />
+            <UInput v-model="row.remarks" placeholder="备注，如：办公室" class="flex-1" />
             <UButton
               size="sm"
               color="error"
@@ -370,16 +433,42 @@ onActivated(() => init())
 
         <!-- MINIO -->
         <div v-if="state.activeConfigKey === 'MINIO'" class="space-y-4">
+          <!-- 说明卡片 -->
+          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
+              <div class="text-sm text-(--ui-text-muted) space-y-2">
+                <p class="font-medium text-(--ui-text-highlighted)">
+                  对象存储配置说明
+                </p>
+                <p>配置 MinIO 或兼容 S3 协议的对象存储服务，用于存储图片、文件等静态资源。</p>
+                <div class="mt-2 p-3 rounded bg-(--ui-bg) text-xs space-y-1">
+                  <p class="font-medium text-(--ui-text)">
+                    配置说明：
+                  </p>
+                  <p>• Access Key: 访问密钥 ID，用于身份验证</p>
+                  <p>• Secret Key: 访问密钥密码，请妥善保管</p>
+                  <p>• 访问域名: 对外访问的 CDN 或存储桶域名</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="grid grid-cols-2 gap-4">
-            <UFormField label="Access Key">
+            <UFormField label="Access Key" hint="访问密钥 ID">
               <UInput v-model="state.currentForm.key" placeholder="请输入 Access Key" class="w-full" />
             </UFormField>
-            <UFormField label="Secret Key">
-              <UInput v-model="state.currentForm.secret" placeholder="请输入 Secret Key" class="w-full" />
+            <UFormField label="Secret Key" hint="访问密钥密码">
+              <UInput
+                v-model="state.currentForm.secret"
+                placeholder="请输入 Secret Key"
+                type="password"
+                class="w-full"
+              />
             </UFormField>
           </div>
-          <UFormField label="访问域名">
-            <UInput v-model="state.currentForm.url" placeholder="例如 xxx.com" class="w-full" />
+          <UFormField label="访问域名" hint="对外访问的域名地址">
+            <UInput v-model="state.currentForm.url" placeholder="例如 https://cdn.example.com" class="w-full" />
           </UFormField>
           <UFormField label="说明">
             <UInput v-model="state.currentForm.remarks" placeholder="说明信息" class="w-full" />
@@ -387,7 +476,25 @@ onActivated(() => init())
         </div>
 
         <!-- 帮助中心 / PAY -->
-        <div v-if="state.activeConfigKey === 'HELP' || state.activeConfigKey === 'PAY'" class="space-y-3">
+        <div v-if="state.activeConfigKey === 'HELP' || state.activeConfigKey === 'PAY'" class="space-y-4">
+          <!-- 说明卡片 -->
+          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
+              <div class="text-sm text-(--ui-text-muted)">
+                <p class="font-medium text-(--ui-text-highlighted) mb-1">
+                  {{ state.activeConfigKey === 'HELP' ? '帮助中心' : '支付配置' }}说明
+                </p>
+                <p v-if="state.activeConfigKey === 'HELP'">
+                  配置帮助中心的常见问题列表，用户可在 App 内查看。建议添加常见问题及解答。
+                </p>
+                <p v-else>
+                  配置支付相关的说明信息，如支付方式、注意事项等，展示给用户。
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div
             v-for="row in state.currentForm.desc"
             :key="row.id"
@@ -424,81 +531,25 @@ onActivated(() => init())
 
         <!-- 富文本协议 (PRIVACY / PROVISION) -->
         <div v-if="['PRIVACY', 'PROVISION'].includes(state.activeConfigKey)" class="space-y-4">
-          <div v-if="editor" class="rounded-lg border border-(--ui-border) overflow-hidden">
-            <div class="border-b border-(--ui-border) bg-(--ui-bg-elevated) px-3 py-2 flex gap-1 flex-wrap">
-              <button
-                v-for="btn in [
-                  { action: () => editor!.chain().focus().toggleBold().run(), active: editor.isActive('bold'), label: 'B', cls: 'font-bold' },
-                  { action: () => editor!.chain().focus().toggleItalic().run(), active: editor.isActive('italic'), label: 'I', cls: 'italic' },
-                  { action: () => editor!.chain().focus().toggleStrike().run(), active: editor.isActive('strike'), label: 'S', cls: 'line-through' }
-                ]"
-                :key="btn.label"
-                class="px-3 py-1 rounded text-sm transition-colors cursor-pointer"
-                :class="btn.active
-                  ? 'bg-(--ui-primary) text-(--ui-bg)'
-                  : 'text-(--ui-text-muted) hover:bg-(--ui-bg-elevated)/80'"
-                @click="btn.action"
-              >
-                <span :class="btn.cls">{{ btn.label }}</span>
-              </button>
-
-              <div class="w-px bg-(--ui-border) mx-1" />
-
-              <button
-                v-for="level in [1, 2, 3]"
-                :key="level"
-                class="px-3 py-1 rounded text-sm transition-colors cursor-pointer"
-                :class="editor.isActive('heading', { level })
-                  ? 'bg-(--ui-primary) text-(--ui-bg)'
-                  : 'text-(--ui-text-muted) hover:bg-(--ui-bg-elevated)/80'"
-                @click="editor!.chain().focus().toggleHeading({ level: level as any }).run()"
-              >
-                H{{ level }}
-              </button>
-
-              <div class="w-px bg-(--ui-border) mx-1" />
-
-              <button
-                class="px-3 py-1 rounded text-sm transition-colors cursor-pointer"
-                :class="editor.isActive('bulletList')
-                  ? 'bg-(--ui-primary) text-(--ui-bg)'
-                  : 'text-(--ui-text-muted) hover:bg-(--ui-bg-elevated)/80'"
-                @click="editor!.chain().focus().toggleBulletList().run()"
-              >
-                &bull; 列表
-              </button>
-              <button
-                class="px-3 py-1 rounded text-sm transition-colors cursor-pointer"
-                :class="editor.isActive('orderedList')
-                  ? 'bg-(--ui-primary) text-(--ui-bg)'
-                  : 'text-(--ui-text-muted) hover:bg-(--ui-bg-elevated)/80'"
-                @click="editor!.chain().focus().toggleOrderedList().run()"
-              >
-                1. 列表
-              </button>
-              <button
-                class="px-3 py-1 rounded text-sm transition-colors cursor-pointer"
-                :class="editor.isActive('blockquote')
-                  ? 'bg-(--ui-primary) text-(--ui-bg)'
-                  : 'text-(--ui-text-muted) hover:bg-(--ui-bg-elevated)/80'"
-                @click="editor!.chain().focus().toggleBlockquote().run()"
-              >
-                引用
-              </button>
-
-              <div class="w-px bg-(--ui-border) mx-1" />
-
-              <button
-                class="px-3 py-1 rounded text-sm text-(--ui-text-muted) hover:bg-(--ui-bg-elevated)/80 transition-colors cursor-pointer"
-                @click="editor!.chain().focus().setHorizontalRule().run()"
-              >
-                分割线
-              </button>
-            </div>
-            <div class="editor-content p-4 min-h-[300px]">
-              <EditorContent :editor="editor" />
+          <!-- 说明卡片 -->
+          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-file-text" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
+              <div class="text-sm text-(--ui-text-muted)">
+                <p class="font-medium text-(--ui-text-highlighted) mb-1">
+                  {{ state.activeConfigKey === 'PRIVACY' ? '隐私政策' : '服务条款' }}配置说明
+                </p>
+                <p v-if="state.activeConfigKey === 'PRIVACY'">
+                  配置应用的隐私政策内容，说明如何收集、使用和保护用户数据。根据法规要求必须提供。
+                </p>
+                <p v-else>
+                  配置应用的服务条款/用户协议，明确用户使用服务的权利和义务。
+                </p>
+              </div>
             </div>
           </div>
+
+          <RichTextEditor v-model="state.currentForm.content" min-height="300px" />
 
           <UFormField label="备注">
             <UInput v-model="state.currentForm.remarks" placeholder="请输入备注信息" class="w-full" />
@@ -507,7 +558,20 @@ onActivated(() => init())
 
         <!-- INVITE 邀请配置 -->
         <div v-if="state.activeConfigKey === 'INVITE'" class="space-y-5">
-          <UFormField label="概要">
+          <!-- 说明卡片 -->
+          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
+              <div class="text-sm text-(--ui-text-muted)">
+                <p class="font-medium text-(--ui-text-highlighted) mb-1">
+                  邀请配置说明
+                </p>
+                <p>配置邀请活动的展示内容和奖励规则，用户可通过分享邀请链接获得奖励。</p>
+              </div>
+            </div>
+          </div>
+
+          <UFormField label="概要" hint="邀请活动的简短描述">
             <UInput v-model="state.currentForm.summary" placeholder="请输入概要" class="w-full" />
           </UFormField>
 
@@ -582,24 +646,52 @@ onActivated(() => init())
         </div>
 
         <!-- OS 系统优化 -->
-        <div v-if="state.activeConfigKey === 'OS'" class="space-y-4">
-          <UFormField label="客户端缓存（秒）">
-            <UInput
-              v-model="state.currentForm.client_cache"
-              type="number"
-              placeholder="请输入客户端缓存时间"
-              class="w-full"
-            />
-          </UFormField>
-          <UFormField label="服务器缓存（秒）">
-            <UInput
-              v-model="state.currentForm.server_cache"
-              type="number"
-              placeholder="请输入服务器缓存时间"
-              class="w-full"
-            />
-          </UFormField>
-          <UFormField label="公开数量限制">
+        <div v-if="state.activeConfigKey === 'OS'" class="space-y-5">
+          <!-- 缓存配置说明 -->
+          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
+              <div class="text-sm text-(--ui-text-muted)">
+                <p class="font-medium text-(--ui-text-highlighted) mb-1">
+                  缓存配置说明
+                </p>
+                <p>缓存默认开启，可有效减少服务器压力，提升响应速度。如需调试可临时关闭。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center justify-between p-4 rounded-lg border border-(--ui-border)">
+              <div>
+                <p class="font-medium text-(--ui-text-highlighted)">
+                  关闭客户端缓存
+                </p>
+                <p class="text-xs text-(--ui-text-muted)">
+                  开启后将禁用客户端缓存
+                </p>
+              </div>
+              <USwitch
+                :model-value="state.currentForm.client_cache === 0"
+                @update:model-value="state.currentForm.client_cache = $event ? 0 : 60"
+              />
+            </div>
+            <div class="flex items-center justify-between p-4 rounded-lg border border-(--ui-border)">
+              <div>
+                <p class="font-medium text-(--ui-text-highlighted)">
+                  关闭服务器缓存
+                </p>
+                <p class="text-xs text-(--ui-text-muted)">
+                  开启后将禁用服务器缓存
+                </p>
+              </div>
+              <USwitch
+                :model-value="state.currentForm.server_cache === 0"
+                @update:model-value="state.currentForm.server_cache = $event ? 0 : 60"
+              />
+            </div>
+          </div>
+
+          <UFormField label="公开数量限制" hint="限制用户可公开发布的内容数量">
             <UInput
               v-model="state.currentForm.publish"
               type="number"
@@ -607,6 +699,137 @@ onActivated(() => init())
               class="w-full"
             />
           </UFormField>
+
+          <USeparator />
+
+          <!-- 费率配置说明 -->
+          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-percent" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
+              <div class="text-sm text-(--ui-text-muted)">
+                <p class="font-medium text-(--ui-text-highlighted) mb-1">
+                  费率配置说明
+                </p>
+                <p>配置各类业务的费率百分比，数值范围 0-100。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-4">
+            <UFormField label="邀请费率 (%)" hint="邀请奖励分成比例">
+              <UInput
+                v-model="state.currentForm.invite_rate"
+                type="number"
+                placeholder="例如 50"
+                class="w-full"
+              />
+            </UFormField>
+            <UFormField label="游戏费率 (%)" hint="游戏收益分成比例">
+              <UInput
+                v-model="state.currentForm.game_rate"
+                type="number"
+                placeholder="例如 90"
+                class="w-full"
+              />
+            </UFormField>
+            <UFormField label="游戏提现费率 (%)" hint="提现手续费比例">
+              <UInput
+                v-model="state.currentForm.game_tx_rate"
+                type="number"
+                placeholder="例如 50"
+                class="w-full"
+              />
+            </UFormField>
+          </div>
+
+          <UFormField label="备注">
+            <UInput v-model="state.currentForm.remarks" placeholder="备注信息" class="w-full" />
+          </UFormField>
+        </div>
+
+        <!-- KNOT 聊天总结 -->
+        <div v-if="state.activeConfigKey === 'KNOT'" class="space-y-5">
+          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
+              <div class="text-sm text-(--ui-text-muted)">
+                <p class="font-medium text-(--ui-text-highlighted) mb-1">聊天总结设计说明</p>
+                <p>配置角色扮演对话的记忆助手，用于将对话压缩成简洁的记忆摘要。</p>
+              </div>
+            </div>
+          </div>
+
+          <UFormField label="模型" hint="选择用于生成摘要的模型">
+            <USelect v-model="state.currentForm.model_id" :items="modelOptions" placeholder="请选择模型" class="w-full" />
+          </UFormField>
+
+          <UFormField label="提示词" hint="生成摘要时使用的提示词">
+            <UTextarea v-model="state.currentForm.prompt" :rows="4" placeholder="请输入提示词" class="w-full" />
+          </UFormField>
+
+          <div class="flex items-center justify-between p-4 rounded-lg border border-(--ui-border)">
+            <div>
+              <p class="font-medium text-(--ui-text-highlighted)">启用</p>
+              <p class="text-xs text-(--ui-text-muted)">开启后将启用聊天总结功能</p>
+            </div>
+            <USwitch
+              :model-value="state.currentForm.open === 2"
+              @update:model-value="state.currentForm.open = $event ? 2 : 0"
+            />
+          </div>
+
+          <UFormField label="数量" hint="摘要相关数量配置">
+            <UInput v-model="state.currentForm.num" type="number" placeholder="请输入数量" class="w-full" />
+          </UFormField>
+
+          <UFormField label="备注">
+            <UInput v-model="state.currentForm.remarks" placeholder="备注信息" class="w-full" />
+          </UFormField>
+        </div>
+
+        <!-- DOCTOR_CONFIG 创作管理 -->
+        <div v-if="state.activeConfigKey === 'DOCTOR_CONFIG'" class="space-y-5">
+          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
+              <div class="text-sm text-(--ui-text-muted)">
+                <p class="font-medium text-(--ui-text-highlighted) mb-1">创作管理配置说明</p>
+                <p>配置创作审核流程的模型、提示词和迭代次数等参数。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between p-4 rounded-lg border border-(--ui-border)">
+            <div>
+              <p class="font-medium text-(--ui-text-highlighted)">启用</p>
+              <p class="text-xs text-(--ui-text-muted)">开启后将启用创作管理功能</p>
+            </div>
+            <USwitch
+              :model-value="state.currentForm.open === 2"
+              @update:model-value="state.currentForm.open = $event ? 2 : 0"
+            />
+          </div>
+
+          <UFormField label="最大迭代次数">
+            <UInput v-model="state.currentForm.max_iterations" type="number" placeholder="请输入最大迭代次数" class="w-full" />
+          </UFormField>
+
+          <UFormField label="系统提示词" hint="系统级别的提示词">
+            <UTextarea v-model="state.currentForm.system_prompt" :rows="4" placeholder="请输入系统提示词" class="w-full" />
+          </UFormField>
+
+          <UFormField label="初始用户消息模板" hint="初始用户消息的模板">
+            <UTextarea v-model="state.currentForm.initial_prompt" :rows="4" placeholder="请输入初始用户消息模板" class="w-full" />
+          </UFormField>
+
+          <UFormField label="条目注入消息模板" hint="条目注入时使用的消息模板">
+            <UTextarea v-model="state.currentForm.inject_prompt" :rows="4" placeholder="请输入条目注入消息模板" class="w-full" />
+          </UFormField>
+
+          <UFormField label="强制终审消息模板" hint="强制终审时使用的消息模板">
+            <UTextarea v-model="state.currentForm.final_prompt" :rows="4" placeholder="请输入强制终审消息模板" class="w-full" />
+          </UFormField>
+
           <UFormField label="备注">
             <UInput v-model="state.currentForm.remarks" placeholder="备注信息" class="w-full" />
           </UFormField>
@@ -625,7 +848,7 @@ onActivated(() => init())
         </div>
       </div>
     </div>
-  </DashboardLayout>
+  </ConfigLayout>
 </template>
 
 <style scoped>

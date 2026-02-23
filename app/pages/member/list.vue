@@ -32,9 +32,7 @@ const openEditModal = async (record: any) => {
 
 const openEditBattery = async (record: any) => {
   state.isDialogBattery = true
-  state.currentForm = {
-    id: record.id
-  }
+  state.currentForm = cloneDeep(record)
 }
 
 const refresh = async () => {
@@ -79,6 +77,26 @@ function getRowItems(row: any) {
       icon: 'material-symbols:visibility-outline',
       onSelect() {
         router.push(`/member/invite/${row.original.id}`)
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: '查看流水',
+      icon: 'material-symbols:receipt-long-outline',
+      onSelect() {
+        router.push(`/member/wallet-log?uid=${row.original.id}`)
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: '查看聊天',
+      icon: 'material-symbols:chat-outline',
+      onSelect() {
+        router.push(`/member/chat/${row.original.id}`)
       }
     }
   ]

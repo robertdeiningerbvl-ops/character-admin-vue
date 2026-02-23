@@ -34,15 +34,15 @@ const refresh = async () => {
 }
 
 function getRowItems(row: any) {
+  const isPaid = row.original.state === 2
   return [
     {
-      label: '编辑',
-      icon: 'material-symbols:edit-square-outline',
+      label: isPaid ? '查看' : '编辑',
+      icon: isPaid ? 'i-lucide-eye' : 'i-lucide-pencil',
       onSelect() {
         openEditCoins(row.original)
       }
     }
-
   ]
 }
 

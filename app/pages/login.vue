@@ -4,7 +4,7 @@ import { omit } from '@nuxt/ui/utils'
 import { useAuthStore, useRouteStore } from '@/store'
 
 useSeoMeta({
-  title: '青丘山 - 管理员登录'
+  title: '幻欲之梦 - 管理员登录'
 })
 
 const loading = ref(false)
@@ -66,7 +66,7 @@ async function onSubmit(payload: any) {
 <template>
   <div class="login-container">
     <!-- 左侧表单区域 -->
-    <div class="left-panel" :class="{ 'active': mounted }">
+    <div class="left-panel" :class="{ active: mounted }">
       <div class="form-wrapper">
         <!-- 头部 -->
         <div class="form-header">
@@ -79,8 +79,12 @@ async function onSubmit(payload: any) {
           </div>
 
           <div class="brand-section">
-            <h1 class="brand-name">青丘山</h1>
-            <p class="brand-desc">ADMIN CONTROL SYSTEM</p>
+            <h1 class="brand-name">
+              幻欲之梦
+            </h1>
+            <p class="brand-desc">
+              ADMIN CONTROL SYSTEM
+            </p>
             <div class="divider-line" />
           </div>
         </div>
@@ -184,7 +188,7 @@ async function onSubmit(payload: any) {
     </div>
 
     <!-- 右侧3D展示区域 -->
-    <div class="right-panel" :class="{ 'active': mounted }">
+    <div class="right-panel" :class="{ active: mounted }">
       <!-- 动态背景 -->
       <div class="bg-effects">
         <div class="gradient-orb orb-1" />
@@ -219,14 +223,24 @@ async function onSubmit(payload: any) {
         <!-- 球体 -->
         <div class="shape-wrapper sphere-wrapper">
           <div class="sphere">
-            <div v-for="i in 15" :key="i" class="sphere-line" :style="{ '--i': i }" />
+            <div
+              v-for="i in 15"
+              :key="i"
+              class="sphere-line"
+              :style="{ '--i': i }"
+            />
           </div>
         </div>
       </div>
 
       <!-- 粒子效果 -->
       <div class="particles-layer">
-        <div v-for="i in 60" :key="i" class="particle" :style="{ '--i': i }" />
+        <div
+          v-for="i in 60"
+          :key="i"
+          class="particle"
+          :style="{ '--i': i }"
+        />
       </div>
 
       <!-- 扫描线 -->
@@ -237,7 +251,12 @@ async function onSubmit(payload: any) {
 
       <!-- 数据流 -->
       <div class="data-flow">
-        <div v-for="i in 6" :key="i" class="flow-line" :style="{ '--i': i }">
+        <div
+          v-for="i in 6"
+          :key="i"
+          class="flow-line"
+          :style="{ '--i': i }"
+        >
           <div class="flow-dot" />
           <div class="flow-dot" />
           <div class="flow-dot" />
@@ -251,8 +270,12 @@ async function onSubmit(payload: any) {
             <UIcon name="i-lucide-shield" />
           </div>
           <div class="card-content">
-            <div class="card-label">安全等级</div>
-            <div class="card-value">99.9%</div>
+            <div class="card-label">
+              安全等级
+            </div>
+            <div class="card-value">
+              99.9%
+            </div>
           </div>
         </div>
         <div class="info-card">
@@ -260,8 +283,12 @@ async function onSubmit(payload: any) {
             <UIcon name="i-lucide-zap" />
           </div>
           <div class="card-content">
-            <div class="card-label">响应速度</div>
-            <div class="card-value">0.2ms</div>
+            <div class="card-label">
+              响应速度
+            </div>
+            <div class="card-value">
+              0.2ms
+            </div>
           </div>
         </div>
       </div>

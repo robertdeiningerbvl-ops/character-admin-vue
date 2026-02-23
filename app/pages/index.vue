@@ -168,196 +168,198 @@ const getChange = (f: string) => {
 </script>
 
 <template>
-  <DashboardLayout>
-    <div class="p-4 md:p-6 lg:p-8">
-      <!-- 顶部操作栏 -->
-      <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center gap-3">
-          <h1 class="text-xl font-semibold text-(--ui-text-highlighted)">
-            数据概览
-          </h1>
-          <UBadge v-if="!state.loading" color="neutral" variant="subtle">
-            {{ state.rangeOptions.find(o => o.value === state.range)?.label }}
-          </UBadge>
-        </div>
-        <div class="flex items-center gap-2">
-          <USelect
-            v-model="state.range"
-            :disabled="state.loading"
-            icon="lucide:calendar"
-            size="sm"
-            :items="state.rangeOptions"
-            class="w-28"
-            @change="getData"
-          />
-          <UButton
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            icon="lucide:refresh-cw"
-            :loading="state.loading"
-            @click="handleRefresh"
-          />
-          <UColorModeButton size="sm" />
-        </div>
-      </div>
-
-      <!-- 统计卡片 -->
-      <div v-if="state.loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-        <USkeleton v-for="i in 10" :key="i" class="h-24 rounded-xl" />
-      </div>
-
-      <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-        <div
-          v-for="item in state.summaryList"
-          :key="item.f"
-          class="relative p-4 rounded-xl border border-(--ui-border) bg-(--ui-bg) hover:bg-(--ui-bg-elevated) transition-colors group"
-        >
-          <div class="flex items-start justify-between">
-            <div>
-              <p class="text-sm text-(--ui-text-muted) mb-1">
-                {{ item.name }}
-              </p>
-              <p class="text-2xl font-semibold text-(--ui-text-highlighted)">
-                {{ formatNumber(item.num) }}
-              </p>
-            </div>
-            <div
-              class="size-10 rounded-lg flex items-center justify-center"
-              :class="{
-                'bg-primary/10 text-primary': item.color === 'primary',
-                'bg-green-500/10 text-green-500': item.color === 'success',
-                'bg-amber-500/10 text-amber-500': item.color === 'warning',
-                'bg-red-500/10 text-red-500': item.color === 'error',
-                'bg-blue-500/10 text-blue-500': item.color === 'info',
-                'bg-purple-500/10 text-purple-500': item.color === 'secondary'
-              }"
-            >
-              <UIcon :name="item.icon" class="size-5" />
-            </div>
+  <UDashboardPanel>
+    <template #body>
+      <div class="p-4 md:p-6 lg:p-8">
+        <!-- 顶部操作栏 -->
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-3">
+            <h1 class="text-xl font-semibold text-(--ui-text-highlighted)">
+              数据概览
+            </h1>
+            <UBadge v-if="!state.loading" color="neutral" variant="subtle">
+              {{ state.rangeOptions.find(o => o.value === state.range)?.label }}
+            </UBadge>
           </div>
-          <!-- 环比变化 -->
-          <div v-if="getChange(item.f) !== null && state.chartData.length > 1" class="mt-2 flex items-center gap-1 text-xs">
-            <UIcon
-              :name="getChange(item.f)! >= 0 ? 'lucide:trending-up' : 'lucide:trending-down'"
-              class="size-3.5"
-              :class="getChange(item.f)! >= 0 ? 'text-green-500' : 'text-red-500'"
+          <div class="flex items-center gap-2">
+            <USelect
+              v-model="state.range"
+              :disabled="state.loading"
+              icon="lucide:calendar"
+              size="sm"
+              :items="state.rangeOptions"
+              class="w-28"
+              @change="getData"
             />
-            <span :class="getChange(item.f)! >= 0 ? 'text-green-500' : 'text-red-500'">
-              {{ Math.abs(getChange(item.f)!) }}%
-            </span>
-            <span class="text-(--ui-text-dimmed)">较前一天</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 趋势图区域 -->
-      <div class="rounded-xl border border-(--ui-border) bg-(--ui-bg) p-4 md:p-6 mb-8">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div>
-            <h2 class="text-lg font-semibold text-(--ui-text-highlighted)">
-              数据趋势
-            </h2>
-            <p class="text-sm text-(--ui-text-muted)">
-              查看各项指标的变化趋势
-            </p>
-          </div>
-          <div class="flex flex-wrap gap-2">
             <UButton
-              v-for="metric in metrics.slice(0, 6)"
-              :key="metric.f"
-              size="xs"
-              :color="selectedCharts.includes(metric.f) ? 'primary' : 'neutral'"
-              :variant="selectedCharts.includes(metric.f) ? 'solid' : 'outline'"
-              @click="selectedCharts.includes(metric.f)
-                ? selectedCharts = selectedCharts.filter(f => f !== metric.f)
-                : selectedCharts.push(metric.f)"
-            >
-              {{ metric.name }}
-            </UButton>
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              icon="lucide:refresh-cw"
+              :loading="state.loading"
+              @click="handleRefresh"
+            />
+            <UColorModeButton size="sm" />
           </div>
         </div>
 
-        <USkeleton v-if="state.loading" class="h-80 rounded-lg" />
-
-        <div v-else-if="state.chartData.length > 1" class="h-80">
-          <VisXYContainer :data="state.chartData" :padding="{ top: 10 }">
-            <VisArea
-              v-for="(f) in selectedCharts"
-              :key="'area-' + f"
-              :x="x"
-              :y="(d: any) => d[f] || 0"
-              :color="chartColors[metrics.find(m => m.f === f)?.color as keyof typeof chartColors] || chartColors.primary"
-              :opacity="0.1"
-              :curve-type="'linear'"
-            />
-            <VisLine
-              v-for="(f) in selectedCharts"
-              :key="'line-' + f"
-              :x="x"
-              :y="(d: any) => d[f] || 0"
-              :color="chartColors[metrics.find(m => m.f === f)?.color as keyof typeof chartColors] || chartColors.primary"
-              :line-width="2"
-              :curve-type="'linear'"
-            />
-            <VisAxis type="x" :tick-format="xTicks" :grid-line="false" />
-            <VisAxis type="y" :tick-format="(v: number) => formatNumber(v)" />
-            <VisCrosshair :template="template" />
-            <VisTooltip />
-          </VisXYContainer>
+        <!-- 统计卡片 -->
+        <div v-if="state.loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+          <USkeleton v-for="i in 10" :key="i" class="h-24 rounded-xl" />
         </div>
 
-        <div v-else class="h-80 flex items-center justify-center text-(--ui-text-muted)">
-          <div class="text-center">
-            <UIcon name="lucide:bar-chart-3" class="size-12 mb-2 opacity-50" />
-            <p>数据不足，无法显示趋势图</p>
-            <p class="text-sm">
-              请选择更长的时间范围
-            </p>
+        <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+          <div
+            v-for="item in state.summaryList"
+            :key="item.f"
+            class="relative p-4 rounded-xl border border-(--ui-border) bg-(--ui-bg) hover:bg-(--ui-bg-elevated) transition-colors group"
+          >
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-sm text-(--ui-text-muted) mb-1">
+                  {{ item.name }}
+                </p>
+                <p class="text-2xl font-semibold text-(--ui-text-highlighted)">
+                  {{ formatNumber(item.num) }}
+                </p>
+              </div>
+              <div
+                class="size-10 rounded-lg flex items-center justify-center"
+                :class="{
+                  'bg-primary/10 text-primary': item.color === 'primary',
+                  'bg-green-500/10 text-green-500': item.color === 'success',
+                  'bg-amber-500/10 text-amber-500': item.color === 'warning',
+                  'bg-red-500/10 text-red-500': item.color === 'error',
+                  'bg-blue-500/10 text-blue-500': item.color === 'info',
+                  'bg-purple-500/10 text-purple-500': item.color === 'secondary'
+                }"
+              >
+                <UIcon :name="item.icon" class="size-5" />
+              </div>
+            </div>
+            <!-- 环比变化 -->
+            <div v-if="getChange(item.f) !== null && state.chartData.length > 1" class="mt-2 flex items-center gap-1 text-xs">
+              <UIcon
+                :name="getChange(item.f)! >= 0 ? 'lucide:trending-up' : 'lucide:trending-down'"
+                class="size-3.5"
+                :class="getChange(item.f)! >= 0 ? 'text-green-500' : 'text-red-500'"
+              />
+              <span :class="getChange(item.f)! >= 0 ? 'text-green-500' : 'text-red-500'">
+                {{ Math.abs(getChange(item.f)!) }}%
+              </span>
+              <span class="text-(--ui-text-dimmed)">较前一天</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 趋势图区域 -->
+        <div class="rounded-xl border border-(--ui-border) bg-(--ui-bg) p-4 md:p-6 mb-8">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+              <h2 class="text-lg font-semibold text-(--ui-text-highlighted)">
+                数据趋势
+              </h2>
+              <p class="text-sm text-(--ui-text-muted)">
+                查看各项指标的变化趋势
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <UButton
+                v-for="metric in metrics.slice(0, 6)"
+                :key="metric.f"
+                size="xs"
+                :color="selectedCharts.includes(metric.f) ? 'primary' : 'neutral'"
+                :variant="selectedCharts.includes(metric.f) ? 'solid' : 'outline'"
+                @click="selectedCharts.includes(metric.f)
+                  ? selectedCharts = selectedCharts.filter(f => f !== metric.f)
+                  : selectedCharts.push(metric.f)"
+              >
+                {{ metric.name }}
+              </UButton>
+            </div>
+          </div>
+
+          <USkeleton v-if="state.loading" class="h-80 rounded-lg" />
+
+          <div v-else-if="state.chartData.length > 1" class="h-80">
+            <VisXYContainer :data="state.chartData" :padding="{ top: 10 }">
+              <VisArea
+                v-for="(f) in selectedCharts"
+                :key="'area-' + f"
+                :x="x"
+                :y="(d: any) => d[f] || 0"
+                :color="chartColors[metrics.find(m => m.f === f)?.color as keyof typeof chartColors] || chartColors.primary"
+                :opacity="0.1"
+                :curve-type="'linear'"
+              />
+              <VisLine
+                v-for="(f) in selectedCharts"
+                :key="'line-' + f"
+                :x="x"
+                :y="(d: any) => d[f] || 0"
+                :color="chartColors[metrics.find(m => m.f === f)?.color as keyof typeof chartColors] || chartColors.primary"
+                :line-width="2"
+                :curve-type="'linear'"
+              />
+              <VisAxis type="x" :tick-format="xTicks" :grid-line="false" />
+              <VisAxis type="y" :tick-format="(v: number) => formatNumber(v)" />
+              <VisCrosshair :template="template" />
+              <VisTooltip />
+            </VisXYContainer>
+          </div>
+
+          <div v-else class="h-80 flex items-center justify-center text-(--ui-text-muted)">
+            <div class="text-center">
+              <UIcon name="lucide:bar-chart-3" class="size-12 mb-2 opacity-50" />
+              <p>数据不足，无法显示趋势图</p>
+              <p class="text-sm">
+                请选择更长的时间范围
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 详细数据表格 -->
+        <div class="rounded-xl border border-(--ui-border) bg-(--ui-bg) p-4 md:p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-(--ui-text-highlighted)">
+              详细数据
+            </h2>
+            <UBadge color="neutral" variant="subtle">
+              共 {{ state.chartData.length }} 条记录
+            </UBadge>
+          </div>
+
+          <USkeleton v-if="state.loading" class="h-60 rounded-lg" />
+
+          <div v-else-if="state.chartData.length" class="overflow-x-auto">
+            <UTable
+              :data="state.chartData"
+              :columns="[
+                { accessorKey: 'date', header: '日期' },
+                ...metrics.map(m => ({
+                  accessorKey: m.f,
+                  header: m.name,
+                  cell: ({ row }: any) => formatNumber(row.original[m.f] || 0)
+                }))
+              ]"
+              :ui="{
+                base: 'min-w-[1200px]',
+                thead: '[&>tr]:bg-(--ui-bg-elevated)/50',
+                th: 'py-3 text-center font-medium',
+                td: 'text-center'
+              }"
+            />
+          </div>
+
+          <div v-else class="py-12 text-center text-(--ui-text-muted)">
+            <UIcon name="lucide:inbox" class="size-10 mb-2 opacity-50" />
+            <p>暂无数据</p>
           </div>
         </div>
       </div>
-
-      <!-- 详细数据表格 -->
-      <div class="rounded-xl border border-(--ui-border) bg-(--ui-bg) p-4 md:p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-(--ui-text-highlighted)">
-            详细数据
-          </h2>
-          <UBadge color="neutral" variant="subtle">
-            共 {{ state.chartData.length }} 条记录
-          </UBadge>
-        </div>
-
-        <USkeleton v-if="state.loading" class="h-60 rounded-lg" />
-
-        <div v-else-if="state.chartData.length" class="overflow-x-auto">
-          <UTable
-            :data="state.chartData"
-            :columns="[
-              { accessorKey: 'date', header: '日期' },
-              ...metrics.map(m => ({
-                accessorKey: m.f,
-                header: m.name,
-                cell: ({ row }: any) => formatNumber(row.original[m.f] || 0)
-              }))
-            ]"
-            :ui="{
-              base: 'min-w-[1200px]',
-              thead: '[&>tr]:bg-(--ui-bg-elevated)/50',
-              th: 'py-3 text-center font-medium',
-              td: 'text-center'
-            }"
-          />
-        </div>
-
-        <div v-else class="py-12 text-center text-(--ui-text-muted)">
-          <UIcon name="lucide:inbox" class="size-10 mb-2 opacity-50" />
-          <p>暂无数据</p>
-        </div>
-      </div>
-    </div>
-  </DashboardLayout>
+    </template>
+  </UDashboardPanel>
 </template>
 
 <style scoped>

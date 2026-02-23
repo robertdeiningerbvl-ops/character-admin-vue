@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { baseColumns, type TableColumnList } from '@/components/amusement/comment/columns'
-import { getConductCommentList, removeConductCommentRemove } from '@/api'
+import { getConductCommentList, removeConductComment } from '@/api'
 
 definePageMeta({
   layout: 'app'
@@ -26,7 +26,7 @@ const fetchCommentList = (params: any) => {
 }
 
 const delRowConfirm = async (record: any) => {
-  const { error } = await removeConductCommentRemove({ id: record.id })
+  const { error } = await removeConductComment({ id: record.id })
   if (!error) {
     tableRef.value.reload()
   }

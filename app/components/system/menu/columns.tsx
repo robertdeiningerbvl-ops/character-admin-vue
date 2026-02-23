@@ -7,9 +7,9 @@ const UBadge = resolveComponent('UBadge')
 const UIcon = resolveComponent('UIcon')
 
 const menuEnum: any = {
-  0: ['目录', 'blue'],
-  1: ['菜单', 'green'],
-  2: ['权限', 'purple']
+  0: ['目录', 'info', 'i-lucide-folder'],
+  1: ['菜单', 'success', 'i-lucide-file-text'],
+  2: ['权限', 'warning', 'i-lucide-key']
 }
 
 export const baseColumns: TableColumnList = [
@@ -62,38 +62,18 @@ export const baseColumns: TableColumnList = [
     cell: ({ row }) => {
       const level = row.original.level || 0
       const ty = row.original.ty
-
-      // 根据类型选择图标
-      const iconMap: any = {
-        0: 'i-material-symbols-folder-outline',
-        1: 'i-material-symbols-description-outline',
-        2: 'i-material-symbols-key-outline'
-      }
+      const [, color, icon] = menuEnum[ty] || ['未知', 'neutral', 'i-lucide-circle']
 
       return h('div', {
         class: 'flex items-center gap-2',
         style: `padding-left: ${level * 24}px`
       }, [
-        // 类型图标
         h(UIcon, {
-          name: iconMap[ty] || 'i-material-symbols-circle-outline',
-          class: `w-4 h-4 ${
-            ty === 0
-              ? 'text-blue-500'
-              : ty === 1
-                ? 'text-green-500'
-                : 'text-purple-500'
-          }`
+          name: icon,
+          class: `w-4 h-4 text-(--ui-${color})`
         }),
-        // 名称文本
         h('span', {
-          class: `font-medium ${
-            level === 0
-              ? 'text-gray-900 dark:text-white'
-              : level === 1
-                ? 'text-gray-700 dark:text-gray-200'
-                : 'text-gray-600 dark:text-gray-300'
-          }`
+          class: 'font-medium text-(--ui-text-highlighted)'
         }, row.original.name)
       ])
     }
@@ -103,12 +83,12 @@ export const baseColumns: TableColumnList = [
     header: '类型',
     meta: {
       class: {
-        th: 'w-[80px]',
-        td: 'w-[80px]'
+        th: 'w-[100px]',
+        td: 'w-[100px]'
       }
     },
     cell: ({ row }) => {
-      const [label, color] = menuEnum[row.original.ty] || ['未知', 'gray']
+      const [label, color] = menuEnum[row.original.ty] || ['未知', 'neutral']
       return h(UBadge, { variant: 'subtle', color }, () => label)
     }
   },
@@ -123,8 +103,10 @@ export const baseColumns: TableColumnList = [
     },
     cell: ({ row }) => {
       const router = row.original.router
-      if (!router) return h('span', { class: 'text-gray-400' }, '-')
-      return h('span', { class: 'text-sm text-gray-600 dark:text-gray-300' }, router)
+      if (!router) return h('span', { class: 'text-(--ui-text-muted)' }, '-')
+      return h('code', {
+        class: 'px-2 py-1 rounded bg-(--ui-bg-elevated) text-xs font-mono text-(--ui-text-muted)'
+      }, router)
     }
   },
   {
@@ -138,23 +120,29 @@ export const baseColumns: TableColumnList = [
     },
     cell: ({ row }) => {
       if (row.original.icon) {
-        return h(UIcon, { name: row.original.icon, class: 'w-5 h-5 text-gray-600 dark:text-gray-400' })
+        return h('div', {
+          class: 'w-8 h-8 rounded bg-(--ui-bg-elevated) flex items-center justify-center'
+        }, [
+          h(UIcon, { name: row.original.icon, class: 'w-4 h-4 text-(--ui-text-muted)' })
+        ])
       }
-      return h('span', { class: 'text-gray-400' }, '-')
+      return h('span', { class: 'text-(--ui-text-muted)' }, '-')
     }
   },
   {
     accessorKey: 'perms',
-    header: '权限',
+    header: '权限标识',
     cell: ({ row }) => {
       const perms = row.original.perms
-      if (!perms) return h('span', { class: 'text-gray-400' }, '-')
-      return h('span', { class: 'text-sm text-gray-600 dark:text-gray-300' }, perms)
+      if (!perms) return h('span', { class: 'text-(--ui-text-muted)' }, '-')
+      return h('code', {
+        class: 'px-2 py-1 rounded bg-(--ui-bg-elevated) text-xs font-mono text-(--ui-text-muted)'
+      }, perms)
     }
   },
   {
     accessorKey: 'is_show',
-    header: '是否显示',
+    header: '显示状态',
     meta: {
       class: {
         th: 'w-[100px]',
@@ -162,11 +150,11 @@ export const baseColumns: TableColumnList = [
       }
     },
     cell: ({ row }) => {
-      const isEnable = row.original.is_show === 1
+      const isShow = row.original.is_show === 1
       return h(UBadge, {
         variant: 'subtle',
-        color: isEnable ? 'success' : 'gray'
-      }, () => isEnable ? '显示' : '隐藏')
+        color: isShow ? 'success' : 'neutral'
+      }, () => isShow ? '显示' : '隐藏')
     }
   }
 ]

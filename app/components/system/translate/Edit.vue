@@ -65,76 +65,83 @@ watch(
 <template>
   <UModal
     v-model:open="drawerVisible"
-    :title="currentForm.id ? '修改' : '新增'"
-    :dismissible="false"
-    :ui="{ footer: 'justify-end' }"
+    :title="currentForm.id ? '编辑翻译' : '新增翻译'"
+
+    :ui="{
+      content: 'sm:max-w-lg',
+      footer: 'justify-end bg-(--ui-bg-elevated)'
+    }"
   >
     <template #body>
-      <UForm
-        ref="formRef"
-        :schema="schema"
-        :state="state.form"
-        class="flex flex-col gap-4"
-        @submit="onSubmit"
-      >
-        <UFormField label="名称" name="name" required>
-          <UInput
-            v-model.trim="state.form.name"
-            placeholder="请输入"
-            class="w-full"
-            :ui="{ trailing: 'pe-1' }"
+      <div class="space-y-5">
+        <!-- 说明卡片 -->
+        <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+          <div class="flex items-start gap-3">
+            <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
+            <div class="text-sm text-(--ui-text-muted)">
+              <p class="font-medium text-(--ui-text-highlighted) mb-1">
+                翻译配置说明
+              </p>
+              <p>配置多语言翻译内容，用于前端界面的国际化显示。</p>
+            </div>
+          </div>
+        </div>
+
+        <UForm
+          ref="formRef"
+          :schema="schema"
+          :state="state.form"
+          class="space-y-4"
+          @submit="onSubmit"
+        >
+          <UFormField
+            label="中文名称"
+            name="name"
+            required
+            hint="原始文本内容"
           >
-            <template #trailing>
-              <UButton
-                v-if="state.form.name"
-                color="neutral"
-                variant="link"
-                size="sm"
-                icon="i-lucide-circle-x"
-                @click="state.form.name = ''"
-              />
-            </template>
-          </UInput>
-        </UFormField>
-        <UFormField label="翻译内容" name="content" required>
-          <UInput
-            v-model.trim="state.form.content"
-            placeholder="请输入翻译内容"
-            class="w-full"
-            :ui="{ trailing: 'pe-1' }"
+            <UInput
+              v-model.trim="state.form.name"
+              placeholder="请输入中文名称"
+              class="w-full"
+              size="lg"
+            >
+              <template #leading>
+                <UIcon name="i-lucide-type" class="w-5 h-5 text-(--ui-text-muted)" />
+              </template>
+            </UInput>
+          </UFormField>
+          <UFormField
+            label="翻译内容"
+            name="content"
+            required
+            hint="对应语言的翻译文本"
           >
-            <template #trailing>
-              <UButton
-                v-if="state.form.content"
-                color="neutral"
-                variant="link"
-                size="sm"
-                icon="i-lucide-circle-x"
-                @click="state.form.content = ''"
-              />
-            </template>
-          </UInput>
-        </UFormField>
-        <UFormField label="菜单标识" name="nation">
-          <UInput
-            v-model.trim="state.form.nation"
-            placeholder="请输入"
-            class="w-full"
-            :ui="{ trailing: 'pe-1' }"
-          >
-            <template #trailing>
-              <UButton
-                v-if="state.form.nation"
-                color="neutral"
-                variant="link"
-                size="sm"
-                icon="i-lucide-circle-x"
-                @click="state.form.nation = ''"
-              />
-            </template>
-          </UInput>
-        </UFormField>
-      </UForm>
+            <UInput
+              v-model.trim="state.form.content"
+              placeholder="请输入翻译内容"
+              class="w-full"
+              size="lg"
+            >
+              <template #leading>
+                <UIcon name="i-lucide-languages" class="w-5 h-5 text-(--ui-text-muted)" />
+              </template>
+            </UInput>
+          </UFormField>
+          <UFormField label="菜单标识" name="nation" hint="用于区分不同模块的翻译">
+            <UInput
+              v-model.trim="state.form.nation"
+              placeholder="请输入菜单标识，如：common、user"
+              class="w-full"
+              size="lg"
+            >
+              <template #leading>
+                <UIcon name="i-lucide-tag" class="w-5 h-5 text-(--ui-text-muted)" />
+              </template>
+            </UInput>
+          </UFormField>
+        </UForm>
+      </div>
     </template>
 
     <template #footer>

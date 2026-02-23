@@ -127,11 +127,11 @@ watch(
   <UModal
     v-model:open="drawerVisible"
     :title="currentForm.id ? '编辑菜单' : '新增菜单'"
-    :dismissible="false"
+
     :ui="{
       content: 'sm:max-w-3xl',
       body: 'p-0',
-      footer: 'justify-end bg-gray-50 dark:bg-gray-900'
+      footer: 'justify-end bg-(--ui-bg-elevated)'
     }"
   >
     <template #body>
@@ -145,10 +145,10 @@ watch(
           @submit="onSubmit"
         >
           <!-- 基本信息卡片 -->
-          <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-5 space-y-5 border border-blue-100 dark:border-blue-900/50">
+          <div class="bg-(--ui-bg-elevated) rounded-xl p-5 space-y-5 border border-(--ui-border)">
             <div class="flex items-center gap-2 mb-1">
-              <UIcon name="i-material-symbols-info-outline" class="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <h4 class="font-semibold text-gray-900 dark:text-white">
+              <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary)" />
+              <h4 class="font-semibold text-(--ui-text-highlighted)">
                 基本信息
               </h4>
             </div>
@@ -163,7 +163,7 @@ watch(
                   size="lg"
                 >
                   <template #leading>
-                    <UIcon name="i-material-symbols-category-outline" class="w-5 h-5 text-gray-400" />
+                    <UIcon name="i-lucide-layout-grid" class="w-5 h-5 text-(--ui-text-muted)" />
                   </template>
                 </USelect>
               </UFormField>
@@ -176,7 +176,7 @@ watch(
                   size="lg"
                 >
                   <template #leading>
-                    <UIcon name="i-material-symbols-label-outline" class="w-5 h-5 text-gray-400" />
+                    <UIcon name="i-lucide-type" class="w-5 h-5 text-(--ui-text-muted)" />
                   </template>
                   <template #trailing>
                     <UButton
@@ -203,7 +203,7 @@ watch(
                     size="lg"
                   >
                     <template #leading>
-                      <UIcon name="i-material-symbols-account-tree" class="w-5 h-5 text-gray-400" />
+                      <UIcon name="i-lucide-git-branch" class="w-5 h-5 text-(--ui-text-muted)" />
                     </template>
                   </USelect>
                 </div>
@@ -220,11 +220,11 @@ watch(
           <!-- 路由配置卡片 -->
           <div
             v-if="state.form.ty !== 2"
-            class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-5 space-y-5 border border-green-100 dark:border-green-900/50"
+            class="bg-(--ui-bg-elevated) rounded-xl p-5 space-y-5 border border-(--ui-border)"
           >
             <div class="flex items-center gap-2 mb-1">
-              <UIcon name="i-material-symbols-route" class="w-5 h-5 text-green-600 dark:text-green-400" />
-              <h4 class="font-semibold text-gray-900 dark:text-white">
+              <UIcon name="i-lucide-route" class="w-5 h-5 text-(--ui-success)" />
+              <h4 class="font-semibold text-(--ui-text-highlighted)">
                 路由配置
               </h4>
             </div>
@@ -237,7 +237,7 @@ watch(
                 size="lg"
               >
                 <template #leading>
-                  <UIcon name="i-material-symbols-link" class="w-5 h-5 text-gray-400" />
+                  <UIcon name="i-lucide-link" class="w-5 h-5 text-(--ui-text-muted)" />
                 </template>
                 <template #trailing>
                   <UButton
@@ -256,11 +256,11 @@ watch(
           <!-- 权限配置卡片 -->
           <div
             v-if="state.form.ty !== 0"
-            class="bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/30 dark:to-violet-950/30 rounded-xl p-5 space-y-5 border border-purple-100 dark:border-purple-900/50"
+            class="bg-(--ui-bg-elevated) rounded-xl p-5 space-y-5 border border-(--ui-border)"
           >
             <div class="flex items-center gap-2 mb-1">
-              <UIcon name="i-material-symbols-shield-lock-outline" class="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              <h4 class="font-semibold text-gray-900 dark:text-white">
+              <UIcon name="i-lucide-key" class="w-5 h-5 text-(--ui-warning)" />
+              <h4 class="font-semibold text-(--ui-text-highlighted)">
                 权限配置
               </h4>
             </div>
@@ -276,7 +276,7 @@ watch(
                   size="lg"
                 >
                   <template #leading>
-                    <UIcon name="i-material-symbols-key-outline" class="w-5 h-5 text-gray-400" />
+                    <UIcon name="i-lucide-shield" class="w-5 h-5 text-(--ui-text-muted)" />
                   </template>
                 </USelect>
                 <UButton
@@ -295,11 +295,11 @@ watch(
           <!-- 显示设置卡片 -->
           <div
             v-if="state.form.ty !== 2"
-            class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-xl p-5 space-y-5 border border-amber-100 dark:border-amber-900/50"
+            class="bg-(--ui-bg-elevated) rounded-xl p-5 space-y-5 border border-(--ui-border)"
           >
             <div class="flex items-center gap-2 mb-1">
-              <UIcon name="i-material-symbols-display-settings-outline" class="w-5 h-5 text-amber-600 dark:text-amber-400" />
-              <h4 class="font-semibold text-gray-900 dark:text-white">
+              <UIcon name="i-lucide-settings" class="w-5 h-5 text-(--ui-info)" />
+              <h4 class="font-semibold text-(--ui-text-highlighted)">
                 显示设置
               </h4>
             </div>
@@ -328,7 +328,7 @@ watch(
                   size="lg"
                 >
                   <template #leading>
-                    <UIcon name="i-material-symbols-visibility-outline" class="w-5 h-5 text-gray-400" />
+                    <UIcon name="i-lucide-eye" class="w-5 h-5 text-(--ui-text-muted)" />
                   </template>
                 </USelect>
               </UFormField>
@@ -340,8 +340,8 @@ watch(
 
     <template #footer>
       <div class="flex items-center justify-between w-full">
-        <div class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
-          <UIcon name="i-material-symbols-info-outline" class="w-4 h-4" />
+        <div class="text-sm text-(--ui-text-muted) flex items-center gap-2">
+          <UIcon name="i-lucide-info" class="w-4 h-4" />
           <span>{{ currentForm.id ? '修改后将更新菜单配置' : '确认后将创建新的菜单项' }}</span>
         </div>
         <div class="flex gap-3">

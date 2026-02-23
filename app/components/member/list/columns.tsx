@@ -2,9 +2,9 @@ import type { DataTableColumn } from '@/types/table'
 
 export type TableColumnList = DataTableColumn<any>[]
 
-const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
 const UAvatar = resolveComponent('UAvatar')
+const UIcon = resolveComponent('UIcon')
 const UTooltip = resolveComponent('UTooltip')
 
 const stateEnum: any = {
@@ -16,269 +16,132 @@ const stateEnum: any = {
 export const baseColumns: TableColumnList = [
   {
     accessorKey: 'id',
-    meta: {
-      class: {
-        th: 'w-[80px]',
-        td: 'w-[80px]'
-      }
+    header: 'ID',
+    searchPlaceholder: 'UID',
+    formItemProps: {
+      field: 'uid'
     },
-    header: () => h(UButton, {
-      color: 'neutral',
-      variant: 'ghost',
-      label: 'ID',
-      class: '-mx-2.5 hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent'
-    }),
-    cell: ({ row }) => h('span', { class: 'font-mono text-sm text-gray-600 dark:text-gray-400' }, `#${row.original.id}`)
-  },
-  {
-    accessorKey: 'avatar',
-    header: '头像',
-    meta: {
-      class: {
-        th: 'w-[80px]',
-        td: 'w-[80px]'
-      }
-    },
-    cell: ({ row }) => {
-      const logo = row.original.avatar
-      if (!logo) {
-        return h('div', {
-          class: 'w-10 h-10 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center'
-        }, h('i', { class: 'i-material-symbols-person w-6 h-6 text-primary-600 dark:text-primary-400' }))
-      }
-      return h(UAvatar, {
-        src: logo,
-        alt: 'avatar',
-        size: 'lg',
-        class: 'ring-2 ring-primary-200 dark:ring-primary-800'
-      })
-    }
+    meta: { class: { th: 'w-[100px]', td: 'w-[100px]' } },
+    cell: ({ row }) => h('span', { class: 'font-mono text-sm text-(--ui-text-muted)' }, row.original.id)
   },
   {
     accessorKey: 'username',
-    header: '客户昵称',
-    searchPlaceholder: '筛选昵称',
+    header: '用户',
+    searchPlaceholder: '用户昵称',
+    meta: { class: { th: 'w-[180px]', td: 'w-[180px]' } },
     cell: ({ row }) => {
-      const username = row.original.username
-      if (!username) return h('span', { class: 'text-gray-400 dark:text-gray-500' }, '-')
+      const { avatar, username, source, is_admin } = row.original
       return h('div', { class: 'flex items-center gap-2' }, [
-        h('i', { class: 'i-material-symbols-person-outline w-4 h-4 text-primary-500' }),
-        h('span', { class: 'font-medium text-gray-900 dark:text-white' }, username)
+        h(UAvatar, { src: avatar, alt: username, size: 'sm' }),
+        h('div', { class: 'min-w-0' }, [
+          h('div', { class: 'flex items-center gap-1' }, [
+            h('span', { class: 'font-medium truncate' }, username || '-'),
+            is_admin === 2 && h(UBadge, { color: 'warning', variant: 'solid', size: 'xs' }, () => '官')
+          ]),
+          h('div', { class: 'text-xs text-(--ui-text-muted) truncate' }, source || '-')
+        ])
       ])
-    },
-    meta: {
-      class: {
-        th: 'w-[150px]',
-        td: 'w-[150px]'
-      }
     }
   },
   {
-    accessorKey: 'is_admin',
-    header: '官方号？',
-    meta: {
-      class: {
-        th: 'w-[90px]',
-        td: 'w-[80px]'
-      }
-    },
+    accessorKey: 'stats',
+    header: '数据统计',
+    meta: { class: { th: 'w-[160px]', td: 'w-[160px]' } },
     cell: ({ row }) => {
-      const isAdmin = row.original.is_admin
-      if (isAdmin === 2) {
-        return h(UBadge, {
-          variant: 'solid',
-          color: 'orange',
-          class: 'font-bold'
-        }, () => h('div', { class: 'flex items-center gap-1' }, [
-          h('i', { class: 'i-material-symbols-verified w-4 h-4' }),
-          h('span', '官方')
-        ]))
-      }
-      return h('span', { class: 'text-gray-400 dark:text-gray-500' }, '-')
+      const d = row.original
+      return h('div', { class: 'flex flex-col gap-1 text-xs' }, [
+        h('div', { class: 'flex items-center gap-3' }, [
+          h(UTooltip, { text: '粉丝' }, () => h('span', { class: 'inline-flex items-center gap-1 text-pink-500 cursor-help' }, [h(UIcon, { name: 'i-lucide-heart', class: 'w-3 h-3' }), d.fans || 0])),
+          h(UTooltip, { text: '关注' }, () => h('span', { class: 'inline-flex items-center gap-1 text-blue-500 cursor-help' }, [h(UIcon, { name: 'i-lucide-bookmark', class: 'w-3 h-3' }), d.focus || 0])),
+          h(UTooltip, { text: '发布' }, () => h('span', { class: 'inline-flex items-center gap-1 text-orange-500 cursor-help' }, [h(UIcon, { name: 'i-lucide-file-text', class: 'w-3 h-3' }), d.publish_count || 0]))
+        ]),
+        h('div', { class: 'flex items-center gap-3' }, [
+          h(UTooltip, { text: '游戏' }, () => h('span', { class: 'inline-flex items-center gap-1 text-teal-500 cursor-help' }, [h(UIcon, { name: 'i-lucide-gamepad-2', class: 'w-3 h-3' }), d.game_num || 0])),
+          h(UTooltip, { text: '邀请' }, () => h('span', { class: 'inline-flex items-center gap-1 text-purple-500 cursor-help' }, [h(UIcon, { name: 'i-lucide-user-plus', class: 'w-3 h-3' }), d.invite || 0]))
+        ])
+      ])
     }
   },
   {
     accessorKey: 'battery',
-    header: '账户电量',
+    header: '电量',
+    meta: { class: { th: 'w-[100px]', td: 'w-[100px]' } },
     cell: ({ row }) => {
-      const battery = row.original.battery || 0
-      return h('div', { class: 'flex items-center gap-1.5' }, [
-        h('i', { class: 'i-material-symbols-bolt w-4 h-4 text-yellow-600' }),
-        h('span', { class: 'font-semibold text-yellow-700 dark:text-yellow-400' }, battery)
+      const { battery, income_battery } = row.original
+      return h('div', { class: 'flex flex-col text-xs' }, [
+        h('span', { class: 'inline-flex items-center gap-1 text-yellow-500' }, [h(UIcon, { name: 'i-lucide-zap', class: 'w-3 h-3' }), battery || 0]),
+        h('span', { class: 'inline-flex items-center gap-1 text-green-500' }, [h(UIcon, { name: 'i-lucide-trending-up', class: 'w-3 h-3' }), income_battery || 0])
       ])
-    },
-    meta: {
-      class: {
-        th: 'w-[120px]',
-        td: 'w-[120px]'
-      }
     }
   },
   {
-    accessorKey: 'income_battery',
-    header: '收益电量',
+    accessorKey: 'income_amount',
+    header: '收益',
+    meta: { class: { th: 'w-[90px]', td: 'w-[90px]' } },
     cell: ({ row }) => {
-      const incomeBattery = row.original.income_battery || 0
-      return h('div', { class: 'flex items-center gap-1.5' }, [
-        h('i', { class: 'i-material-symbols-trending-up w-4 h-4 text-green-600' }),
-        h('span', { class: 'font-semibold text-green-700 dark:text-green-400' }, incomeBattery)
+      const { income_amount, amount } = row.original
+      return h('div', { class: 'text-xs' }, [
+        h('div', { class: 'font-medium text-green-600' }, `¥${income_amount || 0}`),
+        h('div', { class: 'text-(--ui-text-muted)' }, `可提 ¥${amount || 0}`)
       ])
-    },
-    meta: {
-      class: {
-        th: 'w-[120px]',
-        td: 'w-[120px]'
-      }
-    }
-  },
-  {
-    accessorKey: 'gift_battery',
-    header: '赠送电量',
-    cell: ({ row }) => {
-      const giftBattery = row.original.gift_battery || 0
-      return h('div', { class: 'flex items-center gap-1.5' }, [
-        h('i', { class: 'i-material-symbols-card-giftcard w-4 h-4 text-blue-600' }),
-        h('span', { class: 'font-semibold text-blue-700 dark:text-blue-400' }, giftBattery)
-      ])
-    },
-    meta: {
-      class: {
-        th: 'w-[120px]',
-        td: 'w-[120px]'
-      }
-    }
-  },
-  {
-    accessorKey: 'source',
-    searchPlaceholder: '来源',
-    header: '来源',
-    meta: {
-      class: {
-        th: 'w-[120px]',
-        td: 'w-[120px]'
-      }
-    },
-    cell: ({ row }) => {
-      const source = row.original.source
-      if (!source) return h('span', { class: 'text-gray-400' }, '-')
-      return h(UBadge, { variant: 'subtle', color: 'primary' }, () => source)
     }
   },
   {
     accessorKey: 'code',
     header: '邀请码',
+    searchPlaceholder: '邀请码',
+    meta: { class: { th: 'w-[120px]', td: 'w-[120px]' } },
     cell: ({ row }) => {
-      const code = row.original.code
-      if (!code) return h('span', { class: 'text-gray-400' }, '-')
-      return h('div', { class: 'flex items-center gap-2' }, [
-        h('i', { class: 'i-material-symbols-qr-code-2 w-4 h-4 text-blue-500' }),
-        h('span', { class: 'font-mono text-sm font-medium text-gray-900 dark:text-white' }, code)
-      ])
-    },
-    meta: {
-      class: {
-        th: 'w-[140px]',
-        td: 'w-[140px]'
-      }
+      const { code } = row.original
+      return h('code', { class: 'text-xs font-mono bg-(--ui-bg-elevated) px-1.5 py-0.5 rounded' }, code || '-')
     }
   },
   {
-    accessorKey: 'invite',
-    header: '邀请人数',
+    accessorKey: 'email',
+    header: '邮箱',
+    searchPlaceholder: '邮箱',
+    meta: { class: { th: 'w-[180px]', td: 'w-[180px]' } },
     cell: ({ row }) => {
-      const invite = row.original.invite || 0
-      return h('div', { class: 'flex items-center gap-1.5' }, [
-        h('i', { class: 'i-material-symbols-person-add-outline w-4 h-4 text-purple-600' }),
-        h('span', { class: 'font-semibold text-purple-700 dark:text-purple-400' }, invite)
-      ])
-    },
-    meta: {
-      class: {
-        th: 'w-[120px]',
-        td: 'w-[120px]'
-      }
-    }
-  },
-  {
-    accessorKey: 'income_amount',
-    header: '累计收益',
-    cell: ({ row }) => {
-      const incomeAmount = row.original.income_amount || 0
-      return h('div', { class: 'flex items-center gap-1.5' }, [
-        h('i', { class: 'i-material-symbols-monetization-on-outline w-4 h-4 text-green-600' }),
-        h('span', { class: 'font-semibold text-green-700 dark:text-green-400' }, `¥${incomeAmount}`)
-      ])
-    },
-    meta: {
-      class: {
-        th: 'w-[120px]',
-        td: 'w-[120px]'
-      }
+      const { email } = row.original
+      return h('span', { class: 'text-xs' }, email || '-')
     }
   },
   {
     accessorKey: 'created_at',
     header: '创建时间',
-    meta: {
-      class: {
-        th: 'w-[180px]',
-        td: 'w-[180px]'
-      }
-    },
+    meta: { class: { th: 'w-[160px]', td: 'w-[160px]' } },
     cell: ({ row }) => {
       const time = row.original.created_at
       if (!time) return h('span', { class: 'text-gray-400' }, '-')
-      return h('div', { class: 'flex items-center gap-1.5' }, [
-        h('i', { class: 'i-material-symbols-schedule-outline w-4 h-4 text-gray-400 dark:text-gray-500' }),
-        h('span', { class: 'text-sm text-gray-600 dark:text-gray-300' }, formatToDateTime(time))
-      ])
+      return h('span', { class: 'text-xs text-(--ui-text-muted)' }, formatToDateTime(time))
     }
   },
   {
     accessorKey: 'remarks',
     header: '备注',
-    meta: {
-      class: {
-        th: 'w-[100px]',
-        td: 'w-[100px]'
-      }
-    },
+    meta: { class: { th: 'w-[120px]', td: 'w-[120px]' } },
     cell: ({ row }) => {
       const remarks = row.original.remarks
       if (!remarks) return h('span', { class: 'text-gray-400' }, '-')
+      const shortText = remarks.length > 6 ? remarks.slice(0, 6) + '...' : remarks
       return h(UTooltip, {
         text: remarks,
-        ui: { content: 'max-w-xs', text: 'whitespace-pre-wrap break-all select-text' }
-      }, () =>
-        h('div', { class: 'flex items-center gap-2' }, [
-          h('i', { class: 'i-material-symbols-note-outline w-4 h-4 text-gray-400 dark:text-gray-500' }),
-          h('div', { class: 'truncate text-gray-600 dark:text-gray-300' }, remarks)
-        ])
-      )
+        ui: { content: 'max-w-xs' }
+      }, () => h('span', { class: 'text-xs cursor-pointer text-(--ui-text-muted) hover:text-(--ui-text)' }, shortText))
     }
   },
   {
     accessorKey: 'summary',
     header: '简介',
-    meta: {
-      class: {
-        th: 'w-[100px]',
-        td: 'w-[100px]'
-      }
-    },
+    meta: { class: { th: 'w-[120px]', td: 'w-[120px]' } },
     cell: ({ row }) => {
       const summary = row.original.summary
-      const fetish = row.original.fetish
-      if (!summary && !fetish) return h('span', { class: 'text-gray-400' }, '-')
-      return h(
-        UTooltip,
-        { text: `${summary || ''}\n${fetish || ''}` },
-        () =>
-          h('div', { class: 'cursor-pointer space-y-1' }, [
-            summary && h('p', { class: 'truncate text-gray-700 dark:text-gray-300' }, summary),
-            fetish && h('p', { class: 'truncate text-xs text-gray-500 dark:text-gray-400' }, fetish)
-          ])
-      )
+      if (!summary) return h('span', { class: 'text-gray-400' }, '-')
+      const shortText = summary.length > 6 ? summary.slice(0, 6) + '...' : summary
+      return h(UTooltip, {
+        text: summary,
+        ui: { content: 'max-w-xs' }
+      }, () => h('span', { class: 'text-xs cursor-pointer text-(--ui-text-muted) hover:text-(--ui-text)' }, shortText))
     }
   },
   {

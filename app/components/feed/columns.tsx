@@ -3,8 +3,8 @@ import dayjs from 'dayjs'
 
 export type TableColumnList = DataTableColumn<any>[]
 
-const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
+const UAvatar = resolveComponent('UAvatar')
 
 const stateEnum: Record<number, [string, 'warning' | 'success' | 'error' | 'info']> = {
   0: ['待处理', 'warning'],
@@ -15,44 +15,46 @@ const stateEnum: Record<number, [string, 'warning' | 'success' | 'error' | 'info
 export const baseColumns: TableColumnList = [
   {
     accessorKey: 'id',
+    header: 'ID',
     meta: {
       class: {
-        th: 'w-[80px]',
-        td: 'w-[80px]'
+        th: 'w-[60px]',
+        td: 'w-[60px]'
       }
-    },
-    header: () => {
-      return h(UButton, {
-        color: 'neutral',
-        variant: 'ghost',
-        label: 'ID',
-        class: '-mx-2.5 hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent'
-      })
     }
   },
   {
-    accessorKey: 'username',
-    header: '用户名',
-    searchPlaceholder: '请输入用户名',
+    accessorKey: 'member',
+    header: '用户',
     meta: {
       class: {
-        th: 'w-[120px]',
-        td: 'w-[120px]'
+        th: 'w-[180px]',
+        td: 'w-[180px]'
       }
     },
     cell: ({ row }) => {
-      const username = row.original.username || '-'
-      return h('div', { class: 'font-medium' }, username)
+      const member = row.original.member
+      if (!member) return h('span', { class: 'text-gray-400' }, '-')
+      return h('div', { class: 'flex items-center gap-2' }, [
+        h(UAvatar, {
+          src: member.avatar,
+          alt: member.username,
+          size: 'sm'
+        }),
+        h('div', { class: 'min-w-0' }, [
+          h('div', { class: 'font-medium text-gray-900 dark:text-white truncate' }, member.username || '-'),
+          h('div', { class: 'text-xs text-gray-500 truncate' }, member.email || '')
+        ])
+      ])
     }
   },
   {
     accessorKey: 'title',
     header: '标题',
-    searchPlaceholder: '请输入标题',
     meta: {
       class: {
-        th: 'min-w-[180px]',
-        td: 'min-w-[180px]'
+        th: 'min-w-[150px]',
+        td: 'min-w-[150px]'
       }
     },
     cell: ({ row }) => {
@@ -65,14 +67,14 @@ export const baseColumns: TableColumnList = [
     header: '内容',
     meta: {
       class: {
-        th: 'min-w-[200px]',
-        td: 'min-w-[200px]'
+        th: 'min-w-[180px]',
+        td: 'min-w-[180px]'
       }
     },
     cell: ({ row }) => {
       const content = row.original.content || '-'
       return h('div', {
-        class: 'text-sm text-gray-600 dark:text-gray-400 truncate max-w-[250px]',
+        class: 'text-sm text-gray-600 dark:text-gray-400 truncate max-w-[200px]',
         title: content
       }, content)
     }
@@ -82,17 +84,21 @@ export const baseColumns: TableColumnList = [
     header: '回复',
     meta: {
       class: {
-        th: 'min-w-[200px]',
-        td: 'min-w-[200px]'
+        th: 'min-w-[180px]',
+        td: 'min-w-[180px]'
       }
     },
     cell: ({ row }) => {
       const reply = row.original.reply
       if (!reply) {
-        return h('span', { class: 'text-xs text-gray-400 dark:text-gray-500' }, '未回复')
+        return h(UBadge, {
+          color: 'neutral',
+          variant: 'subtle',
+          label: '未回复'
+        })
       }
       return h('div', {
-        class: 'text-sm text-gray-600 dark:text-gray-400 truncate max-w-[250px]',
+        class: 'text-sm text-gray-600 dark:text-gray-400 truncate max-w-[200px]',
         title: reply
       }, reply)
     }

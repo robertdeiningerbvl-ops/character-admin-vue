@@ -77,7 +77,7 @@ const columns: TableColumnList = [
         td: 'w-[80px]'
       }
     },
-    cell: ({ row }) => {
+    cell: ({ row }: any) => {
       return h(
         'div',
         { class: 'text-right' },

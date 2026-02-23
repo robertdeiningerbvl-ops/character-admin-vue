@@ -14,12 +14,8 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits(['update:dialog', 'refresh'])
 
 const drawerVisible = computed({
-  get() {
-    return props.dialog
-  },
-  set(visible) {
-    emit('update:dialog', visible)
-  }
+  get: () => props.dialog,
+  set: visible => emit('update:dialog', visible)
 })
 
 const closeModal = () => {
@@ -28,6 +24,7 @@ const closeModal = () => {
 
 const formRef = useTemplateRef('formRef')
 const fileRef = ref<HTMLInputElement>()
+const toast = useToast()
 
 const schema = z.object({
   title: z.string().nonempty('标题不能为空'),
@@ -37,38 +34,35 @@ const schema = z.object({
 })
 
 const stateOptions = [
-  {
-    label: '启用',
-    value: 2
-  },
-  {
-    label: '禁用',
-    value: 4
-  }
+  { label: '启用', value: 2 },
+  { label: '禁用', value: 4 }
 ]
 
 const typeOptions = [
-  {
-    label: '系统',
-    value: 2
-  },
-  {
-    label: '公告',
-    value: 3
-  },
-  {
-    label: '营销',
-    value: 4
-  }
+  { label: '系统', value: 2 },
+  { label: '公告', value: 3 },
+  { label: '营销', value: 4 }
 ]
 
-const state = reactive({
+interface FormState {
+  loading: boolean
+  uploading: boolean
+  form: {
+    id?: number
+    title?: string
+    content?: string
+    ty?: number
+    state?: number
+    image?: string
+    tm?: number
+  }
+}
+
+const state = reactive<FormState>({
   loading: false,
   uploading: false,
-  form: {} as any
+  form: {}
 })
-
-const toast = useToast()
 
 // 图片上传处理
 function onFileClick() {
@@ -116,13 +110,17 @@ const handleDeleteImage = () => {
 
 async function onSubmit() {
   state.loading = true
-  const postForm = cloneDeep(state.form)
-  const { error } = await (postForm.id ? updateCommonMessage : addCommonMessage)(postForm)
-  if (!error) {
-    toast.add({ title: `操作成功`, color: 'success' })
-    emit('refresh')
+  try {
+    const postForm = cloneDeep(state.form)
+    const { error } = await (postForm.id ? updateCommonMessage : addCommonMessage)(postForm)
+    if (!error) {
+      toast.add({ title: '操作成功', color: 'success' })
+      closeModal()
+      emit('refresh')
+    }
+  } finally {
+    state.loading = false
   }
-  state.loading = false
 }
 
 watch(
@@ -141,113 +139,155 @@ watch(
   <UModal
     v-model:open="drawerVisible"
     :title="currentForm.id ? '修改消息' : '新增消息'"
-    :dismissible="false"
-    :ui="{ footer: 'justify-end' }"
+
+    :ui="{
+      content: 'sm:max-w-3xl',
+      footer: 'justify-end bg-(--ui-bg-elevated)'
+    }"
   >
     <template #body>
       <UForm
         ref="formRef"
         :schema="schema"
         :state="state.form"
-        class="flex flex-col gap-4"
+        class="space-y-5"
         @submit="onSubmit"
       >
-        <UFormField label="标题" name="title" required>
-          <UInput
-            v-model.trim="state.form.title"
-            placeholder="请输入标题"
-            class="w-full"
-          />
-        </UFormField>
+        <!-- 基本信息 -->
+        <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border) space-y-4">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-info" class="w-4 h-4 text-(--ui-primary)" />
+            <span class="text-sm font-medium text-(--ui-text-highlighted)">基本信息</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <UFormField label="消息类型" name="ty" required>
+              <USelect
+                v-model="state.form.ty"
+                :items="typeOptions"
+                placeholder="请选择类型"
+                class="w-full"
+              />
+            </UFormField>
+            <UFormField label="消息状态" name="state" required>
+              <USelect
+                v-model="state.form.state"
+                :items="stateOptions"
+                placeholder="请选择状态"
+                class="w-full"
+              />
+            </UFormField>
+          </div>
+          <UFormField label="消息标题" name="title" required>
+            <UInput v-model.trim="state.form.title" placeholder="请输入消息标题" class="w-full" />
+          </UFormField>
+        </div>
 
-        <UFormField label="内容" name="content" required>
-          <UTextarea
-            v-model.trim="state.form.content"
-            placeholder="请输入消息内容"
-            :rows="4"
-            class="w-full"
-          />
-        </UFormField>
+        <!-- 消息内容 -->
+        <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border) space-y-4">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-file-text" class="w-4 h-4 text-(--ui-info)" />
+            <span class="text-sm font-medium text-(--ui-text-highlighted)">消息内容</span>
+          </div>
+          <UFormField label="消息正文" name="content" required>
+            <RichTextEditor v-model="state.form.content" min-height="200px" />
+          </UFormField>
+        </div>
 
-        <UFormField label="类型" name="ty" required>
-          <USelect
-            v-model="state.form.ty"
-            :items="typeOptions"
-            placeholder="请选择类型"
-            class="w-full"
-          />
-        </UFormField>
-
-        <UFormField label="状态" name="state" required>
-          <USelect
-            v-model="state.form.state"
-            :items="stateOptions"
-            placeholder="请选择状态"
-            class="w-full"
-          />
-        </UFormField>
-
-        <UFormField label="宣传图" name="image">
-          <div class="w-full">
-            <!-- 上传区域 -->
-            <div
-              v-if="!state.form.image"
-              class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6 text-center cursor-pointer hover:border-primary-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all"
-              @click="onFileClick"
-            >
-              <div class="flex flex-col items-center gap-2">
-                <UIcon
-                  :name="state.uploading ? 'i-lucide-loader' : 'i-lucide-image-plus'"
-                  class="w-10 h-10 text-gray-400"
-                  :class="{ 'animate-spin': state.uploading }"
-                />
-                <div>
-                  <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {{ state.uploading ? '上传中...' : '点击上传宣传图' }}
-                  </p>
-                  <p class="text-xs text-gray-500 mt-1">
-                    支持 JPG、PNG、GIF、WebP，最大 5MB
-                  </p>
+        <!-- 宣传图 -->
+        <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border) space-y-4">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-image" class="w-4 h-4 text-(--ui-success)" />
+            <span class="text-sm font-medium text-(--ui-text-highlighted)">宣传图</span>
+            <span class="text-xs text-(--ui-text-muted)">（可选）</span>
+          </div>
+          <UFormField name="image">
+            <div class="w-full">
+              <!-- 上传区域 -->
+              <div
+                v-if="!state.form.image"
+                class="border-2 border-dashed border-(--ui-border) rounded-lg p-6 text-center cursor-pointer hover:border-(--ui-primary) hover:bg-(--ui-bg-elevated)/50 transition-all"
+                @click="onFileClick"
+              >
+                <div class="flex flex-col items-center gap-2">
+                  <UIcon
+                    :name="state.uploading ? 'i-lucide-loader' : 'i-lucide-image-plus'"
+                    class="w-10 h-10 text-(--ui-text-muted)"
+                    :class="{ 'animate-spin': state.uploading }"
+                  />
+                  <div>
+                    <p class="text-sm font-medium text-(--ui-text-highlighted)">
+                      {{ state.uploading ? '上传中...' : '点击上传宣传图' }}
+                    </p>
+                    <p class="text-xs text-(--ui-text-muted) mt-1">
+                      支持 JPG、PNG、GIF、WebP，最大 5MB
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <!-- 图片预览 -->
-            <div v-else class="relative group">
-              <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                <img
-                  :src="state.form.image"
-                  alt="宣传图"
-                  class="w-full h-48 object-cover"
-                >
+              <!-- 图片预览 -->
+              <div v-else class="relative group">
+                <div class="border border-(--ui-border) rounded-lg overflow-hidden">
+                  <img :src="state.form.image" alt="宣传图" class="w-full h-48 object-cover">
+                </div>
+                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 rounded-lg">
+                  <UButton
+                    icon="i-lucide-refresh-cw"
+                    color="neutral"
+                    variant="solid"
+                    label="更换"
+                    @click="onFileClick"
+                  />
+                  <UButton
+                    icon="i-lucide-trash-2"
+                    color="error"
+                    variant="solid"
+                    label="删除"
+                    @click="handleDeleteImage"
+                  />
+                </div>
               </div>
-              <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 rounded-lg">
-                <UButton
-                  icon="i-lucide-refresh-cw"
-                  color="neutral"
-                  variant="solid"
-                  label="更换"
-                  @click="onFileClick"
-                />
-                <UButton
-                  icon="i-lucide-trash-2"
-                  color="error"
-                  variant="solid"
-                  label="删除"
-                  @click="handleDeleteImage"
-                />
-              </div>
-            </div>
 
-            <input
-              ref="fileRef"
-              type="file"
-              accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-              class="hidden"
-              @change="onFileChange"
-            >
+              <input
+                ref="fileRef"
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                class="hidden"
+                @change="onFileChange"
+              >
+            </div>
+          </UFormField>
+        </div>
+
+        <!-- 弹框配置 -->
+        <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border) space-y-4">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-bell-ring" class="w-4 h-4 text-(--ui-warning)" />
+            <span class="text-sm font-medium text-(--ui-text-highlighted)">弹框配置</span>
           </div>
-        </UFormField>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center justify-between p-3 rounded-lg border border-(--ui-border)">
+              <div>
+                <p class="text-sm font-medium text-(--ui-text-highlighted)">
+                  是否弹框
+                </p>
+                <p class="text-xs text-(--ui-text-muted)">
+                  开启后将定时弹出消息提示
+                </p>
+              </div>
+              <USwitch :model-value="(state.form.tm ?? 0) > 0" @update:model-value="state.form.tm = $event ? 60 : 0" />
+            </div>
+            <UFormField v-if="(state.form.tm ?? 0) > 0" label="弹框间隔（秒）" name="tm">
+              <UInput
+                v-model.number="state.form.tm"
+                type="number"
+                min="1"
+                placeholder="间隔秒数"
+                class="w-full"
+              />
+            </UFormField>
+          </div>
+        </div>
       </UForm>
     </template>
 

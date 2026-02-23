@@ -2,7 +2,6 @@ import type { DataTableColumn } from '@/types/table'
 
 export type TableColumnList = DataTableColumn<any>[]
 
-const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
 const UTooltip = resolveComponent('UTooltip')
 
@@ -11,8 +10,8 @@ const stateEnum: Record<number, [string, 'error' | 'success']> = {
   2: ['启用', 'success']
 }
 
-const showEnum: Record<number, [string, 'warning' | 'info']> = {
-  0: ['隐藏', 'warning'],
+const showEnum: Record<number, [string, 'neutral' | 'info']> = {
+  0: ['隐藏', 'neutral'],
   2: ['显示', 'info']
 }
 
@@ -28,37 +27,19 @@ const showOptions = [
 
 export const baseColumns: TableColumnList = [
   {
-    accessorKey: 'id',
-    header: () => {
-      return h(UButton, {
-        color: 'neutral',
-        variant: 'ghost',
-        label: 'ID',
-        class: '-mx-2.5 hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent'
-      })
-    },
-    meta: {
-      class: {
-        th: 'w-[80px]',
-        td: 'w-[80px]'
-      }
-    }
-  },
-  {
     accessorKey: 'name',
     header: '任务名称',
     meta: {
       class: {
-        th: 'w-[100px]'
+        th: 'w-[150px]',
+        td: 'w-[150px]'
       }
     },
     cell: ({ row }) => {
-      const name = row.original.name
-      return h(
-        'div',
-        { class: 'font-medium text-gray-900 dark:text-white' },
-        name || '-'
-      )
+      return h('div', { class: 'flex items-center gap-2' }, [
+        h('span', { class: 'i-lucide-zap w-4 h-4 text-(--ui-warning)' }),
+        h('span', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.name || '-')
+      ])
     }
   },
   {
@@ -67,16 +48,16 @@ export const baseColumns: TableColumnList = [
     searchPlaceholder: '搜索任务编码',
     meta: {
       class: {
-        th: 'w-[80px]'
+        th: 'w-[120px]',
+        td: 'w-[120px]'
       }
     },
     cell: ({ row }) => {
       const code = row.original.code
-      return h(
-        'code',
-        { class: 'px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-xs font-mono text-gray-700 dark:text-gray-300' },
-        code || '-'
-      )
+      if (!code) return h('span', { class: 'text-(--ui-text-muted)' }, '-')
+      return h('code', {
+        class: 'px-2 py-1 rounded bg-(--ui-bg-elevated) text-xs font-mono text-(--ui-text-muted)'
+      }, code)
     }
   },
   {
@@ -84,20 +65,17 @@ export const baseColumns: TableColumnList = [
     header: '奖励电量',
     meta: {
       class: {
-        th: 'w-[100px]'
+        th: 'w-[100px]',
+        td: 'w-[100px]'
       }
     },
     cell: ({ row }) => {
       const battery = row.original.battery
-      if (!battery) return '-'
-      return h(
-        'div',
-        { class: 'flex items-center gap-1' },
-        [
-          h('span', { class: 'text-yellow-600 font-semibold' }, battery),
-          h('span', { class: 'text-xs text-gray-500 dark:text-gray-400' }, '⚡')
-        ]
-      )
+      if (!battery) return h('span', { class: 'text-(--ui-text-muted)' }, '-')
+      return h('div', { class: 'flex items-center gap-1' }, [
+        h('span', { class: 'i-lucide-battery-charging w-4 h-4 text-(--ui-warning)' }),
+        h('span', { class: 'font-medium text-(--ui-text-highlighted)' }, battery)
+      ])
     }
   },
   {
@@ -105,19 +83,16 @@ export const baseColumns: TableColumnList = [
     header: '需要次数',
     meta: {
       class: {
-        th: 'w-[100px]'
+        th: 'w-[100px]',
+        td: 'w-[100px]'
       }
     },
     cell: ({ row }) => {
       const num = row.original.num
-      return h(
-        'div',
-        { class: 'text-center' },
-        h(UBadge, {
-          variant: 'soft',
-          color: 'neutral'
-        }, () => num || 0)
-      )
+      return h(UBadge, {
+        variant: 'subtle',
+        color: 'neutral'
+      }, () => `${num || 0} 次`)
     }
   },
   {
@@ -125,42 +100,30 @@ export const baseColumns: TableColumnList = [
     header: '奖励金额',
     meta: {
       class: {
-        th: 'w-[120px]'
+        th: 'w-[100px]',
+        td: 'w-[100px]'
       }
     },
     cell: ({ row }) => {
       const amount = row.original.amount
-      if (!amount) return '-'
-      return h(
-        'div',
-        { class: 'flex items-center gap-1' },
-        [
-          h('span', { class: 'text-green-600 font-semibold' }, `¥${amount}`)
-        ]
-      )
+      if (!amount) return h('span', { class: 'text-(--ui-text-muted)' }, '-')
+      return h('div', { class: 'flex items-center gap-1' }, [
+        h('span', { class: 'i-lucide-coins w-4 h-4 text-(--ui-success)' }),
+        h('span', { class: 'font-medium text-(--ui-success)' }, `¥${amount}`)
+      ])
     }
   },
   {
     accessorKey: 'remark',
     header: '任务描述',
-    meta: {
-      class: {
-        th: 'w-[300px]'
-      }
-    },
     cell: ({ row }) => {
       const remark = row.original.remark
-      if (!remark) return h('span', { class: 'text-gray-400 dark:text-gray-500' }, '无描述')
-
-      return h(
-        UTooltip,
-        { text: remark },
-        {
-          default: () => h('div', {
-            class: 'truncate max-w-[280px] cursor-help text-gray-600 dark:text-gray-400'
-          }, remark)
-        }
-      )
+      if (!remark) return h('span', { class: 'text-(--ui-text-muted)' }, '无描述')
+      return h(UTooltip, { text: remark }, {
+        default: () => h('div', {
+          class: 'truncate max-w-[200px] cursor-help text-(--ui-text-muted)'
+        }, remark)
+      })
     }
   },
   {
@@ -168,24 +131,17 @@ export const baseColumns: TableColumnList = [
     header: '显示状态',
     formItemProps: {
       component: 'Select',
-      componentProps: {
-        options: showOptions
-      }
+      componentProps: { options: showOptions }
     },
     meta: {
       class: {
-        th: 'w-[100px]'
+        th: 'w-[100px]',
+        td: 'w-[100px]'
       }
     },
     cell: ({ row }) => {
-      const show = row.original.show
-      const [label, color] = showEnum[show] || ['未知', 'warning']
-
-      return h(UBadge, {
-        class: 'capitalize',
-        variant: 'subtle',
-        color
-      }, () => label)
+      const [label, color] = showEnum[row.original.show] || ['未知', 'neutral']
+      return h(UBadge, { variant: 'subtle', color }, () => label)
     }
   },
   {
@@ -193,24 +149,17 @@ export const baseColumns: TableColumnList = [
     header: '任务状态',
     formItemProps: {
       component: 'Select',
-      componentProps: {
-        options: stateOptions
-      }
+      componentProps: { options: stateOptions }
     },
     meta: {
       class: {
-        th: 'w-[100px]'
+        th: 'w-[100px]',
+        td: 'w-[100px]'
       }
     },
     cell: ({ row }) => {
-      const state = row.original.state
-      const [label, color] = stateEnum[state] || ['未知', 'error']
-
-      return h(UBadge, {
-        class: 'capitalize',
-        variant: 'subtle',
-        color
-      }, () => label)
+      const [label, color] = stateEnum[row.original.state] || ['未知', 'error']
+      return h(UBadge, { variant: 'subtle', color }, () => label)
     }
   },
   {
@@ -218,12 +167,17 @@ export const baseColumns: TableColumnList = [
     header: '更新时间',
     meta: {
       class: {
-        th: 'w-[180px]'
+        th: 'w-[160px]',
+        td: 'w-[160px]'
       }
     },
     cell: ({ row }) => {
       const time = row.original.updated_at
-      return h('div', { class: 'text-gray-500 dark:text-gray-400 text-sm' }, formatToDateTime(time))
+      if (!time) return h('span', { class: 'text-(--ui-text-muted)' }, '-')
+      return h('div', { class: 'flex items-center gap-2' }, [
+        h('span', { class: 'i-lucide-clock w-4 h-4 text-(--ui-text-muted)' }),
+        h('span', { class: 'text-sm' }, formatToDateTime(time))
+      ])
     }
   }
 ]

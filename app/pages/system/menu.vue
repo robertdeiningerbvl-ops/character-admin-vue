@@ -167,7 +167,12 @@ const columns: TableColumnList = [
   <DashboardLayout>
     <template #actions>
       <div v-permission="'rbac-menu-add'">
-        <UButton label="新增" icon="i-lucide-plus" @click="openEditModal(null)" />
+        <UButton
+          label="新增"
+          icon="i-lucide-plus"
+          color="neutral"
+          @click="openEditModal(null)"
+        />
       </div>
     </template>
 

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import * as z from 'zod'
 import { cloneDeep } from 'lodash-es'
 import { updatePayment } from '@/api'
 
@@ -28,26 +27,21 @@ const closeModal = () => {
 
 const formRef = useTemplateRef('formRef')
 
-const schema = z.object({
-  name: z.string().nonempty(),
-  desc: z.string(),
-  state: z.number().min(0),
-  sort: z.number().min(0)
-})
-
 const stateOptions = [
-  {
-    label: '启用',
-    value: 2
-  },
-  {
-    label: '已删除',
-    value: 4
-  }
+  { label: '正常', value: 2 },
+  { label: '删除', value: 4 },
+  { label: '待审核', value: 0 }
 ]
+
+const tyOptions = [
+  { label: '支付宝', value: 1 },
+  { label: '微信', value: 2 },
+  { label: 'USDT', value: 3 },
+  { label: '自建', value: 4 }
+]
+
 const state = reactive({
   loading: false,
-  avatarLoading: false,
   form: {} as any
 })
 
@@ -77,78 +71,68 @@ watch(
 <template>
   <UModal
     v-model:open="drawerVisible"
-    :title="'修改'"
-    :dismissible="false"
-    :ui="{ footer: 'justify-end' }"
+
+    :ui="{ footer: 'justify-end', content: 'sm:max-w-2xl' }"
   >
+    <template #header>
+      <div class="flex items-center gap-2">
+        <UIcon name="i-lucide-credit-card" class="w-5 h-5 text-(--ui-primary)" />
+        <span class="font-semibold">修改支付通道</span>
+      </div>
+    </template>
+
     <template #body>
       <UForm
         ref="formRef"
-        :schema="schema"
         :state="state.form"
-        class="flex flex-col gap-4"
+        class="space-y-5"
         @submit="onSubmit"
       >
-        <UFormField label="名称" name="name" required>
-          <UInput
-            v-model.trim="state.form.name"
-            placeholder="请输入"
-            class="w-full"
-          >
-            <template v-if="state.form.name" #trailing>
-              <UButton
-                color="neutral"
-                variant="link"
-                size="sm"
-                icon="i-lucide-circle-x"
-                @click="state.form.name = ''"
+        <!-- 基本信息 -->
+        <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border) space-y-4">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-info" class="w-4 h-4 text-(--ui-primary)" />
+            <span class="text-sm font-medium text-(--ui-text-highlighted)">基本信息</span>
+          </div>
+          <UFormField label="名称" name="name" required>
+            <UInput v-model.trim="state.form.name" placeholder="请输入名称" class="w-full" />
+          </UFormField>
+          <div class="grid grid-cols-2 gap-4">
+            <UFormField label="类型" name="ty" required>
+              <USelect
+                v-model="state.form.ty"
+                :items="tyOptions"
+                placeholder="请选择"
+                class="w-full"
               />
-            </template>
-          </UInput>
-        </UFormField>
-        <UFormField label="描述" name="desc">
-          <UInput
-            v-model.trim="state.form.desc"
-            placeholder="请输入"
-            class="w-full"
-          >
-            <template v-if="state.form.desc" #trailing>
-              <UButton
-                color="neutral"
-                variant="link"
-                size="sm"
-                icon="i-lucide-circle-x"
-                @click="state.form.desc = ''"
+            </UFormField>
+            <UFormField label="状态" name="state" required>
+              <USelect
+                v-model="state.form.state"
+                :items="stateOptions"
+                placeholder="请选择"
+                class="w-full"
               />
-            </template>
-          </UInput>
-        </UFormField>
-        <UFormField label="排序" name="sort">
-          <UInput
-            v-model.trim="state.form.sort"
-            placeholder="请输入"
-            class="w-full"
-            type="number"
-          >
-            <template v-if="state.form.sort" #trailing>
-              <UButton
-                color="neutral"
-                variant="link"
-                size="sm"
-                icon="i-lucide-circle-x"
-                @click="state.form.sort = ''"
-              />
-            </template>
-          </UInput>
-        </UFormField>
-        <UFormField label="状态" name="state" required>
-          <USelect
-            v-model="state.form.state"
-            :items="stateOptions"
-            placeholder="请选择"
-            class="w-full"
-          />
-        </UFormField>
+            </UFormField>
+          </div>
+          <UFormField label="排序" name="sort">
+            <UInput
+              v-model.number="state.form.sort"
+              placeholder="请输入排序值"
+              type="number"
+              min="0"
+              class="w-full"
+            />
+          </UFormField>
+          <UFormField label="描述" name="desc">
+            <UTextarea
+              v-model.trim="state.form.desc"
+              placeholder="请输入描述"
+              class="w-full"
+              :rows="3"
+            />
+          </UFormField>
+        </div>
       </UForm>
     </template>
 

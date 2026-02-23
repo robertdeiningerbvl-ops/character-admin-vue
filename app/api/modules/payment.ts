@@ -2,7 +2,7 @@ import request from '../request'
 import apiRoute from '../router'
 
 /** 支付类型列表 */
-export function getPaymentListList(params?: any) {
+export function getPaymentList(params?: any) {
   return request.get<any>(apiRoute.paymentList, params)
 }
 
@@ -28,7 +28,7 @@ export function updatePaymentType(data: any) {
 
 /** 支付通道删除 */
 export function removePaymentType(data: any) {
-  return request.post<any>(apiRoute.paymentTyperemove, data)
+  return request.post<any>(apiRoute.paymentTypeRemove, data)
 }
 
 /** 支付订单列表 */

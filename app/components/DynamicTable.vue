@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Service } from '@/types'
 
+const route = useRoute()
+
 const props = withDefaults(defineProps<{
   /** 是否隐藏工具栏 */
   hideToolbar?: boolean
@@ -74,6 +76,19 @@ function paginationHandler() {
   )
 }
 
+// 格式化时间参数
+function formatDateTimeParams(form: any) {
+  const result = { ...form }
+  // 匹配 ISO 日期时间格式: YYYY-MM-DDTHH:MM
+  const dateTimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/
+  Object.keys(result).forEach((key) => {
+    if (result[key] && typeof result[key] === 'string' && dateTimeRegex.test(result[key])) {
+      result[key] = result[key].replace('T', ' ') + ':00'
+    }
+  })
+  return result
+}
+
 async function getList() {
   state.loading = true
   // 搜索条件变化重置显示页面
@@ -82,7 +97,8 @@ async function getList() {
     pagination.page = 1
     state.formHash = formHash
   }
-  const { data } = await props.dataRequest({ page: pagination.page, pagesize: pagination.pageSize, ...state.form })
+  const params = formatDateTimeParams(state.form)
+  const { data } = await props.dataRequest({ page: pagination.page, pagesize: pagination.pageSize, ...params })
   if (data) {
     state.isBackendPagination = Boolean(data.count)
     if (state.isBackendPagination) {
@@ -101,11 +117,14 @@ async function init() {
   pagination.page = 1
   state.form = null
   nextTick(() => {
-    // 初始化表单，支持默认值
+    // 初始化表单，支持默认值和URL参数
     const form: any = {}
     props.columns.forEach((item: any) => {
-      if (item.formItemProps?.defaultValue !== undefined) {
-        const field = item.formItemProps?.field || item.accessorKey
+      const field = item.formItemProps?.field || item.accessorKey
+      // 优先使用URL参数
+      if (route.query[field] !== undefined) {
+        form[field] = route.query[field]
+      } else if (item.formItemProps?.defaultValue !== undefined) {
         form[field] = item.formItemProps.defaultValue
       }
     })
@@ -122,20 +141,20 @@ defineExpose({
 </script>
 
 <template>
-  <div class="pt-[var(--ui-header-height)]">
+  <div>
     <template v-if="!hideToolbar">
       <div v-if="searchShow && state.form" class="flex flex-wrap items-center mb-4 sm:mb-6 gap-4">
       <template v-for="item in columns" :key="item.accessorKey">
         <template v-if="item.searchPlaceholder">
           <UInput
-            v-if="!item.formItemProps"
-            :model-value="state.form[item.accessorKey]"
+            v-if="!item.formItemProps || !item.formItemProps.component"
+            :model-value="state.form[item.formItemProps?.field || item.accessorKey]"
             placeholder=""
             class="w-[180px]"
             :ui="{ base: 'peer', trailing: 'pe-1' }"
             @update:model-value="
               (value: any) => {
-                updateTrimValue(value, item.accessorKey);
+                updateTrimValue(value, item.formItemProps?.field || item.accessorKey);
               }
             "
             @keyup.enter="getList"
@@ -145,12 +164,12 @@ defineExpose({
             </label>
             <template #trailing>
               <UButton
-                v-if="state.form[item.accessorKey]"
+                v-if="state.form[item.formItemProps?.field || item.accessorKey]"
                 color="neutral"
                 variant="link"
                 size="sm"
                 icon="i-lucide-circle-x"
-                @click="state.form[item.accessorKey] = ''"
+                @click="state.form[item.formItemProps?.field || item.accessorKey] = ''"
               />
             </template>
           </UInput>
@@ -201,6 +220,16 @@ defineExpose({
               <span class="inline-flex bg-default px-1">{{ item.searchPlaceholder }}</span>
             </label>
           </div>
+          <div v-else-if="item.formItemProps && item.formItemProps.component === 'DateTimeInput'" class="relative">
+            <UInput
+              v-model="state.form[item.formItemProps?.field || item.accessorKey]"
+              type="datetime-local"
+              class="w-[200px]"
+            />
+            <label class="pointer-events-none absolute left-0 -top-2.5 text-highlighted text-xs font-medium px-1.5">
+              <span class="inline-flex bg-default px-1">{{ item.searchPlaceholder }}</span>
+            </label>
+          </div>
         </template>
       </template>
 
@@ -244,8 +273,8 @@ defineExpose({
       base: `table-fixed border-separate border-spacing-0 w-full ${scrollX}`,
       thead: '[&>tr]:bg-(--ui-bg-elevated)/50 [&>tr]:after:content-none',
       tbody: '[&>tr]:last:[&>td]:border-b-0',
-      th: 'py-1 first:rounded-l-[calc(var(--ui-radius)*2)] last:rounded-r-[calc(var(--ui-radius)*2)] border-y border-(--ui-border) first:border-l last:border-r',
-      td: 'border-b border-(--ui-border) whitespace-normal break-all',
+      th: 'py-1 first:rounded-l-[calc(var(--ui-radius)*2)] last:rounded-r-[calc(var(--ui-radius)*2)] border-y border-(--ui-border) first:border-l last:border-r last:sticky last:right-0 last:bg-(--ui-bg-elevated) last:z-10',
+      td: 'border-b border-(--ui-border) whitespace-normal break-all last:sticky last:right-0 last:bg-(--ui-bg) last:z-10',
       tr: 'data-[expanded=true]:bg-(--ui-bg-elevated)/50'
     }"
   >

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import * as z from 'zod'
 import { cloneDeep } from 'lodash-es'
 import { updatePaymentOrder } from '@/api'
 
@@ -28,25 +27,24 @@ const closeModal = () => {
 
 const formRef = useTemplateRef('formRef')
 
-const schema = z.object({
-  real_amount: z.coerce.number().min(0),
-  state: z.number().min(0)
-})
-
-const stateOptions = [
-  { label: '已完成', value: 2 },
-  { label: '未支付', value: 0 }
-]
-
 const state = reactive({
   loading: false,
+  补单Loading: false,
   form: {} as any
 })
 
+const isPaid = computed(() => state.form.state === 2)
+
+const dialogHelper = useDialog()
 const toast = useToast()
+
 async function onSubmit() {
   state.loading = true
-  const postForm = cloneDeep(state.form)
+  const postForm = {
+    id: state.form.id,
+    real_amount: state.form.real_amount ? state.form.real_amount * 100 : 0,
+    remark: state.form.remark
+  }
   const { error } = await updatePaymentOrder(postForm)
   if (!error) {
     toast.add({ title: '操作成功', color: 'success' })
@@ -55,12 +53,36 @@ async function onSubmit() {
   state.loading = false
 }
 
+async function handleBudan() {
+  dialogHelper.open({
+    title: '补单确认',
+    description: `确定要对订单「${state.form.order_sn}」进行补单操作吗？补单后订单状态将变为已支付，并为用户增加相应能量。`,
+    color: 'warning',
+    onPositiveClick: async () => {
+      state.补单Loading = true
+      const postForm = {
+        id: state.form.id,
+        state: 2
+      }
+      const { error } = await updatePaymentOrder(postForm)
+      if (!error) {
+        toast.add({ title: '补单成功', color: 'success' })
+        emit('refresh')
+      }
+      state.补单Loading = false
+    }
+  })
+}
+
 watch(
   () => props.dialog,
   (newValue) => {
     if (newValue) {
       state.loading = false
       state.form = cloneDeep(props.currentForm)
+      if (state.form.real_amount) {
+        state.form.real_amount = state.form.real_amount / 100
+      }
     }
   }
 )
@@ -69,154 +91,120 @@ watch(
 <template>
   <UModal
     v-model:open="drawerVisible"
-    title="编辑订单"
-    :dismissible="false"
-    :ui="{
-      content: 'sm:max-w-2xl',
-      body: 'p-0',
-      footer: 'justify-end bg-gray-50 dark:bg-gray-900'
-    }"
+
+    :ui="{ footer: 'justify-end', content: 'sm:max-w-xl' }"
   >
-    <template #body>
-      <div class="p-6">
-        <!-- 订单信息（只读） -->
-        <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-5 mb-6">
-          <h4 class="font-semibold text-gray-900 dark:text-white mb-4">
-            订单信息
-          </h4>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-1">
-              <p class="text-xs text-gray-500 dark:text-gray-400">
-                订单号
-              </p>
-              <p class="font-mono text-sm font-medium text-gray-900 dark:text-white">
-                {{ state.form.order_sn || '-' }}
-              </p>
-            </div>
-            <div class="space-y-1">
-              <p class="text-xs text-gray-500 dark:text-gray-400">
-                支付单号
-              </p>
-              <p class="font-mono text-xs text-gray-600 dark:text-gray-300">
-                {{ state.form.trade_no || '-' }}
-              </p>
-            </div>
-            <div class="space-y-1">
-              <p class="text-xs text-gray-500 dark:text-gray-400">
-                用户名
-              </p>
-              <p class="font-medium text-gray-900 dark:text-white">
-                {{ state.form.member?.username || '-' }}
-              </p>
-            </div>
-            <div class="space-y-1">
-              <p class="text-xs text-gray-500 dark:text-gray-400">
-                订单金额
-              </p>
-              <p class="font-semibold text-blue-700 dark:text-blue-400">
-                ¥{{ state.form.order_amount || 0 }}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <UForm
-          ref="formRef"
-          :schema="schema"
-          :state="state.form"
-          class="space-y-6"
-          @submit="onSubmit"
-        >
-          <!-- 订单编辑卡片 -->
-          <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-5 space-y-5">
-            <h4 class="font-semibold text-gray-900 dark:text-white mb-1">
-              可编辑信息
-            </h4>
-
-            <UFormField label="备注" name="remark">
-              <UInput
-                v-model.trim="state.form.remark"
-                class="w-full"
-                placeholder="请输入备注信息"
-                size="lg"
-              />
-            </UFormField>
-
-            <div class="grid grid-cols-2 gap-4">
-              <UFormField label="能量" name="coins" required>
-                <UInput
-                  v-model.number="state.form.coins"
-                  type="number"
-                  step="1"
-                  min="0"
-                  placeholder="请输入能量值"
-                  class="w-full"
-                  size="lg"
-                />
-              </UFormField>
-
-              <UFormField label="实付金额" name="real_amount" required>
-                <UInput
-                  v-model.number="state.form.real_amount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  class="w-full"
-                  size="lg"
-                >
-                  <template #trailing>
-                    <span class="text-sm text-gray-500">¥</span>
-                  </template>
-                </UInput>
-              </UFormField>
-            </div>
-
-            <UFormField label="状态" name="state" required>
-              <USelect
-                v-model="state.form.state"
-                :items="stateOptions"
-                placeholder="请选择订单状态"
-                class="w-full"
-                size="lg"
-              />
-            </UFormField>
-          </div>
-        </UForm>
+    <template #header>
+      <div class="flex items-center gap-2">
+        <UIcon name="i-lucide-receipt" class="w-5 h-5 text-(--ui-primary)" />
+        <span class="font-semibold">{{ isPaid ? '查看订单' : '编辑订单' }}</span>
       </div>
     </template>
 
+    <template #body>
+      <UForm
+        ref="formRef"
+        :state="state.form"
+        class="space-y-5"
+        @submit="onSubmit"
+      >
+        <!-- 订单信息 -->
+        <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border) space-y-4">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-info" class="w-4 h-4 text-(--ui-primary)" />
+            <span class="text-sm font-medium text-(--ui-text-highlighted)">订单信息</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span class="text-(--ui-text-muted)">订单号：</span>
+              <span class="font-mono">{{ state.form.order_sn || '-' }}</span>
+            </div>
+            <div>
+              <span class="text-(--ui-text-muted)">用户：</span>
+              <span>{{ state.form.member?.username || '-' }}</span>
+            </div>
+            <div>
+              <span class="text-(--ui-text-muted)">套餐：</span>
+              <span>{{ state.form.package_info || '-' }}</span>
+            </div>
+            <div>
+              <span class="text-(--ui-text-muted)">能量：</span>
+              <span class="text-yellow-600">{{ state.form.coins || 0 }}</span>
+            </div>
+            <div>
+              <span class="text-(--ui-text-muted)">订单金额：</span>
+              <span class="font-medium">¥{{ (state.form.order_amount || 0) / 100 }}</span>
+            </div>
+            <div>
+              <span class="text-(--ui-text-muted)">状态：</span>
+              <UBadge :color="state.form.state === 2 ? 'success' : 'warning'" variant="subtle">
+                {{ state.form.state === 2 ? '已支付' : '待支付' }}
+              </UBadge>
+            </div>
+          </div>
+        </div>
+
+        <!-- 可编辑信息 -->
+        <div v-if="!isPaid" class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border) space-y-4">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-edit" class="w-4 h-4 text-(--ui-warning)" />
+            <span class="text-sm font-medium text-(--ui-text-highlighted)">可编辑信息</span>
+          </div>
+          <UFormField label="实付金额" name="real_amount">
+            <UInput
+              v-model.number="state.form.real_amount"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+              class="w-full"
+            />
+          </UFormField>
+          <UFormField label="备注" name="remark">
+            <UTextarea
+              v-model.trim="state.form.remark"
+              placeholder="请输入备注信息"
+              class="w-full"
+              :rows="2"
+            />
+          </UFormField>
+        </div>
+
+        <!-- 补单操作 -->
+        <div v-if="state.form.state === 0" class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border) space-y-4">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-alert-circle" class="w-4 h-4 text-(--ui-error)" />
+            <span class="text-sm font-medium text-(--ui-text-highlighted)">补单操作</span>
+          </div>
+          <p class="text-sm text-(--ui-text-muted)">
+            如果用户已支付但订单状态未更新，可以进行补单操作。补单后将为用户增加相应能量。
+          </p>
+          <UButton
+            color="warning"
+            variant="soft"
+            icon="i-lucide-refresh-cw"
+            label="确认补单"
+            :loading="state.补单Loading"
+            @click="handleBudan"
+          />
+        </div>
+      </UForm>
+    </template>
+
     <template #footer>
-      <div class="flex items-center justify-between w-full">
-        <div class="text-sm text-gray-500 dark:text-gray-400">
-          <UIcon name="i-material-symbols-info-outline" class="inline w-4 h-4" />
-          修改后将更新订单信息
-        </div>
-        <div class="flex gap-3">
-          <UButton
-            label="取消"
-            color="neutral"
-            variant="outline"
-            size="lg"
-            @click="closeModal"
-          >
-            <template #leading>
-              <UIcon name="i-material-symbols-close" />
-            </template>
-          </UButton>
-          <UButton
-            :loading="state.loading"
-            label="确认保存"
-            variant="solid"
-            size="lg"
-            @click="formRef?.submit()"
-          >
-            <template #leading>
-              <UIcon name="i-material-symbols-check" />
-            </template>
-          </UButton>
-        </div>
-      </div>
+      <UButton
+        :label="isPaid ? '关闭' : '取消'"
+        color="neutral"
+        variant="outline"
+        @click="closeModal"
+      />
+      <UButton
+        v-if="!isPaid"
+        :loading="state.loading"
+        label="确认"
+        variant="solid"
+        @click="formRef?.submit()"
+      />
     </template>
   </UModal>
 </template>

@@ -37,6 +37,10 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-07-11',
 
   nitro: {
+    output: {
+      dir: '.output',
+      publicDir: 'dist'
+    },
     prerender: {
       routes: [
         '/'
@@ -47,6 +51,28 @@ export default defineNuxtConfig({
       '/admin': {
         target: process.env.API_BASE_URL,
         changeOrigin: true
+      }
+    }
+  },
+
+  vite: {
+    build: {
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // 将 Vue 相关库分离
+            'vue-vendor': ['vue', 'vue-router', '@vue/shared'],
+            // 将工具库分离
+            'utils-vendor': ['lodash-es', 'dayjs'],
+            // 将图表库分离
+            'chart-vendor': ['@unovis/vue'],
+            // 将编辑器分离
+            'editor-vendor': ['@tiptap/vue-3', '@tiptap/starter-kit'],
+            // 将 VueUse 分离
+            'vueuse-vendor': ['@vueuse/core']
+          }
+        }
       }
     }
   },

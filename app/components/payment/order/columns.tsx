@@ -4,6 +4,7 @@ export type TableColumnList = DataTableColumn<any>[]
 
 const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
+const UAvatar = resolveComponent('UAvatar')
 
 const stateEnum: any = {
   0: ['待支付', 'warning'],
@@ -11,10 +12,10 @@ const stateEnum: any = {
 }
 
 const tyEnum: any = {
-  4: ['自建', 'primary'],
-  3: ['支付宝', 'info'],
+  1: ['支付宝', 'info'],
   2: ['微信', 'success'],
-  1: ['USDT', 'warning']
+  3: ['USDT', 'warning'],
+  4: ['自建', 'neutral']
 }
 
 export const baseColumns: TableColumnList = [
@@ -35,22 +36,19 @@ export const baseColumns: TableColumnList = [
     }
   },
   {
-    accessorKey: 'member.username',
-    searchPlaceholder: '请输入用户名',
+    accessorKey: 'uid',
     header: '用户信息',
-    meta: {
-      class: {
-        th: 'w-[150px]',
-        td: 'w-[150px]'
-      }
-    },
+    searchPlaceholder: '用户ID',
+    meta: { class: { th: 'w-[180px]', td: 'w-[180px]' } },
     cell: ({ row }) => {
-      const username = row.original.member?.username
-      const uid = row.original.uid
-      if (!username) return h('span', { class: 'text-gray-400' }, '-')
-      return h('div', { class: 'space-y-0.5' }, [
-        h('div', { class: 'font-medium text-gray-900 dark:text-white text-sm' }, username),
-        h('div', { class: 'text-xs text-gray-500' }, `ID: ${uid || '-'}`)
+      const member = row.original.member
+      if (!member || !member.id) return h('span', { class: 'text-gray-400' }, row.original.uid || '-')
+      return h('div', { class: 'flex items-center gap-2' }, [
+        h(UAvatar, { src: member.avatar, size: 'sm' }),
+        h('div', { class: 'flex flex-col' }, [
+          h('span', { class: 'text-sm font-medium truncate' }, member.username),
+          h('span', { class: 'text-xs text-(--ui-text-muted)' }, `ID: ${member.id}`)
+        ])
       ])
     }
   },
@@ -104,7 +102,7 @@ export const baseColumns: TableColumnList = [
     accessorKey: 'order_amount',
     header: '订单金额',
     cell: ({ row }) => {
-      const amount = row.original.order_amount || 0
+      const amount = (row.original.order_amount || 0) / 100
       return h('span', { class: 'font-semibold text-gray-900 dark:text-white' }, `¥${amount}`)
     },
     meta: {
@@ -118,7 +116,7 @@ export const baseColumns: TableColumnList = [
     accessorKey: 'real_amount',
     header: '实付金额',
     cell: ({ row }) => {
-      const realAmount = row.original.real_amount || 0
+      const realAmount = (row.original.real_amount || 0) / 100
       return h('span', { class: 'font-semibold text-green-600 dark:text-green-400' }, `¥${realAmount}`)
     },
     meta: {
@@ -160,27 +158,22 @@ export const baseColumns: TableColumnList = [
   },
   {
     accessorKey: 'payment_ty',
+    searchPlaceholder: '支付方式',
     header: '支付方式',
-    meta: {
-      class: {
-        th: 'w-[120px]',
-        td: 'w-[120px]'
-      }
-    },
+    meta: { class: { th: 'w-[100px]', td: 'w-[100px]' } },
     formItemProps: {
       component: 'Select',
       componentProps: {
         options: [
-          { label: '自建', value: 4 },
-          { label: '支付宝', value: 3 },
+          { label: '支付宝', value: 1 },
           { label: '微信', value: 2 },
-          { label: 'USDT', value: 1 }
+          { label: 'USDT', value: 3 },
+          { label: '自建', value: 4 }
         ]
       }
     },
     cell: ({ row }) => {
-      const paymentTy = row.original.payment_ty
-      const [label, color] = tyEnum[paymentTy] || ['未知', 'neutral']
+      const [label, color] = tyEnum[row.original.payment_ty] || ['未知', 'neutral']
       return h(UBadge, { variant: 'subtle', color }, () => label)
     }
   },
@@ -193,6 +186,7 @@ export const baseColumns: TableColumnList = [
       }
     },
     header: '状态',
+    searchPlaceholder: '请输入状态',
     formItemProps: {
       component: 'Select',
       componentProps: {

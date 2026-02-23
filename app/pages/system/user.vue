@@ -118,6 +118,7 @@ const columns: TableColumnList = [
         <UButton
           label="新增"
           icon="i-lucide-plus"
+          color="neutral"
           @click="openEditModal(null)"
         />
       </div>

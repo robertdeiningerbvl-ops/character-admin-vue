@@ -17,8 +17,8 @@ export function updateCommonCoins(data: any) {
 }
 
 /** 套餐删除 */
-export function removeCommonCcoins(data: any) {
-  return request.post<any>(apiRoute.commonCcoinsRemove, data)
+export function removeCommonCoins(data: any) {
+  return request.post<any>(apiRoute.commonCoinsRemove, data)
 }
 
 /** 标签列表 */
@@ -54,6 +54,11 @@ export function addCommonModel(data: any) {
 /**  模型修改 */
 export function updateCommonModel(data: any) {
   return request.post<any>(apiRoute.commonModelEdit, data)
+}
+
+/** 模型测试 */
+export function testCommonModel(params: any) {
+  return request.get<any>(apiRoute.commonModelTest, params)
 }
 
 /** 模型预设列表 */
@@ -148,15 +153,15 @@ export function removeCommonSensitive(data: any) {
 
 /** 反馈日志列表 */
 export function getCommonFeedList(params?: any) {
-  return request.get<any>(apiRoute.CommonFeedList, params)
+  return request.get<any>(apiRoute.commonFeedList, params)
 }
 
 /** 反馈日志处理 */
 export function updateCommonFeed(data: any) {
-  return request.post<any>(apiRoute.CommonFeedEdit, data)
+  return request.post<any>(apiRoute.commonFeedEdit, data)
 }
 
 /** 反馈日志删除 */
 export function removeCommonFeed(data: any) {
-  return request.post<any>(apiRoute.CommonFeedRemove, data)
+  return request.post<any>(apiRoute.commonFeedRemove, data)
 }

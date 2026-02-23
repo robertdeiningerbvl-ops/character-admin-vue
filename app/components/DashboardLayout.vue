@@ -12,18 +12,25 @@ const isMobile = breakpoints.smaller('lg')
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
+
+        <template #right>
+          <slot name="actions" />
+        </template>
       </UDashboardNavbar>
     </template>
 
     <template #body>
-      <div v-if="!isMobile" class="absolute top-0 left-0 right-0 h-(--ui-header-height) flex items-center justify-between border-b border-(--ui-border) px-4 sm:px-6 bg-(--ui-bg)">
+      <div v-if="!isMobile" class="absolute top-0 left-0 right-0 h-(--ui-header-height) flex items-center justify-between border-b border-(--ui-border) px-4 sm:px-6 bg-(--ui-bg) z-10">
         <div class="flex items-center gap-4">
           <UDashboardSidebarCollapse />
           <AutoBreadcrumb />
         </div>
+        <slot name="actions" />
       </div>
 
-      <slot />
+      <div class="pt-(--ui-header-height)">
+        <slot />
+      </div>
     </template>
   </UDashboardPanel>
 </template>

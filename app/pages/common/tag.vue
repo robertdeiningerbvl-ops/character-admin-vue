@@ -111,7 +111,12 @@ const columns: TableColumnList = [
 <template>
   <DashboardLayout>
     <template #actions>
-      <UButton label="新增" icon="i-lucide-plus" @click="openEditCoins(null)" />
+      <UButton
+        label="新增"
+        icon="i-lucide-plus"
+        color="neutral"
+        @click="openEditCoins(null)"
+      />
     </template>
 
     <DynamicTable

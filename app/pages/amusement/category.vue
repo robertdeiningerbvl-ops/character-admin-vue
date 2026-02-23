@@ -17,7 +17,8 @@ const UButton = resolveComponent('UButton')
 const dialog = useDialog()
 const state = reactive({
   isDialog: false,
-  currentForm: {}
+  currentForm: {},
+  totalCount: 0
 })
 
 const openEditCoins = async (record: any) => {
@@ -25,6 +26,9 @@ const openEditCoins = async (record: any) => {
   if (record) {
     state.currentForm = cloneDeep(record)
   } else {
+    // 新增时获取当前总数
+    const { data } = await getAmusementCategoryList({ page: 1, pagesize: 1 })
+    state.totalCount = data?.count || 0
     state.currentForm = { state: 2 }
   }
 }
@@ -110,7 +114,12 @@ const columns: TableColumnList = [
 <template>
   <DashboardLayout>
     <template #actions>
-      <UButton label="新增" icon="i-lucide-plus" @click="openEditCoins(null)" />
+      <UButton
+        label="新增"
+        icon="i-lucide-plus"
+        color="neutral"
+        @click="openEditCoins(null)"
+      />
     </template>
 
     <DynamicTable
@@ -123,6 +132,7 @@ const columns: TableColumnList = [
   <AmusementCategoryEdit
     v-model:dialog="state.isDialog"
     :current-form="state.currentForm"
+    :total-count="state.totalCount"
     @refresh="refresh"
   />
 </template>

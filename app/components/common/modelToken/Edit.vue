@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import * as z from 'zod'
 import { cloneDeep } from 'lodash-es'
 import { updateCommonModelToken, addCommonModelToken, getCommonModelList } from '@/api'
 
@@ -15,163 +14,126 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits(['update:dialog', 'refresh'])
 
 const drawerVisible = computed({
-  get() {
-    return props.dialog
-  },
-  set(visible) {
-    emit('update:dialog', visible)
-  }
+  get: () => props.dialog,
+  set: visible => emit('update:dialog', visible)
 })
 
-const closeModal = () => {
-  drawerVisible.value = false
-}
+const closeModal = () => { drawerVisible.value = false }
 
 const formRef = useTemplateRef('formRef')
+const toast = useToast()
 
-const schema = z.object({
-  battery: z.number().min(0),
-  max_token: z.number().min(0),
-  biz_id: z.number().min(0),
-  state: z.number().min(0)
+const stateEnabled = computed({
+  get: () => state.form.state === 2,
+  set: (val) => { state.form.state = val ? 2 : 4 }
 })
-
-const stateOptions = [
-  {
-    label: '启用',
-    value: 2
-  },
-  {
-    label: '关闭',
-    value: 4
-  }
-]
 
 const state = reactive({
   loading: false,
-  avatarLoading: false,
-  presetOptions: [] as any,
-  modelLoading: false,
-  form: {} as any
+  form: {} as any,
+  modelOptions: [] as any[],
+  modelLoading: false
 })
 
-const loadPresetOptions = async (isChange: boolean = false) => {
-  if (isChange) {
-    state.presetOptions = []
-  }
-
+const loadModelOptions = async () => {
   state.modelLoading = true
-  formRef.value?.clear('preset_id')
-
-  const { data, error } = await getCommonModelList({})
+  const { data } = await getCommonModelList({})
   if (data) {
-    const presetOptions = [] as any
-    data.list.forEach((item: any) => {
-      presetOptions.push({
-        label: item.name,
-        value: item.id
-      })
-    })
-    state.presetOptions = presetOptions
-  } else if (error) {
-    state.form.mark = undefined
-    if (error.code === 400) {
-      formRef.value?.setErrors([{ name: 'preset_id', message: error.msg }])
-    } else if (error.code === 401) {
-      formRef.value?.setErrors([{ name: 'type', message: error.msg }])
-    } else {
-      formRef.value?.setErrors([{ name: 'mark', message: error.msg }])
-    }
+    state.modelOptions = data.list.map((item: any) => ({
+      label: item.name,
+      value: item.id
+    }))
   }
   state.modelLoading = false
 }
 
-const toast = useToast()
 async function onSubmit() {
   state.loading = true
-  const postForm = cloneDeep(state.form)
-  console.log('postForm', postForm)
-  const { error } = await (postForm.id ? updateCommonModelToken : addCommonModelToken)(postForm)
-  if (!error) {
-    toast.add({ title: `操作成功`, color: 'success' })
-    emit('refresh')
+  try {
+    const postForm = cloneDeep(state.form)
+    const { error } = await (postForm.id ? updateCommonModelToken : addCommonModelToken)(postForm)
+    if (!error) {
+      toast.add({ title: '保存成功', color: 'success' })
+      closeModal()
+      emit('refresh')
+    }
+  } finally {
+    state.loading = false
   }
-  state.loading = false
 }
 
-watch(
-  () => props.dialog,
-  (newValue) => {
-    if (newValue) {
-      state.loading = false
-      state.form = props.currentForm
-      if (!state.form.id && props.bizId) {
-        state.form.biz_id = Number(props.bizId)
-      }
-      loadPresetOptions()
+watch(() => props.dialog, (val) => {
+  if (val) {
+    state.loading = false
+    state.form = cloneDeep(props.currentForm)
+    if (!state.form.id && props.bizId) {
+      state.form.biz_id = Number(props.bizId)
     }
+    loadModelOptions()
   }
-)
+})
 </script>
 
 <template>
-  <UModal
-    v-model:open="drawerVisible"
-    :title="currentForm.id ? '修改' : '新增'"
-    :dismissible="false"
-    :ui="{ footer: 'justify-end' }"
-  >
+  <UModal v-model:open="drawerVisible" :ui="{ content: 'sm:max-w-lg', footer: 'justify-end' }">
+    <template #header>
+      <div class="flex items-center gap-2">
+        <UIcon name="i-lucide-key" class="w-5 h-5 text-(--ui-primary)" />
+        <span class="font-semibold">{{ currentForm.id ? '编辑 Token' : '新建 Token' }}</span>
+      </div>
+    </template>
+
     <template #body>
       <UForm
         ref="formRef"
-        :schema="schema"
         :state="state.form"
-        class="flex flex-col gap-4"
+        class="space-y-4"
         @submit="onSubmit"
       >
         <UFormField label="关联模型" name="biz_id" required>
           <USelect
             v-model="state.form.biz_id"
-            :items="state.presetOptions"
-            placeholder="请选择"
-            class="w-full"
-            @change="loadPresetOptions(true)"
+            :items="state.modelOptions"
+            :loading="state.modelLoading"
+            placeholder="选择模型"
+            :disabled="!!bizId"
           />
         </UFormField>
-        <UFormField label="最大token数" name="max_token" required>
-          <UInput
-            v-model.trim="state.form.max_token"
-            placeholder="请输入"
-            class="w-full"
-            :ui="{ trailing: 'pe-1' }"
-            type="number"
-            min="0"
-          />
-        </UFormField>
+
+        <div class="grid grid-cols-2 gap-4">
+          <UFormField label="最大 Token 数" name="max_token" required>
+            <UInput
+              v-model.number="state.form.max_token"
+              type="number"
+              :min="0"
+              placeholder="输入最大 Token"
+            />
+          </UFormField>
+          <UFormField label="每次消耗电量" name="battery">
+            <UInput
+              v-model.number="state.form.battery"
+              type="number"
+              :min="0"
+              placeholder="输入消耗电量"
+            />
+          </UFormField>
+        </div>
+
         <UFormField label="说明" name="description">
-          <UInput
+          <UTextarea
             v-model.trim="state.form.description"
-            placeholder="请输入"
+            placeholder="输入说明"
+            :rows="2"
+            autoresize
             class="w-full"
-            :ui="{ trailing: 'pe-1' }"
           />
         </UFormField>
-        <UFormField label="每次消耗" name="battery">
-          <UInput
-            v-model.trim="state.form.battery"
-            placeholder="请输入"
-            type="number"
-            class="w-full"
-            :ui="{ trailing: 'pe-1' }"
-          />
-        </UFormField>
-        <UFormField label="状态" name="state" required>
-          <USelect
-            v-model="state.form.state"
-            :items="stateOptions"
-            placeholder="请选择"
-            class="w-full"
-          />
+
+        <UFormField label="状态" name="state">
+          <div class="flex items-center h-9">
+            <USwitch v-model="stateEnabled" />
+            <span class="ml-2 text-sm">{{ stateEnabled ? '启用' : '关闭' }}</span>
+          </div>
         </UFormField>
       </UForm>
     </template>
@@ -183,12 +145,7 @@ watch(
         variant="outline"
         @click="closeModal"
       />
-      <UButton
-        :loading="state.loading"
-        label="确认"
-        variant="solid"
-        @click="formRef?.submit()"
-      />
+      <UButton :loading="state.loading" label="保存" @click="formRef?.submit()" />
     </template>
   </UModal>
 </template>
