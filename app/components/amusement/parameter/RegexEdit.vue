@@ -57,7 +57,7 @@ const createDefaultRule = (): RegexRule => ({
 const state = reactive({
   loading: false,
   configName: '',
-  configState: 1,
+  configState: 2,
   rules: [] as RegexRule[],
   fullscreenOpen: false,
   fullscreenContent: '',
@@ -65,8 +65,8 @@ const state = reactive({
 })
 
 const configStateSwitch = computed({
-  get: () => state.configState === 1,
-  set: (val: boolean) => { state.configState = val ? 1 : 9 }
+  get: () => state.configState === 2,
+  set: (val: boolean) => { state.configState = val ? 2 : 4 }
 })
 
 const addRule = () => {
@@ -166,7 +166,7 @@ watch(() => props.dialog, (val) => {
   if (val) {
     state.loading = false
     state.configName = props.currentForm?.name || ''
-    state.configState = props.currentForm?.state ?? 1
+    state.configState = props.currentForm?.state ?? 2
     state.rules = []
     if (props.currentForm?.content) {
       try {

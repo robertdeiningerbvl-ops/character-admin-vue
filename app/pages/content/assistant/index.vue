@@ -12,6 +12,8 @@ defineOptions({
 
 const dialog = useDialog()
 const toast = useToast()
+const router = useRouter()
+const route = useRoute()
 
 const state = reactive({
   isDialog: false,
@@ -94,6 +96,8 @@ const loadCategoryOptions = async () => {
 const loadCurrentList = async (page = 1) => {
   state.loading = true
   state.pagination.page = page
+  // 同步页码到URL
+  router.replace({ query: { ...route.query, page: String(page), tab: String(state.activeTab) } })
   const params: any = {
     page: state.pagination.page,
     pagesize: state.pagination.pagesize,
@@ -160,7 +164,13 @@ const updateStatus = async (id: number, field: string, value: any) => {
 const init = () => {
   loadTagsOptions()
   loadCategoryOptions()
-  loadCurrentList()
+  // 从URL恢复页码和标签页
+  const urlPage = Number(route.query.page) || 1
+  const urlTab = Number(route.query.tab)
+  if (!isNaN(urlTab) && [0, 2, 3, 4, 5].includes(urlTab)) {
+    state.activeTab = urlTab
+  }
+  loadCurrentList(urlPage)
 }
 
 // 监听标签页切换

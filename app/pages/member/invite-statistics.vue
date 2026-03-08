@@ -10,6 +10,9 @@ defineOptions({
   name: 'InviteStatistics'
 })
 
+const router = useRouter()
+const route = useRoute()
+
 const state = reactive({
   loading: false,
   list: [] as any[],
@@ -37,6 +40,8 @@ async function loadData(resetPage = true) {
   state.loading = true
   state.expandedRows.clear()
   if (resetPage) state.page = 1
+  // 同步页码到URL
+  router.replace({ query: { ...route.query, page: String(state.page) } })
   const { data, error } = await getCommonInviteStatistics({
     start: state.dateRange.start,
     end: state.dateRange.end,
@@ -101,7 +106,10 @@ watch(() => state.searchCode, () => {
 })
 
 onMounted(() => {
-  loadData()
+  // 从URL恢复页码
+  const urlPage = Number(route.query.page) || 1
+  state.page = urlPage
+  loadData(false)
 })
 </script>
 

@@ -5,6 +5,7 @@ definePageMeta({ layout: 'app' })
 defineOptions({ name: 'MemberChatSummary' })
 
 const route = useRoute()
+const router = useRouter()
 const uid = computed(() => route.params.uid as string)
 const amusementId = computed(() => route.params.id as string)
 
@@ -18,6 +19,7 @@ const state = reactive({
 
 const loadData = async () => {
   state.loading = true
+  router.replace({ query: { ...route.query, page: String(state.page) } })
   try {
     const { data } = await getAmusementChatSummary({
       uid: uid.value,
@@ -37,7 +39,11 @@ const onPageChange = (page: number) => {
   loadData()
 }
 
-onMounted(() => loadData())
+onMounted(() => {
+  const urlPage = Number(route.query.page) || 1
+  state.page = urlPage
+  loadData()
+})
 </script>
 
 <template>

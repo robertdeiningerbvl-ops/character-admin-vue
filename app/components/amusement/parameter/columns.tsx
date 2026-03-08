@@ -7,9 +7,9 @@ const UBadge = resolveComponent('UBadge')
 const UTooltip = resolveComponent('UTooltip')
 
 const stateEnum: any = {
-  4: ['删除', 'error'],
-  2: ['待审核', 'warning'],
-  1: ['正常', 'success']
+  0: ['待审核', 'warning'],
+  2: ['正常', 'success'],
+  4: ['删除', 'error']
 }
 
 const tyEnum: any = {
@@ -107,16 +107,16 @@ export const baseColumns: TableColumnList = [
       componentProps: {
         options: [
           {
-            label: '删除',
-            value: 4
-          },
-          {
             label: '待审核',
-            value: 2
+            value: 0
           },
           {
             label: '正常',
-            value: 1
+            value: 2
+          },
+          {
+            label: '删除',
+            value: 4
           }
         ]
       }

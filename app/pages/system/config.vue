@@ -77,7 +77,8 @@ const configGroups = reactive([
       { key: 'INVITE', label: '邀请配置', icon: 'lucide:user-plus' },
       { key: 'OS', label: '系统优化', icon: 'lucide:cpu' },
       { key: 'KNOT', label: '聊天总结', icon: 'lucide:message-circle' },
-      { key: 'DOCTOR_CONFIG', label: '创作管理', icon: 'lucide:pen-tool' }
+      { key: 'DOCTOR_CONFIG', label: '创作管理', icon: 'lucide:pen-tool' },
+      { key: 'RIGHT_NAV', label: '导航配置', icon: 'lucide:navigation' }
     ]
   }
 ])
@@ -122,7 +123,7 @@ const saveConfig = async () => {
     saving.value = true
     const formCopy: ConfigForm = {
       ...state.currentForm,
-      open: typeof state.currentForm.open === 'boolean' ? (state.currentForm.open ? 1 : 0) : state.currentForm.open,
+      open: typeof state.currentForm.open === 'boolean' ? (state.currentForm.open ? 2 : 0) : state.currentForm.open,
       content: state.currentForm.content,
       ip: Array.isArray(state.currentForm.ip) ? state.currentForm.ip : [],
       desc: state.currentForm.desc
@@ -176,19 +177,12 @@ const selectConfig = async (key: string) => {
 }
 
 /* ================= SMS 列表操作 ================= */
-const newSMS = reactive({
-  username: '',
-  password: ''
-})
-
 const confirmAddSMS = () => {
-  if (!newSMS.username || !newSMS.password) return
   state.currentForm.content.push({
     id: Date.now(),
-    ...newSMS
+    username: '',
+    password: ''
   })
-  newSMS.username = ''
-  newSMS.password = ''
 }
 
 const delSMSItem = (id: number) => {
@@ -212,8 +206,8 @@ const delHelpItem = (id: number) => {
 }
 
 /* ================= 模型列表 ================= */
-const modelOptions = ref<{ label: string; value: number }[]>([])
-const modelOptionsTy1 = ref<{ label: string; value: number }[]>([])
+const modelOptions = ref<{ label: string, value: number }[]>([])
+const modelOptionsTy1 = ref<{ label: string, value: number }[]>([])
 const fetchModelList = async () => {
   const [res0, res1] = await Promise.all([getCommonModelList({ ty: 0 }), getCommonModelList({ ty: 1 })])
   if (res0.data?.list) modelOptions.value = res0.data.list.map((m: any) => ({ label: m.name, value: m.id }))
@@ -314,26 +308,15 @@ onActivated(() => init())
             />
           </div>
 
-          <div class="rounded-lg border border-dashed border-(--ui-border) p-4 space-y-3">
-            <div class="flex gap-3">
-              <UInput v-model="newSMS.username" placeholder="邮箱 / 账号" class="flex-1" />
-              <UInput
-                v-model="newSMS.password"
-                placeholder="密码"
-                type="password"
-                class="flex-1"
-              />
-            </div>
-            <div class="flex justify-end">
-              <UButton
-                size="sm"
-                color="neutral"
-                variant="soft"
-                icon="i-lucide-plus"
-                label="新增账号"
-                @click="confirmAddSMS"
-              />
-            </div>
+          <div class="flex justify-end">
+            <UButton
+              size="sm"
+              color="neutral"
+              variant="soft"
+              icon="i-lucide-plus"
+              label="新增账号"
+              @click="confirmAddSMS"
+            />
           </div>
 
           <UFormField label="备注">
@@ -475,22 +458,71 @@ onActivated(() => init())
           </UFormField>
         </div>
 
-        <!-- 帮助中心 / PAY -->
-        <div v-if="state.activeConfigKey === 'HELP' || state.activeConfigKey === 'PAY'" class="space-y-4">
+        <!-- 帮助中心 -->
+        <div v-if="state.activeConfigKey === 'HELP'" class="space-y-4">
           <!-- 说明卡片 -->
           <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
             <div class="flex items-start gap-3">
               <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
               <div class="text-sm text-(--ui-text-muted)">
-                <p class="font-medium text-(--ui-text-highlighted) mb-1">
-                  {{ state.activeConfigKey === 'HELP' ? '帮助中心' : '支付配置' }}说明
-                </p>
-                <p v-if="state.activeConfigKey === 'HELP'">
-                  配置帮助中心的常见问题列表，用户可在 App 内查看。建议添加常见问题及解答。
-                </p>
-                <p v-else>
-                  配置支付相关的说明信息，如支付方式、注意事项等，展示给用户。
-                </p>
+                <p class="font-medium text-(--ui-text-highlighted) mb-1">帮助中心说明</p>
+                <p>配置帮助中心的常见问题列表和客服联系方式，用户可在 App 内查看。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 客服配置 -->
+          <div class="p-4 rounded-lg border border-(--ui-border) space-y-4">
+            <p class="font-medium text-(--ui-text-highlighted)">客服配置</p>
+            <div class="grid grid-cols-2 gap-4">
+              <UFormField label="客服链接 1" hint="如 Telegram 链接">
+                <UInput v-model="state.currentForm.kefu" placeholder="https://t.me/xxx" class="w-full" />
+              </UFormField>
+              <UFormField label="客服链接 2" hint="备用客服链接">
+                <UInput v-model="state.currentForm.kefu2" placeholder="https://t.me/xxx" class="w-full" />
+              </UFormField>
+            </div>
+            <UFormField label="网页客服链接" hint="Tawk.to 等在线客服链接">
+              <UInput v-model="state.currentForm.kefu_web" placeholder="https://tawk.to/chat/xxx" class="w-full" />
+            </UFormField>
+            <UFormField label="网页客服嵌入代码" hint="Tawk.to 等在线客服的嵌入脚本代码">
+              <UTextarea
+                v-model="state.currentForm.kefu_web_script"
+                :rows="6"
+                placeholder="粘贴客服脚本代码，如 Tawk.to 的嵌入代码"
+                class="w-full font-mono text-xs"
+              />
+            </UFormField>
+          </div>
+
+          <!-- 常见问题列表 -->
+          <div class="space-y-3">
+            <p class="font-medium text-(--ui-text-highlighted)">常见问题列表</p>
+            <div
+              v-for="row in state.currentForm.desc"
+              :key="row.id"
+              class="flex items-start gap-3"
+            >
+              <UInput v-model="row.title" placeholder="标题" class="w-48 shrink-0" />
+              <UTextarea v-model="row.content" :rows="2" placeholder="内容" class="flex-1" />
+              <UButton size="sm" color="error" variant="soft" icon="i-lucide-trash-2" class="mt-1" @click="delHelpItem(row.id)" />
+            </div>
+            <UButton size="sm" color="neutral" variant="soft" icon="i-lucide-plus" label="新增条目" @click="addHelpItem" />
+          </div>
+
+          <UFormField label="备注">
+            <UInput v-model="state.currentForm.remarks" placeholder="备注" class="w-full" />
+          </UFormField>
+        </div>
+
+        <!-- PAY 支付配置 -->
+        <div v-if="state.activeConfigKey === 'PAY'" class="space-y-4">
+          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
+              <div class="text-sm text-(--ui-text-muted)">
+                <p class="font-medium text-(--ui-text-highlighted) mb-1">支付配置说明</p>
+                <p>配置支付相关的说明信息，如支付方式、注意事项等，展示给用户。</p>
               </div>
             </div>
           </div>
@@ -501,29 +533,10 @@ onActivated(() => init())
             class="flex items-start gap-3"
           >
             <UInput v-model="row.title" placeholder="标题" class="w-48 shrink-0" />
-            <UTextarea
-              v-model="row.content"
-              :rows="2"
-              placeholder="内容"
-              class="flex-1"
-            />
-            <UButton
-              size="sm"
-              color="error"
-              variant="soft"
-              icon="i-lucide-trash-2"
-              class="mt-1"
-              @click="delHelpItem(row.id)"
-            />
+            <UTextarea v-model="row.content" :rows="2" placeholder="内容" class="flex-1" />
+            <UButton size="sm" color="error" variant="soft" icon="i-lucide-trash-2" class="mt-1" @click="delHelpItem(row.id)" />
           </div>
-          <UButton
-            size="sm"
-            color="neutral"
-            variant="soft"
-            icon="i-lucide-plus"
-            label="新增条目"
-            @click="addHelpItem"
-          />
+          <UButton size="sm" color="neutral" variant="soft" icon="i-lucide-plus" label="新增条目" @click="addHelpItem" />
           <UFormField label="备注">
             <UInput v-model="state.currentForm.remarks" placeholder="备注" class="w-full" />
           </UFormField>
@@ -753,24 +766,40 @@ onActivated(() => init())
             <div class="flex items-start gap-3">
               <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
               <div class="text-sm text-(--ui-text-muted)">
-                <p class="font-medium text-(--ui-text-highlighted) mb-1">聊天总结设计说明</p>
+                <p class="font-medium text-(--ui-text-highlighted) mb-1">
+                  聊天总结设计说明
+                </p>
                 <p>配置角色扮演对话的记忆助手，用于将对话压缩成简洁的记忆摘要。</p>
               </div>
             </div>
           </div>
 
           <UFormField label="模型" hint="选择用于生成摘要的模型">
-            <USelect v-model="state.currentForm.model_id" :items="modelOptions" placeholder="请选择模型" class="w-full" />
+            <USelect
+              v-model="state.currentForm.model_id"
+              :items="modelOptions"
+              placeholder="请选择模型"
+              class="w-full"
+            />
           </UFormField>
 
           <UFormField label="提示词" hint="生成摘要时使用的提示词">
-            <UTextarea v-model="state.currentForm.prompt" :rows="4" placeholder="请输入提示词" class="w-full" />
+            <UTextarea
+              v-model="state.currentForm.prompt"
+              :rows="4"
+              placeholder="请输入提示词"
+              class="w-full"
+            />
           </UFormField>
 
           <div class="flex items-center justify-between p-4 rounded-lg border border-(--ui-border)">
             <div>
-              <p class="font-medium text-(--ui-text-highlighted)">启用</p>
-              <p class="text-xs text-(--ui-text-muted)">开启后将启用聊天总结功能</p>
+              <p class="font-medium text-(--ui-text-highlighted)">
+                启用
+              </p>
+              <p class="text-xs text-(--ui-text-muted)">
+                开启后将启用聊天总结功能
+              </p>
             </div>
             <USwitch
               :model-value="state.currentForm.open === 2"
@@ -779,8 +808,48 @@ onActivated(() => init())
           </div>
 
           <UFormField label="数量" hint="摘要相关数量配置">
-            <UInput v-model="state.currentForm.num" type="number" placeholder="请输入数量" class="w-full" />
+            <UInput
+              v-model="state.currentForm.num"
+              type="number"
+              placeholder="请输入数量"
+              class="w-full"
+            />
           </UFormField>
+
+          <UFormField label="备注">
+            <UInput v-model="state.currentForm.remarks" placeholder="备注信息" class="w-full" />
+          </UFormField>
+        </div>
+
+        <!-- RIGHT_NAV 导航配置 -->
+        <div v-if="state.activeConfigKey === 'RIGHT_NAV'" class="space-y-4">
+          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+            <div class="flex items-start gap-3">
+              <UIcon name="lucide:info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
+              <div class="text-sm text-(--ui-text-muted)">
+                <p class="font-medium text-(--ui-text-highlighted) mb-1">导航配置说明</p>
+                <p>配置右侧导航菜单项，包括标题、角标内容和图标。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div
+              v-for="(item, index) in state.currentForm.right_nav"
+              :key="index"
+              class="flex items-center gap-3 p-3 rounded-lg border border-(--ui-border)"
+            >
+              <UInput v-model="item.title" placeholder="标题" class="flex-1" readonly />
+              <UInput v-model="item.content" placeholder="标记内容" class="w-24" />
+              <!-- <UButton
+                size="sm"
+                color="error"
+                variant="soft"
+                icon="lucide:trash-2"
+                @click="state.currentForm.right_nav.splice(index, 1)"
+              /> -->
+            </div>
+          </div>
 
           <UFormField label="备注">
             <UInput v-model="state.currentForm.remarks" placeholder="备注信息" class="w-full" />
@@ -793,7 +862,9 @@ onActivated(() => init())
             <div class="flex items-start gap-3">
               <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
               <div class="text-sm text-(--ui-text-muted)">
-                <p class="font-medium text-(--ui-text-highlighted) mb-1">创作管理配置说明</p>
+                <p class="font-medium text-(--ui-text-highlighted) mb-1">
+                  创作管理配置说明
+                </p>
                 <p>配置创作审核流程的模型、提示词和迭代次数等参数。</p>
               </div>
             </div>
@@ -801,8 +872,12 @@ onActivated(() => init())
 
           <div class="flex items-center justify-between p-4 rounded-lg border border-(--ui-border)">
             <div>
-              <p class="font-medium text-(--ui-text-highlighted)">启用</p>
-              <p class="text-xs text-(--ui-text-muted)">开启后将启用创作管理功能</p>
+              <p class="font-medium text-(--ui-text-highlighted)">
+                启用
+              </p>
+              <p class="text-xs text-(--ui-text-muted)">
+                开启后将启用创作管理功能
+              </p>
             </div>
             <USwitch
               :model-value="state.currentForm.open === 2"
@@ -811,23 +886,48 @@ onActivated(() => init())
           </div>
 
           <UFormField label="最大迭代次数">
-            <UInput v-model="state.currentForm.max_iterations" type="number" placeholder="请输入最大迭代次数" class="w-full" />
+            <UInput
+              v-model="state.currentForm.max_iterations"
+              type="number"
+              placeholder="请输入最大迭代次数"
+              class="w-full"
+            />
           </UFormField>
 
           <UFormField label="系统提示词" hint="系统级别的提示词">
-            <UTextarea v-model="state.currentForm.system_prompt" :rows="4" placeholder="请输入系统提示词" class="w-full" />
+            <UTextarea
+              v-model="state.currentForm.system_prompt"
+              :rows="4"
+              placeholder="请输入系统提示词"
+              class="w-full"
+            />
           </UFormField>
 
           <UFormField label="初始用户消息模板" hint="初始用户消息的模板">
-            <UTextarea v-model="state.currentForm.initial_prompt" :rows="4" placeholder="请输入初始用户消息模板" class="w-full" />
+            <UTextarea
+              v-model="state.currentForm.initial_prompt"
+              :rows="4"
+              placeholder="请输入初始用户消息模板"
+              class="w-full"
+            />
           </UFormField>
 
           <UFormField label="条目注入消息模板" hint="条目注入时使用的消息模板">
-            <UTextarea v-model="state.currentForm.inject_prompt" :rows="4" placeholder="请输入条目注入消息模板" class="w-full" />
+            <UTextarea
+              v-model="state.currentForm.inject_prompt"
+              :rows="4"
+              placeholder="请输入条目注入消息模板"
+              class="w-full"
+            />
           </UFormField>
 
           <UFormField label="强制终审消息模板" hint="强制终审时使用的消息模板">
-            <UTextarea v-model="state.currentForm.final_prompt" :rows="4" placeholder="请输入强制终审消息模板" class="w-full" />
+            <UTextarea
+              v-model="state.currentForm.final_prompt"
+              :rows="4"
+              placeholder="请输入强制终审消息模板"
+              class="w-full"
+            />
           </UFormField>
 
           <UFormField label="备注">

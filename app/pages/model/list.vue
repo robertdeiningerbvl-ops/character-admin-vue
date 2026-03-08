@@ -15,8 +15,13 @@ const stateMap: Record<number, [string, BadgeColor]> = {
 }
 
 const streamMap: Record<number, [string, BadgeColor]> = {
-  2: ['是', 'success'],
-  1: ['否', 'neutral']
+  1: ['是', 'success'],
+  0: ['否', 'neutral']
+}
+
+const typeMap: Record<number, [string, BadgeColor]> = {
+  0: ['聊天模型', 'primary'],
+  1: ['创作模型', 'warning']
 }
 
 const state = reactive({
@@ -37,7 +42,7 @@ const loadData = async () => {
 }
 
 const openEditModal = (record?: any) => {
-  state.currentForm = record ? cloneDeep(record) : { state: 2, stream: 2 }
+  state.currentForm = record ? cloneDeep(record) : { state: 2, stream: 1, ty: 0 }
   state.isDialog = true
 }
 
@@ -84,6 +89,9 @@ onMounted(() => loadData())
           </div>
           <UBadge :color="stateMap[item.state]?.[1] || 'neutral'" variant="subtle">
             {{ stateMap[item.state]?.[0] || '未知' }}
+          </UBadge>
+          <UBadge :color="typeMap[item.ty]?.[1] || 'neutral'" variant="solid" class="ml-1">
+            {{ typeMap[item.ty]?.[0] || '未知' }}
           </UBadge>
         </div>
 

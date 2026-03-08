@@ -5,6 +5,7 @@ definePageMeta({ layout: 'app' })
 defineOptions({ name: 'MemberCollectList' })
 
 const route = useRoute()
+const router = useRouter()
 const uid = computed(() => route.params.id as string)
 
 type BadgeColor = 'error' | 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'neutral'
@@ -25,6 +26,7 @@ const state = reactive({
 
 const loadData = async () => {
   state.loading = true
+  router.replace({ query: { ...route.query, page: String(state.page) } })
   try {
     const { data } = await getConductCollectList({
       uid: uid.value,
@@ -43,7 +45,11 @@ const onPageChange = (page: number) => {
   loadData()
 }
 
-onMounted(() => loadData())
+onMounted(() => {
+  const urlPage = Number(route.query.page) || 1
+  state.page = urlPage
+  loadData()
+})
 </script>
 
 <template>

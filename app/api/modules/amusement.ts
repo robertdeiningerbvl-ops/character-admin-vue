@@ -46,6 +46,11 @@ export function removeAmusement(data: { id: number }) {
   return request.post<any>(apiRoute.amusementRemove, data)
 }
 
+/** 物理删除角色卡 */
+export function hardRemoveAmusement(data: { id: number }) {
+  return request.post<any>(apiRoute.amusementHardRemove, data)
+}
+
 /** 修改角色卡状态 */
 export function updateAmusementState(data: any) {
   return request.post<any>(apiRoute.amusementStateEdit, data)

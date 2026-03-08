@@ -18,6 +18,8 @@ const state = reactive({
 
 const loadData = async () => {
   state.loading = true
+  // 同步页码到URL
+  router.replace({ query: { ...route.query, page: String(state.page) } })
   try {
     const { data } = await getAmusementChatMessage({
       uid: uid.value,
@@ -36,7 +38,12 @@ const onPageChange = (page: number) => {
   loadData()
 }
 
-onMounted(() => loadData())
+onMounted(() => {
+  // 从URL恢复页码
+  const urlPage = Number(route.query.page) || 1
+  state.page = urlPage
+  loadData()
+})
 </script>
 
 <template>

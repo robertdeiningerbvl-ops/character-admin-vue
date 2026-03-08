@@ -29,9 +29,14 @@ const stateEnabled = computed({
   set: (val) => { state.form.state = val ? 2 : 0 }
 })
 
+const typeOptions = [
+  { label: '聊天模型', value: 0 },
+  { label: '创作模型', value: 1 }
+]
+
 const streamEnabled = computed({
-  get: () => state.form.stream === 2,
-  set: (val) => { state.form.stream = val ? 2 : 1 }
+  get: () => state.form.stream === 1,
+  set: (val) => { state.form.stream = val ? 1 : 0 }
 })
 
 const state = reactive({
@@ -126,7 +131,14 @@ watch(() => props.dialog, (val) => {
             <UFormField label="名称" name="name" required>
               <UInput v-model.trim="state.form.name" placeholder="输入模型名称" />
             </UFormField>
-            <UFormField label="预设类型" name="preset_id" required>
+            <UFormField label="模型类型" name="ty" required>
+              <USelect
+                v-model="state.form.ty"
+                :items="typeOptions"
+                placeholder="选择模型类型"
+              />
+            </UFormField>
+            <UFormField label="预设" name="preset_id" required>
               <USelect
                 v-model="state.form.preset_id"
                 :items="state.presetOptions"

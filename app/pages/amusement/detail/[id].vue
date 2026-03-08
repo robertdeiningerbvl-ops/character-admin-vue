@@ -81,11 +81,21 @@ const state = reactive({
     playCount: 0,
     score: 0,
     scoreCount: 0,
-    battery: 0
+    battery: 0,
+    browseCount: 0
   },
   // 状态标记
   recommend: 0,
-  dayRecommend: 0
+  dayRecommend: 0,
+  weekRecommend: '',
+  monthRecommend: '',
+  recommendTime: null as number | null,
+  createdAt: 0,
+  updatedAt: 0,
+  // 全局参数
+  worldBookParameter: 0,
+  regularParameter: 0,
+  categoryId: 0
 })
 
 // 返回列表
@@ -129,8 +139,14 @@ const applyData = async (data: any, applyContent = true) => {
     state.stats.score = item.score ?? 0
     state.stats.scoreCount = item.score_count ?? 0
     state.stats.battery = item.battery ?? 0
+    state.stats.browseCount = item.browse_count ?? 0
     state.recommend = item.recommend ?? 0
     state.dayRecommend = item.day_recommend ?? 0
+    state.weekRecommend = item.week_recommend ?? ''
+    state.monthRecommend = item.month_recommend ?? ''
+    state.recommendTime = item.recommend_time ?? null
+    state.createdAt = item.created_at ?? 0
+    state.updatedAt = item.updated_at ?? 0
     state.isPrivate = item.anonymous === 1
     state.isNsfw = item.nsfw === 1
     state.isRepost = item.source === 1
@@ -150,12 +166,12 @@ const applyData = async (data: any, applyContent = true) => {
         const content = JSON.parse(versionData.body)
         applyCharacterCard(content)
       }
-    } catch {}
+    } catch { /* empty */ }
   } else if (applyContent && data.body) {
     try {
       const content = JSON.parse(data.body)
       applyCharacterCard(content)
-    } catch {}
+    } catch { /* empty */ }
   }
 }
 
@@ -204,8 +220,18 @@ const applyCharacterCard = (card: any) => {
     state.isPrivate = card.anohana.anonymous === true
     state.isNsfw = card.anohana.nsfw === true
     if (card.anohana.guide && Array.isArray(card.anohana.guide)) {
-      state.quickReplies = card.anohana.guide
+      // 兼容字符串数组和对象数组两种格式
+      state.quickReplies = card.anohana.guide.map((item: any, index: number) => {
+        if (typeof item === 'string') {
+          return { id: String(Date.now() + index), content: item }
+        }
+        return item
+      })
     }
+    // 全局参数
+    if (card.anohana.world_book_parameter != null) state.worldBookParameter = card.anohana.world_book_parameter
+    if (card.anohana.regular_parameter != null) state.regularParameter = card.anohana.regular_parameter
+    if (card.anohana.category_id != null) state.categoryId = card.anohana.category_id
   }
 }
 
@@ -223,7 +249,10 @@ const buildCharacterData = () => {
       summary: state.summary,
       anonymous: state.isPrivate,
       nsfw: state.isNsfw,
-      guide: state.quickReplies.filter(r => (r.content || '').trim())
+      guide: state.quickReplies.filter(r => (r.content || '').trim()).map(r => r.content),
+      world_book_parameter: state.worldBookParameter,
+      regular_parameter: state.regularParameter,
+      category_id: state.categoryId
     },
     data: {
       name: state.name,
@@ -279,7 +308,7 @@ const handleSave = async () => {
         avatar: draft.anohana?.avatar || '',
         anonymous: state.isPrivate,
         nsfw: state.isNsfw,
-        guide: JSON.stringify(state.quickReplies.filter(r => (r.content || '').trim()))
+        guide: JSON.stringify(state.quickReplies.filter(r => (r.content || '').trim()).map(r => r.content))
       })
       if (!error && data?.id) {
         state.amusementId = data.id

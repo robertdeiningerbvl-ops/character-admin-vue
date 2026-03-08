@@ -3,6 +3,9 @@ import { breakpointsTailwind } from '@vueuse/core'
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
 const isMobile = breakpoints.smaller('lg')
+
+const scrollRef = ref<HTMLElement | null>(null)
+provide('scrollContainer', scrollRef)
 </script>
 
 <template>
@@ -28,9 +31,18 @@ const isMobile = breakpoints.smaller('lg')
         <slot name="actions" />
       </div>
 
-      <div class="pt-(--ui-header-height)">
+      <div ref="scrollRef" class="dashboard-scroll-body pt-(--ui-header-height)">
         <slot />
       </div>
+
+      <ScrollAnchor />
     </template>
   </UDashboardPanel>
 </template>
+
+<style scoped>
+.dashboard-scroll-body {
+  height: 100%;
+  overflow-y: auto;
+}
+</style>

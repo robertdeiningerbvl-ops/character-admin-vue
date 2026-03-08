@@ -90,7 +90,7 @@ const createDefaultEntry = (id: number): WorldBookEntry => ({
 const state = reactive({
   loading: false,
   configName: '',
-  configState: 1,
+  configState: 2,
   entries: [] as WorldBookEntry[],
   expandedKeys: [] as string[],
   fullscreenOpen: false,
@@ -232,7 +232,7 @@ watch(() => props.dialog, (val) => {
   if (val) {
     state.loading = false
     state.configName = props.currentForm?.name || ''
-    state.configState = props.currentForm?.state ?? 1
+    state.configState = props.currentForm?.state ?? 2
     state.entries = []
     state.expandedKeys = []
     state.fullscreenOpen = false

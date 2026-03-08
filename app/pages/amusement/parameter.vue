@@ -7,6 +7,8 @@ defineOptions({ name: 'AmusementParameterList' })
 
 const dialog = useDialog()
 const toast = useToast()
+const router = useRouter()
+const route = useRoute()
 
 type BadgeColor = 'error' | 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'neutral'
 
@@ -35,6 +37,8 @@ const state = reactive({
 
 const loadData = async () => {
   state.loading = true
+  // 同步页码到URL
+  router.replace({ query: { ...route.query, page: String(state.page), tab: String(state.activeTab) } })
   try {
     const { data } = await getAmusementParameterList({
       ty: state.activeTab,
@@ -49,7 +53,7 @@ const loadData = async () => {
 }
 
 const openEditModal = (record?: any) => {
-  state.currentForm = record ? cloneDeep(record) : { state: 1, ty: state.activeTab }
+  state.currentForm = record ? cloneDeep(record) : { state: 2, ty: state.activeTab }
   const ty = record?.ty ?? state.activeTab
   if (ty === 1) {
     state.isRegexDialog = true
@@ -90,7 +94,16 @@ const onPageChange = (page: number) => {
   loadData()
 }
 
-onMounted(() => loadData())
+onMounted(() => {
+  // 从URL恢复页码和标签页
+  const urlPage = Number(route.query.page) || 1
+  const urlTab = Number(route.query.tab)
+  if (!isNaN(urlTab) && [1, 2].includes(urlTab)) {
+    state.activeTab = urlTab
+  }
+  state.page = urlPage
+  loadData()
+})
 </script>
 
 <template>

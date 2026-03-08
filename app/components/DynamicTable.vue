@@ -2,6 +2,7 @@
 import type { Service } from '@/types'
 
 const route = useRoute()
+const router = useRouter()
 
 const props = withDefaults(defineProps<{
   /** 是否隐藏工具栏 */
@@ -97,6 +98,8 @@ async function getList() {
     pagination.page = 1
     state.formHash = formHash
   }
+  // 同步页码到URL
+  router.replace({ query: { ...route.query, page: String(pagination.page) } })
   const params = formatDateTimeParams(state.form)
   const { data } = await props.dataRequest({ page: pagination.page, pagesize: pagination.pageSize, ...params })
   if (data) {
@@ -114,7 +117,9 @@ async function getList() {
 }
 
 async function init() {
-  pagination.page = 1
+  // 从URL恢复页码
+  const urlPage = Number(route.query.page) || 1
+  pagination.page = urlPage
   state.form = null
   nextTick(() => {
     // 初始化表单，支持默认值和URL参数

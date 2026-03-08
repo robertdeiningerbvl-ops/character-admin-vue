@@ -2,9 +2,16 @@
 import * as z from 'zod'
 import { omit } from '@nuxt/ui/utils'
 import { useAuthStore, useRouteStore } from '@/store'
+import { getSiteConfig } from '@/api/modules/config'
+
+const siteName = ref('后台管理')
+
+getSiteConfig().then((res: any) => {
+  if (res?.data?.name) siteName.value = res.data.name
+})
 
 useSeoMeta({
-  title: '幻欲之梦 - 管理员登录'
+  title: computed(() => `${siteName.value} - 管理员登录`)
 })
 
 const loading = ref(false)
@@ -80,7 +87,7 @@ async function onSubmit(payload: any) {
 
           <div class="brand-section">
             <h1 class="brand-name">
-              幻欲之梦
+              {{ siteName }}
             </h1>
             <p class="brand-desc">
               ADMIN CONTROL SYSTEM

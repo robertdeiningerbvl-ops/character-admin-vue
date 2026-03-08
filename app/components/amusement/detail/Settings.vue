@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getCommonTagList } from '@/api'
+import { getCommonTagList, getAmusementParameterList, getAmusementCategoryList } from '@/api'
 
 const props = defineProps<{
   state: any
@@ -115,6 +115,37 @@ const addCustomTag = () => {
 // 高级设置展开
 const showAdvanced = ref(false)
 
+// 全局参数选项
+const worldBookOptions = ref<{ label: string; value: number }[]>([])
+const regularOptions = ref<{ label: string; value: number }[]>([])
+const categoryOptions = ref<{ label: string; value: number }[]>([])
+
+// 加载全局参数
+const fetchParameters = async () => {
+  try {
+    // 世界书 ty=2
+    const { data: wbData } = await getAmusementParameterList({ ty: 2, page: 1, pagesize: -1 })
+    worldBookOptions.value = (wbData?.list || []).map((item: any) => ({
+      label: item.name,
+      value: item.id
+    }))
+    // 正则 ty=1
+    const { data: regData } = await getAmusementParameterList({ ty: 1, page: 1, pagesize: -1 })
+    regularOptions.value = (regData?.list || []).map((item: any) => ({
+      label: item.name,
+      value: item.id
+    }))
+    // 分类
+    const { data: catData } = await getAmusementCategoryList({ page: 1, pagesize: -1 })
+    categoryOptions.value = (catData?.list || []).map((item: any) => ({
+      label: item.name,
+      value: item.id
+    }))
+  } catch (e) {
+    console.error('fetchParameters error:', e)
+  }
+}
+
 // 第一句话操作
 const prevGreeting = () => {
   if (localState.value.currentGreetingIndex > 0) {
@@ -141,6 +172,7 @@ const removeGreeting = () => {
 
 onMounted(() => {
   fetchTags()
+  fetchParameters()
 })
 </script>
 
@@ -165,6 +197,40 @@ onMounted(() => {
         <div>
           <label class="block text-sm text-gray-500 mb-2">创作者</label>
           <UInput v-model="localState.creatorName" placeholder="输入创作者名称..." />
+        </div>
+      </div>
+
+      <!-- 全局参数选择 -->
+      <div class="grid grid-cols-3 gap-4 mb-4">
+        <div>
+          <label class="block text-sm text-gray-500 mb-2">分类</label>
+          <USelectMenu
+            v-model="localState.categoryId"
+            :items="categoryOptions"
+            value-key="value"
+            placeholder="选择分类..."
+            class="w-full"
+          />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-500 mb-2">全局世界书</label>
+          <USelectMenu
+            v-model="localState.worldBookParameter"
+            :items="worldBookOptions"
+            value-key="value"
+            placeholder="选择世界书..."
+            class="w-full"
+          />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-500 mb-2">全局正则</label>
+          <USelectMenu
+            v-model="localState.regularParameter"
+            :items="regularOptions"
+            value-key="value"
+            placeholder="选择正则..."
+            class="w-full"
+          />
         </div>
       </div>
 

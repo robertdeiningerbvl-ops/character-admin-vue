@@ -6,8 +6,8 @@ const UBadge = resolveComponent('UBadge')
 const UIcon = resolveComponent('UIcon')
 
 const stateEnum: Record<number, [string, string]> = {
-  1: ['启用', 'success'],
-  2: ['待审核', 'warning'],
+  0: ['待审核', 'warning'],
+  2: ['启用', 'success'],
   4: ['已删除', 'error']
 }
 
@@ -63,8 +63,8 @@ export const baseColumns: TableColumnList = [
       component: 'Select',
       componentProps: {
         options: [
-          { label: '启用', value: 1 },
-          { label: '待审核', value: 2 },
+          { label: '待审核', value: 0 },
+          { label: '启用', value: 2 },
           { label: '已删除', value: 4 }
         ]
       }

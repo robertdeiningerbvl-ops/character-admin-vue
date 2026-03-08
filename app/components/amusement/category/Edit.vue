@@ -23,14 +23,14 @@ const formRef = useTemplateRef('formRef')
 const toast = useToast()
 
 const stateOptions = [
-  { label: '启用', value: 1 },
-  { label: '待审核', value: 2 },
+  { label: '待审核', value: 0 },
+  { label: '启用', value: 2 },
   { label: '已删除', value: 4 }
 ]
 
 const stateEnabled = computed({
-  get: () => state.form.state === 1,
-  set: (val) => { state.form.state = val ? 1 : 4 }
+  get: () => state.form.state === 2,
+  set: (val) => { state.form.state = val ? 2 : 4 }
 })
 
 const state = reactive({
@@ -39,7 +39,7 @@ const state = reactive({
     name: '',
     rating: 0,
     hint: '',
-    state: 1,
+    state: 2,
     contentList: [] as Array<{ id: number, name: string, content: string, sort: number }>
   } as any
 })

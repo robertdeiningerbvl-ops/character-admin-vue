@@ -100,6 +100,7 @@ export const apiRoute = {
   amusementAdd: 'amusement-add',
   amusementEdit: 'amusement-edit',
   amusementRemove: 'amusement-remove',
+  amusementHardRemove: 'amusement-hard-remove',
   amusementStateEdit: 'amusement-state-edit',
   amusementSubmit: 'amusement-submit',
   amusementVersionDetail: 'amusement-version-detail',

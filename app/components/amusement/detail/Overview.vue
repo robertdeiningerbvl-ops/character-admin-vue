@@ -13,49 +13,67 @@ const localState = computed({
   set: val => emit('update:state', val)
 })
 
-// 预览状态
-const showPreview = ref(false)
+// 时间判断函数
+const isThisWeek = (timestamp: number | null) => {
+  if (!timestamp) return false
+  const ts = timestamp < 10000000000 ? timestamp * 1000 : timestamp
+  const date = new Date(ts)
+  const now = new Date()
+  const weekStart = new Date(now)
+  weekStart.setDate(now.getDate() - now.getDay())
+  weekStart.setHours(0, 0, 0, 0)
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekStart.getDate() + 7)
+  return date >= weekStart && date < weekEnd
+}
+
+const isThisMonth = (timestamp: number | null) => {
+  if (!timestamp) return false
+  const ts = timestamp < 10000000000 ? timestamp * 1000 : timestamp
+  const date = new Date(ts)
+  const now = new Date()
+  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()
+}
+
+const formatDate = (timestamp: number | string | null) => {
+  if (!timestamp) return ''
+  let ts = typeof timestamp === 'string' ? Number(timestamp) : timestamp
+  if (ts <= 0) return ''
+  if (ts < 10000000000) ts = ts * 1000
+  if (ts < new Date('2000-01-01').getTime()) return ''
+  const date = new Date(ts)
+  if (isNaN(date.getTime())) return ''
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}/${m}/${d}`
+}
+
+// 格式化周推显示
+const formatWeekRecommend = (weekRecommend: any) => {
+  if (!weekRecommend) return ''
+  const arr = Array.isArray(weekRecommend) ? weekRecommend : (typeof weekRecommend === 'string' ? weekRecommend.split(',') : [])
+  if (arr.length === 0) return ''
+  return ' ' + arr.map((w: string) => `第${w}周`).join('、')
+}
+
+// 格式化月推显示
+const formatMonthRecommend = (monthRecommend: any) => {
+  if (!monthRecommend) return ''
+  const arr = Array.isArray(monthRecommend) ? monthRecommend : (typeof monthRecommend === 'string' ? monthRecommend.split(',') : [])
+  if (arr.length === 0) return ''
+  return ' ' + arr.map((m: string) => `${m}月`).join('、')
+}
+
+// 预览相关
+const phonePreviewRef = ref<any>(null)
 const loadingHistory = ref(false)
-const chatHistory = ref<{ role: string, raw: string, kind: 'text' | 'html' | 'iframe' | 'mixed', html: string, text?: string }[]>([])
-const chatContentRef = ref<HTMLDivElement | null>(null)
-
-// 检测是否包含HTML
-const containsHTML = (str: string): boolean => {
-  return /<[^>]+>/.test(str || '')
-}
-
-// 渲染消息
-const renderMessage = (content: string): { kind: 'text' | 'html' | 'iframe' | 'mixed', html: string, text?: string } => {
-  if (!content) return { kind: 'text', html: '' }
-
-  // 检测是否是完整HTML文档（iframe）
-  const isFullDoc = /<!DOCTYPE|<html[^>]*>|<head[^>]*>|<body[^>]*>/i.test(content)
-  if (isFullDoc) {
-    const m = content.match(/(<!DOCTYPE[\s\S]*|<html[\s\S]*)/i)
-    if (m && m.index !== undefined && m.index > 0) {
-      let cleanText = content.slice(0, m.index)
-        .replace(/<!--[\s\S]*?-->/g, '')
-        .replace(/```html\s*$/gm, '')
-        .replace(/<\/?content>/gi, '')
-        .trim()
-      return { kind: 'mixed', text: cleanText, html: m[0] }
-    }
-    return { kind: 'iframe', html: content }
-  }
-
-  // 检测是否包含HTML标签
-  if (containsHTML(content)) {
-    return { kind: 'html', html: content }
-  }
-
-  // 纯文本
-  return { kind: 'text', html: '' }
-}
+const chatHistoryData = ref<{ role: string, content: string }[]>([])
 
 // 加载聊天历史
 const loadChatHistory = async () => {
   if (!localState.value.amusementId) {
-    chatHistory.value = []
+    chatHistoryData.value = []
     return
   }
   loadingHistory.value = true
@@ -66,29 +84,23 @@ const loadChatHistory = async () => {
     })
     const history = data?.history || []
     if (Array.isArray(history) && history.length > 0) {
-      chatHistory.value = history.map((msg: any) => {
-        const rendered = renderMessage(msg.content || '')
-        return {
-          role: msg.role || 'assistant',
-          raw: msg.content || '',
-          kind: rendered.kind,
-          html: rendered.html,
-          text: rendered.text || ''
-        }
-      })
+      chatHistoryData.value = history.map((msg: any) => ({
+        role: msg.role || 'assistant',
+        content: msg.content || ''
+      }))
     } else {
-      chatHistory.value = []
+      chatHistoryData.value = []
     }
   } catch {
-    chatHistory.value = []
+    chatHistoryData.value = []
   } finally {
     loadingHistory.value = false
   }
 }
 
-// 点击预览
-const handlePreview = async () => {
-  showPreview.value = true
+// 点击预览时加载数据
+const handlePreviewClick = async () => {
+  phonePreviewRef.value?.handlePreview()
   await loadChatHistory()
 }
 
@@ -198,7 +210,7 @@ const buildCharacterData = () => {
       summary: localState.value.summary,
       anonymous: localState.value.isPrivate,
       nsfw: localState.value.isNsfw,
-      guide: localState.value.quickReplies.filter((r: any) => (r.content || '').trim())
+      guide: localState.value.quickReplies.filter((r: any) => (r.content || '').trim()).map((r: any) => r.content)
     },
     data: {
       name: localState.value.name,
@@ -272,7 +284,7 @@ const handleExportPng = async () => {
     ctx.drawImage(img, 0, 0)
 
     const dataUrl = canvas.toDataURL('image/png')
-    const binaryString = atob(dataUrl.split(',')[1])
+    const binaryString = atob(dataUrl.split(',')[1] || '')
     const bytes = new Uint8Array(binaryString.length)
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i)
@@ -307,7 +319,7 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
   const crc32 = (data: Uint8Array): number => {
     let crc = 0xffffffff
     for (let i = 0; i < data.length; i++) {
-      crc = crcTable[(crc ^ data[i]) & 0xff] ^ (crc >>> 8)
+      crc = crcTable[(crc ^ (data[i] ?? 0)) & 0xff]! ^ (crc >>> 8)
     }
     return (crc ^ 0xffffffff) >>> 0
   }
@@ -341,11 +353,11 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
 
   let insertPos = 8
   while (insertPos < pngData.length - 12) {
-    const len = (pngData[insertPos] << 24) | (pngData[insertPos + 1] << 16)
-      | (pngData[insertPos + 2] << 8) | pngData[insertPos + 3]
+    const len = ((pngData[insertPos] ?? 0) << 24) | ((pngData[insertPos + 1] ?? 0) << 16)
+      | ((pngData[insertPos + 2] ?? 0) << 8) | (pngData[insertPos + 3] ?? 0)
     const type = String.fromCharCode(
-      pngData[insertPos + 4], pngData[insertPos + 5],
-      pngData[insertPos + 6], pngData[insertPos + 7]
+      pngData[insertPos + 4] ?? 0, pngData[insertPos + 5] ?? 0,
+      pngData[insertPos + 6] ?? 0, pngData[insertPos + 7] ?? 0
     )
     insertPos += 12 + len
     if (type === 'IHDR') break
@@ -361,167 +373,19 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
 
 <template>
   <div class="flex gap-6 p-6 h-full min-h-0">
-    <!-- 左侧：手机预览 -->
-    <div class="w-72 shrink-0 flex flex-col">
-      <!-- 未预览状态 -->
-      <div
-        v-if="!showPreview"
-        class="flex-1 min-h-[500px] rounded-2xl bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-700 transition-all hover:border-gray-400 dark:hover:border-gray-600"
-      >
-        <UIcon name="i-lucide-eye" class="w-12 h-12 text-gray-400 mb-4" />
-        <span class="text-gray-500 dark:text-gray-400 mb-5 text-sm">点击预览聊天效果</span>
-        <UButton size="sm" :loading="loadingHistory" @click="handlePreview">
-          <template #leading>
-            <UIcon name="i-lucide-eye" class="w-4 h-4" />
-          </template>
-          {{ loadingHistory ? '加载中...' : '预览' }}
-        </UButton>
-      </div>
-
-      <!-- 预览状态 -->
-      <template v-else>
-        <div class="flex-1 min-h-[500px] rounded-[2rem] border-[6px] border-gray-800 dark:border-gray-900 bg-gray-800 shadow-2xl overflow-hidden flex flex-col">
-          <div
-            class="flex-1 min-h-0 flex flex-col relative"
-            :style="{
-              backgroundImage: localState.backgroundImage ? `url(${localState.backgroundImage})` : undefined,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            }"
-          >
-            <!-- 默认渐变背景 -->
-            <div v-if="!localState.backgroundImage" class="absolute inset-0 bg-gradient-to-b from-cyan-100 to-cyan-50 dark:from-gray-700 dark:to-gray-800" />
-
-            <!-- 顶部栏 -->
-            <div class="relative z-10 flex items-center justify-center px-4 py-3 bg-black/40 backdrop-blur-sm shrink-0">
-              <div class="text-center">
-                <div class="font-medium text-white text-sm drop-shadow-md">
-                  {{ localState.name || '未命名角色' }}
-                </div>
-                <div class="text-xs text-cyan-300 flex items-center justify-center gap-1 mt-0.5">
-                  <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                  24小时在线
-                </div>
-              </div>
-            </div>
-
-            <!-- 聊天内容区 -->
-            <div ref="chatContentRef" class="flex-1 min-h-0 relative z-10 p-3 overflow-y-auto space-y-3">
-              <!-- 加载中 -->
-              <div v-if="loadingHistory" class="flex items-center justify-center h-full">
-                <span class="text-gray-400 text-sm">加载聊天记录中...</span>
-              </div>
-
-              <!-- 有聊天记录 -->
-              <template v-else-if="chatHistory.length > 0">
-                <div
-                  v-for="(msg, idx) in chatHistory"
-                  :key="idx"
-                  :class="['flex', (msg.kind === 'iframe' || msg.kind === 'mixed') ? 'w-full' : (msg.role === 'user' ? 'justify-end' : 'justify-start')]"
-                >
-                  <!-- 头像 -->
-                  <img
-                    v-if="msg.role !== 'user' && msg.kind !== 'iframe' && msg.kind !== 'mixed' && displayAvatar"
-                    :src="displayAvatar"
-                    alt=""
-                    class="w-8 h-8 rounded-full mr-2 shrink-0 object-cover"
-                  >
-
-                  <!-- iframe 消息 -->
-                  <div v-if="msg.kind === 'iframe'" class="w-full rounded-lg overflow-hidden">
-                    <iframe
-                      class="w-full border-0"
-                      style="min-height: 300px"
-                      :srcdoc="msg.html"
-                      sandbox="allow-scripts allow-same-origin allow-modals"
-                      @load="(e: Event) => {
-                        const iframe = e.target as HTMLIFrameElement
-                        try {
-                          const h = iframe.contentWindow?.document?.body?.scrollHeight || 300
-                          iframe.style.height = h + 'px'
-                        }
-                        catch {}
-                      }"
-                    />
-                  </div>
-
-                  <!-- mixed 消息 -->
-                  <div v-else-if="msg.kind === 'mixed'" class="w-full">
-                    <div class="bg-white/80 backdrop-blur rounded-lg p-2 text-sm text-gray-700 mb-2">{{ msg.text }}</div>
-                    <div class="rounded-lg overflow-hidden">
-                      <iframe
-                        class="w-full border-0"
-                        style="min-height: 300px"
-                        :srcdoc="msg.html"
-                        sandbox="allow-scripts allow-same-origin allow-modals"
-                        @load="(e: Event) => {
-                          const iframe = e.target as HTMLIFrameElement
-                          try {
-                            const h = iframe.contentWindow?.document?.body?.scrollHeight || 300
-                            iframe.style.height = h + 'px'
-                          }
-                          catch {}
-                        }"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- 普通消息 -->
-                  <div
-                    v-else
-                    :class="[
-                      'max-w-[75%] rounded-lg p-2 text-sm',
-                      msg.role === 'user' ? 'bg-cyan-500 text-white' : 'bg-white/80 backdrop-blur text-gray-700'
-                    ]"
-                  >
-                    <span v-if="msg.kind === 'text'">{{ msg.raw }}</span>
-                    <div v-else-if="msg.kind === 'html'" class="message-content" v-html="msg.html" />
-                  </div>
-                </div>
-              </template>
-
-              <!-- 无聊天记录，显示第一句话 -->
-              <template v-else-if="localState.greetings[0]">
-                <div class="flex justify-start">
-                  <img
-                    v-if="displayAvatar"
-                    :src="displayAvatar"
-                    alt=""
-                    class="w-8 h-8 rounded-full mr-2 shrink-0 object-cover"
-                  >
-                  <div class="bg-white/80 backdrop-blur rounded-lg p-3 text-sm text-gray-700 leading-relaxed max-w-[75%]">
-                    {{ localState.greetings[0].slice(0, 200) }}{{ localState.greetings[0].length > 200 ? '...' : '' }}
-                  </div>
-                </div>
-              </template>
-
-              <!-- 无内容 -->
-              <div v-else class="flex items-center justify-center h-full">
-                <span class="text-gray-400 text-sm">暂无聊天记录</span>
-              </div>
-            </div>
-
-            <!-- 底部输入框 -->
-            <div class="relative z-10 p-3 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm">
-              <div class="flex items-center gap-2">
-                <div class="flex-1 bg-white dark:bg-gray-800 rounded-full px-4 py-2 text-sm text-gray-400">
-                  说点什么...
-                </div>
-                <div class="w-9 h-9 rounded-full bg-cyan-500 flex items-center justify-center text-white shadow-md">
-                  <UIcon name="i-lucide-send" class="w-4 h-4" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <button
-          class="w-full mt-3 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors flex items-center justify-center gap-1.5"
-          @click="showPreview = false"
-        >
-          <UIcon name="i-lucide-eye-off" class="w-3.5 h-3.5" />
-          关闭预览
-        </button>
-      </template>
+    <!-- 左侧：手机预览（使用共用组件） -->
+    <div class="w-[388px] shrink-0 flex flex-col overflow-hidden">
+      <AmusementPhonePreview
+        ref="phonePreviewRef"
+        :name="localState.name"
+        :background-image="localState.backgroundImage"
+        :avatar-image="localState.avatarImage"
+        :greetings="localState.greetings"
+        :chat-history="chatHistoryData"
+        :loading="loadingHistory"
+        :show-toggle="true"
+        @click="handlePreviewClick"
+      />
     </div>
 
     <!-- 右侧：信息区 -->
@@ -724,7 +588,7 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
             </div>
           </div>
         </div>
-        <div class="grid grid-cols-4 gap-3">
+        <div class="grid grid-cols-5 gap-3">
           <div class="p-3 bg-white dark:bg-gray-900 rounded-lg text-center shadow-sm">
             <div class="text-xl font-semibold text-purple-500">
               {{ localState.stats.dialogueCount }}
@@ -739,6 +603,14 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
             </div>
             <div class="text-xs text-gray-500 mt-1">
               游玩数
+            </div>
+          </div>
+          <div class="p-3 bg-white dark:bg-gray-900 rounded-lg text-center shadow-sm">
+            <div class="text-xl font-semibold text-blue-500">
+              {{ localState.stats.browseCount }}
+            </div>
+            <div class="text-xs text-gray-500 mt-1">
+              浏览量
             </div>
           </div>
           <div class="p-3 bg-white dark:bg-gray-900 rounded-lg text-center shadow-sm">
@@ -757,6 +629,14 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
               评分人数
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- 时间信息 -->
+      <div v-if="localState.amusementId" class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+        <div class="flex items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
+          <span>创作时间: {{ formatDate(localState.createdAt) }}</span>
+          <span>更新时间: {{ formatDate(localState.updatedAt) }}</span>
         </div>
       </div>
 
@@ -789,6 +669,30 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
             variant="soft"
           >
             日推
+          </UBadge>
+          <!-- 周推 -->
+          <UBadge
+            v-if="localState.weekRecommend && (Array.isArray(localState.weekRecommend) ? localState.weekRecommend.length > 0 : localState.weekRecommend !== '')"
+            color="cyan"
+            variant="soft"
+          >
+            周推{{ formatWeekRecommend(localState.weekRecommend) }}
+          </UBadge>
+          <!-- 月推 -->
+          <UBadge
+            v-if="localState.monthRecommend && (Array.isArray(localState.monthRecommend) ? localState.monthRecommend.length > 0 : localState.monthRecommend !== '')"
+            color="purple"
+            variant="soft"
+          >
+            月推{{ formatMonthRecommend(localState.monthRecommend) }}
+          </UBadge>
+          <!-- 推荐时间 -->
+          <UBadge
+            v-if="localState.recommendTime && formatDate(localState.recommendTime)"
+            color="neutral"
+            variant="soft"
+          >
+            {{ formatDate(localState.recommendTime) }}
           </UBadge>
           <!-- 隐私 -->
           <UBadge
