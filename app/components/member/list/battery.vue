@@ -53,7 +53,7 @@ watch(() => props.dialog, (val) => {
     <template #header>
       <div class="flex items-center gap-2">
         <UIcon name="i-lucide-zap" class="w-5 h-5 text-yellow-500" />
-        <span class="font-semibold">电量充值</span>
+        <span class="font-semibold">妖力充值</span>
       </div>
     </template>
 
@@ -78,7 +78,7 @@ watch(() => props.dialog, (val) => {
             </div>
             <div class="ml-auto text-right">
               <div class="text-xs text-(--ui-text-muted)">
-                当前电量
+                当前妖力
               </div>
               <div class="text-lg font-semibold text-yellow-500">
                 {{ currentForm.battery || 0 }}
@@ -91,12 +91,12 @@ watch(() => props.dialog, (val) => {
         <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border) space-y-3">
           <div class="flex items-center gap-2">
             <UIcon name="i-lucide-plus-circle" class="w-4 h-4 text-(--ui-primary)" />
-            <span class="text-sm font-medium">充值电量</span>
+            <span class="text-sm font-medium">充值妖力</span>
           </div>
           <UFormField name="battery" required>
             <UInput
               v-model.number="state.form.battery"
-              placeholder="请输入充值电量"
+              placeholder="请输入充值妖力"
               type="number"
               class="w-full"
               size="lg"
@@ -107,7 +107,7 @@ watch(() => props.dialog, (val) => {
             </UInput>
           </UFormField>
           <div class="text-xs text-(--ui-text-muted)">
-            充值后电量: <span class="text-yellow-500 font-medium">{{ (currentForm.battery || 0) + (state.form.battery || 0) }}</span>
+            充值后妖力: <span class="text-yellow-500 font-medium">{{ (currentForm.battery || 0) + (state.form.battery || 0) }}</span>
           </div>
         </div>
       </UForm>

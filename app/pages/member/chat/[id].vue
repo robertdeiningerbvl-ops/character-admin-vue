@@ -65,7 +65,7 @@ onMounted(() => {
         class="p-4 rounded-xl bg-(--ui-bg-elevated) border border-(--ui-border)"
       >
         <div class="flex gap-4">
-          <img :src="item.game?.image" :alt="item.game?.name" class="w-16 h-16 rounded-lg object-cover shrink-0">
+          <NuxtImg :src="item.game?.image" :alt="item.game?.name" class="w-16 h-16 rounded-lg object-cover shrink-0" loading="lazy" />
           <div class="flex-1 min-w-0">
             <div class="font-medium truncate">{{ item.game?.name }}</div>
             <div class="mt-1 text-sm text-(--ui-text-muted) line-clamp-2">{{ item.content }}</div>

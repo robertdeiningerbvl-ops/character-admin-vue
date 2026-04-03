@@ -76,7 +76,7 @@ onMounted(() => loadData())
         <!-- 信息 -->
         <div class="space-y-2 text-sm mb-3">
           <div class="flex justify-between">
-            <span class="text-(--ui-text-muted)">所需电量</span>
+            <span class="text-(--ui-text-muted)">所需妖力</span>
             <span class="font-medium text-yellow-600">{{ item.battery }}</span>
           </div>
           <div class="flex justify-between">

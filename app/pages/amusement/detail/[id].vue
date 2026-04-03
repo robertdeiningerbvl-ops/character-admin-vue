@@ -55,6 +55,7 @@ const state = reactive({
   // 图片
   backgroundImage: '',
   avatarImage: '',
+  images: [] as string[],
   // 世界书
   worldBookName: '',
   worldBookEntries: [] as any[],
@@ -215,6 +216,7 @@ const applyCharacterCard = (card: any) => {
     if (card.anohana.image) state.backgroundImage = card.anohana.image
     if (card.anohana.avatar) state.avatarImage = card.anohana.avatar
     if (card.anohana.summary) state.summary = card.anohana.summary
+    state.images = card.anohana.images || []
     state.isRepost = card.anohana.source === true
     state.sourceUrl = card.anohana.source_url || ''
     state.isPrivate = card.anohana.anonymous === true
@@ -244,6 +246,7 @@ const buildCharacterData = () => {
     anohana: {
       image: state.backgroundImage,
       avatar: state.avatarImage || state.backgroundImage,
+      images: state.images,
       source: state.isRepost,
       source_url: state.sourceUrl,
       summary: state.summary,

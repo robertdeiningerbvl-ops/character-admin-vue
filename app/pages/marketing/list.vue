@@ -63,7 +63,7 @@ onMounted(() => loadData())
           <div v-if="item.battery" class="flex items-center gap-1">
             <UIcon name="i-lucide-battery-charging" class="w-4 h-4 text-(--ui-warning)" />
             <span class="font-bold text-(--ui-text-highlighted)">{{ item.battery }}</span>
-            <span class="text-xs text-(--ui-text-muted)">电量</span>
+            <span class="text-xs text-(--ui-text-muted)">妖力</span>
           </div>
           <div v-if="item.amount" class="flex items-center gap-1">
             <UIcon name="i-lucide-coins" class="w-4 h-4 text-(--ui-success)" />

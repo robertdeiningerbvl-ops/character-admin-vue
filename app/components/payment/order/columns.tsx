@@ -46,7 +46,7 @@ export const baseColumns: TableColumnList = [
       return h('div', { class: 'flex items-center gap-2' }, [
         h(UAvatar, { src: member.avatar, size: 'sm' }),
         h('div', { class: 'flex flex-col' }, [
-          h('span', { class: 'text-sm font-medium truncate' }, member.username),
+          h('span', { class: 'text-sm font-medium truncate max-w-[120px]' }, member.username),
           h('span', { class: 'text-xs text-(--ui-text-muted)' }, `ID: ${member.id}`)
         ])
       ])
@@ -142,12 +142,12 @@ export const baseColumns: TableColumnList = [
     }
   },
   {
-    accessorKey: 'payment_type_name',
-    header: '支付类型',
+    accessorKey: 'payment_type',
+    header: '支付渠道',
     cell: ({ row }) => {
-      const typeName = row.original.payment_type_name
-      if (!typeName) return h('span', { class: 'text-gray-400' }, '-')
-      return h(UBadge, { variant: 'subtle', color: 'neutral' }, () => typeName)
+      const paymentType = row.original.payment_type
+      if (!paymentType?.name) return h('span', { class: 'text-gray-400' }, '-')
+      return h(UBadge, { variant: 'subtle', color: 'neutral' }, () => paymentType.name)
     },
     meta: {
       class: {

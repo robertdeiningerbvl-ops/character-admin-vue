@@ -41,6 +41,21 @@ export function removeCommonTag(data: any) {
   return request.post<any>(apiRoute.commonTagRemove, data)
 }
 
+/** 图片列表 */
+export function getImageList(params?: any) {
+  return request.get<any>(apiRoute.imageList, params)
+}
+
+/** 图片新增 */
+export function addImage(data: any) {
+  return request.post<any>(apiRoute.imageSave, data)
+}
+
+/** 图片删除 */
+export function removeImage(data: any) {
+  return request.post<any>(apiRoute.imageRemove, data)
+}
+
 /** 模型列表 */
 export function getCommonModelList(params?: any) {
   return request.get<any>(apiRoute.commonModelList, params)

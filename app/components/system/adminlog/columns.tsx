@@ -82,13 +82,12 @@ export const baseColumns: TableColumnList = [
       const params = row.original.params || '-'
       if (params === '-') return h('span', { class: 'text-(--ui-text-muted)' }, '-')
 
-      const shortParams = params.length > 50 ? params.substring(0, 50) + '...' : params
-      return h(UTooltip, {
-        text: params,
-        class: 'max-w-md'
-      }, () => h('code', {
-        class: 'px-2 py-1 rounded bg-(--ui-bg-elevated) text-xs font-mono text-(--ui-text-muted) truncate block max-w-[180px] cursor-help'
-      }, shortParams))
+      const shortText = params.length > 30 ? params.slice(0, 30) + '...' : params
+
+      return h('code', {
+        class: 'px-2 py-1 rounded bg-(--ui-bg-elevated) text-xs font-mono text-(--ui-primary) cursor-pointer hover:bg-(--ui-bg-inverted/10)',
+        'data-params': params
+      }, shortText)
     }
   },
   {

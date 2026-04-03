@@ -24,7 +24,7 @@ const state = reactive({
   currentList: [] as any[],
   loading: false,
   selectedCardId: null as number | null,
-  sortType: 1, // 1=时间排序, 2=电量排序
+  sortType: 1, // 1=时间排序, 2=妖力排序
   pagination: {
     page: 1,
     pagesize: 12,
@@ -252,7 +252,7 @@ onActivated(() => {
               v-model="state.sortType"
               :items="[
                 { label: '时间', value: 1 },
-                { label: '电量', value: 2 }
+                { label: '妖力', value: 2 }
               ]"
               value-key="value"
               size="sm"
@@ -327,12 +327,13 @@ onActivated(() => {
         >
           <!-- 图片区域 -->
           <div class="relative overflow-hidden bg-gray-100 dark:bg-gray-900">
-            <img
+            <NuxtImg
               :src="item.image"
               :alt="item.name"
               class="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-500"
               :class="{ grayscale: state.activeTab === 4 }"
-            >
+              loading="lazy"
+            />
             <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
             <!-- 左上角标签 -->
             <div class="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
@@ -401,7 +402,7 @@ onActivated(() => {
                   <div class="w-5 h-5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
                     <UIcon name="i-material-symbols-bolt" class="w-2.5 h-2.5 text-yellow-600 dark:text-yellow-400" />
                   </div>
-                  <span class="text-[10px] text-gray-600 dark:text-gray-400">电量</span>
+                  <span class="text-[10px] text-gray-600 dark:text-gray-400">妖力</span>
                 </div>
                 <span class="font-semibold text-gray-900 dark:text-white text-xs">{{ item.battery || 0 }}</span>
               </div>

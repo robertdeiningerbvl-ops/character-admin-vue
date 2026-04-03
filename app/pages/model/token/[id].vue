@@ -43,8 +43,8 @@ const openEditModal = (record?: any) => {
 const delRowConfirm = async (record: any) => {
   dialog.open({
     color: 'error',
-    title: '删除 Token',
-    description: `确定要删除该 Token 配置吗？`,
+    title: '删除 上下文',
+    description: `确定要删除该 上下文 配置吗？`,
     onPositiveClick: async () => {
       const { error } = await removeCommonModelToken({ id: record.id })
       if (!error) {
@@ -95,28 +95,33 @@ onMounted(() => loadData())
             </div>
             <div>
               <div class="font-medium">
-                Token #{{ item.id }}
+                上下文 #{{ item.id }}
               </div>
               <div class="text-xs text-(--ui-text-muted)">
                 模型 ID: {{ item.biz_id }}
               </div>
             </div>
           </div>
-          <UBadge :color="stateMap[item.state]?.[1] || 'neutral'" variant="subtle" size="xs">
-            {{ stateMap[item.state]?.[0] || '未知' }}
-          </UBadge>
+          <div class="flex items-center gap-1">
+            <UBadge v-if="item.default === 1" color="warning" variant="solid" size="xs">
+              默认
+            </UBadge>
+            <UBadge :color="stateMap[item.state]?.[1] || 'neutral'" variant="subtle" size="xs">
+              {{ stateMap[item.state]?.[0] || '未知' }}
+            </UBadge>
+          </div>
         </div>
 
         <!-- 信息 -->
         <div class="space-y-2 text-xs mb-3">
           <div class="flex items-center justify-between">
-            <span class="text-(--ui-text-muted)">最大 Token</span>
+            <span class="text-(--ui-text-muted)">最大 上下文长度</span>
             <span class="font-medium">{{ item.max_token?.toLocaleString() || 0 }}</span>
           </div>
-          <div class="flex items-center justify-between">
+          <!-- <div class="flex items-center justify-between">
             <span class="text-(--ui-text-muted)">每次消耗</span>
-            <span class="font-medium text-yellow-500">{{ item.battery || 0 }} 电量</span>
-          </div>
+            <span class="font-medium text-yellow-500">{{ item.battery || 0 }} 妖力</span>
+          </div> -->
         </div>
 
         <!-- 描述 -->

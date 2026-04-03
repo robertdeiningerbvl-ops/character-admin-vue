@@ -30,7 +30,7 @@ const toast = useToast()
 const schema = z.object({
   name: z.string().nonempty('任务名称不能为空'),
   code: z.string().nonempty('任务编码不能为空'),
-  battery: z.number().min(0, '奖励电量不能小于0'),
+  battery: z.number().min(0, '奖励妖力不能小于0'),
   num: z.number().min(0, '需要次数不能小于0'),
   amount: z.number().min(0, '奖励金额不能小于0'),
   show: z.number(),
@@ -196,10 +196,10 @@ watch(
             <span class="text-sm font-medium text-(--ui-text-highlighted)">奖励配置</span>
           </div>
           <div class="grid grid-cols-3 gap-4">
-            <UFormField label="奖励电量" name="battery" required>
+            <UFormField label="奖励妖力" name="battery" required>
               <UInput
                 v-model.number="state.form.battery"
-                placeholder="电量值"
+                placeholder="妖力值"
                 type="number"
                 min="0"
                 class="w-full"
@@ -248,7 +248,7 @@ watch(
           <div class="flex items-center gap-2">
             <UIcon name="i-lucide-calendar-check" class="w-4 h-4 text-(--ui-success)" />
             <span class="text-sm font-medium text-(--ui-text-highlighted)">签到奖励配置</span>
-            <span class="text-xs text-(--ui-text-muted)">（每日签到奖励电量）</span>
+            <span class="text-xs text-(--ui-text-muted)">（每日签到奖励妖力）</span>
           </div>
           <div class="grid grid-cols-7 gap-3">
             <div v-for="day in weekDays" :key="day.key" class="text-center">

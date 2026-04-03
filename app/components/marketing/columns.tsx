@@ -62,7 +62,7 @@ export const baseColumns: TableColumnList = [
   },
   {
     accessorKey: 'battery',
-    header: '奖励电量',
+    header: '奖励妖力',
     meta: {
       class: {
         th: 'w-[100px]',

@@ -107,11 +107,16 @@ const handlePreviewClick = async () => {
 // 上传状态
 const uploadingBg = ref(false)
 const uploadingAvatar = ref(false)
+const uploadingGallery = ref(false)
 const exporting = ref(false)
 
 // 文件上传
 const bgInputRef = ref<HTMLInputElement | null>(null)
 const avatarInputRef = ref<HTMLInputElement | null>(null)
+const galleryInputRef = ref<HTMLInputElement | null>(null)
+const showBgPicker = ref(false)
+const showAvatarPicker = ref(false)
+const showGalleryPicker = ref(false)
 
 const handleBgUpload = async (e: Event) => {
   const file = (e.target as HTMLInputElement).files?.[0]
@@ -151,6 +156,47 @@ const handleAvatarUpload = async (e: Event) => {
     uploadingAvatar.value = false
     ;(e.target as HTMLInputElement).value = ''
   }
+}
+
+const handleBgSelect = (url: string) => {
+  props.state.backgroundImage = url
+  toast.add({ title: '选择成功', color: 'success' })
+}
+
+const handleAvatarSelect = (url: string) => {
+  props.state.avatarImage = url
+  toast.add({ title: '选择成功', color: 'success' })
+}
+
+const handleGalleryUpload = async (e: Event) => {
+  const files = (e.target as HTMLInputElement).files
+  if (!files || files.length === 0) return
+  uploadingGallery.value = true
+  try {
+    for (const file of Array.from(files)) {
+      const formData = new FormData()
+      formData.append('image', file)
+      const { data } = await uploadFile(formData)
+      if (data?.uri) {
+        localState.value.images.push(data.uri)
+      }
+    }
+    toast.add({ title: '上传成功', color: 'success' })
+  } catch (err: any) {
+    toast.add({ title: err.message || '上传失败', color: 'error' })
+  } finally {
+    uploadingGallery.value = false
+    ;(e.target as HTMLInputElement).value = ''
+  }
+}
+
+const removeGalleryImage = (index: number) => {
+  localState.value.images.splice(index, 1)
+}
+
+const handleGallerySelect = (url: string) => {
+  localState.value.images.push(url)
+  toast.add({ title: '添加成功', color: 'success' })
 }
 
 // 显示的头像
@@ -205,6 +251,7 @@ const buildCharacterData = () => {
     anohana: {
       image: localState.value.backgroundImage,
       avatar: localState.value.avatarImage || localState.value.backgroundImage,
+      images: localState.value.images,
       source: localState.value.isRepost,
       source_url: localState.value.sourceUrl,
       summary: localState.value.summary,
@@ -384,7 +431,7 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
         :chat-history="chatHistoryData"
         :loading="loadingHistory"
         :show-toggle="true"
-        @click="handlePreviewClick"
+        @preview="loadChatHistory"
       />
     </div>
 
@@ -394,7 +441,10 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
       <div class="flex gap-5">
         <!-- 背景图上传 -->
         <div class="flex-1">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">背景图</label>
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">背景图</label>
+            <UButton size="xs" variant="ghost" icon="i-lucide-images" @click="showBgPicker = true">图片库</UButton>
+          </div>
           <div
             class="h-44 rounded-xl bg-gray-50 dark:bg-gray-800/50 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-700 cursor-pointer hover:border-primary-400 dark:hover:border-primary-500 transition-all overflow-hidden group"
             @click="!uploadingBg && bgInputRef?.click()"
@@ -404,7 +454,7 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
               <span class="text-sm text-gray-500">上传中...</span>
             </template>
             <template v-else-if="localState.backgroundImage">
-              <img :src="localState.backgroundImage" alt="背景" class="w-full h-full object-cover">
+              <img :key="localState.backgroundImage" :src="localState.backgroundImage" alt="背景" loading="lazy" class="w-full h-full object-cover" />
             </template>
             <template v-else>
               <UIcon name="i-lucide-image-plus" class="w-10 h-10 text-gray-400 mb-2 group-hover:text-primary-500 transition-colors" />
@@ -422,7 +472,10 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
 
         <!-- 头像上传 -->
         <div class="w-44">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">头像</label>
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">头像</label>
+            <UButton size="xs" variant="ghost" icon="i-lucide-images" @click="showAvatarPicker = true">图片库</UButton>
+          </div>
           <div
             class="h-44 rounded-xl bg-gray-50 dark:bg-gray-800/50 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-700 cursor-pointer hover:border-primary-400 dark:hover:border-primary-500 transition-all overflow-hidden group"
             @click="!uploadingAvatar && avatarInputRef?.click()"
@@ -432,7 +485,7 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
               <span class="text-sm text-gray-500">上传中...</span>
             </template>
             <template v-else-if="displayAvatar">
-              <img :src="displayAvatar" alt="头像" class="w-full h-full object-cover">
+              <img :key="displayAvatar" :src="displayAvatar" alt="头像" loading="lazy" class="w-full h-full object-cover" />
             </template>
             <template v-else>
               <UIcon name="i-lucide-user-circle" class="w-10 h-10 text-gray-400 mb-2 group-hover:text-primary-500 transition-colors" />
@@ -447,6 +500,26 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
           class="hidden"
           @change="handleAvatarUpload"
         >
+      </div>
+
+      <!-- 图片合集 -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">图片合集</label>
+          <UButton size="xs" variant="ghost" icon="i-lucide-images" @click="showGalleryPicker = true">图片库</UButton>
+        </div>
+        <div class="grid grid-cols-4 gap-3">
+          <div v-for="(img, idx) in localState.images" :key="idx" class="relative group h-32 rounded-lg overflow-hidden">
+            <img :src="img" class="w-full h-full object-cover" />
+            <button @click="removeGalleryImage(idx)" class="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <UIcon name="i-lucide-x" class="w-4 h-4" />
+            </button>
+          </div>
+          <div class="h-32 rounded-lg bg-gray-50 dark:bg-gray-800/50 flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-700 cursor-pointer hover:border-primary-400 dark:hover:border-primary-500 transition-all group" @click="galleryInputRef?.click()">
+            <UIcon name="i-lucide-plus" class="w-8 h-8 text-gray-400 group-hover:text-primary-500 transition-colors" />
+          </div>
+        </div>
+        <input ref="galleryInputRef" type="file" accept="image/*" multiple class="hidden" @change="handleGalleryUpload" />
       </div>
 
       <!-- 设置开关 -->
@@ -560,7 +633,7 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
               {{ localState.stats.battery }}
             </div>
             <div class="text-xs text-gray-500 mt-1">
-              电量
+              妖力
             </div>
           </div>
           <div class="p-3 bg-white dark:bg-gray-900 rounded-lg text-center shadow-sm">
@@ -730,4 +803,8 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
       </div>
     </div>
   </div>
+
+  <CommonImagePicker v-model:dialog="showBgPicker" @select="handleBgSelect" />
+  <CommonImagePicker v-model:dialog="showAvatarPicker" @select="handleAvatarSelect" />
+  <CommonImagePicker v-model:dialog="showGalleryPicker" @select="handleGallerySelect" />
 </template>

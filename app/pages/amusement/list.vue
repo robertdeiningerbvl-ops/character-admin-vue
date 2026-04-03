@@ -41,7 +41,7 @@ const state = reactive({
   batchDateValue: '',
   pagination: {
     page: 1,
-    pagesize: 30,
+    pagesize: 100,
     total: 0
   },
   search: {
@@ -702,7 +702,7 @@ onActivated(() => {
               v-model="state.search.sort"
               :items="[
                 { label: '默认', value: 'all' },
-                { label: '电量', value: 'battery' },
+                { label: '妖力', value: 'battery' },
                 { label: '播放数', value: 'play_count' },
                 { label: '浏览量', value: 'browse_count' },
                 { label: '点赞数', value: 'praise_count' },
@@ -864,13 +864,14 @@ onActivated(() => {
               <div class="flex items-start gap-3">
                 <!-- 左侧图片 -->
                 <div class="relative shrink-0">
-                  <img
+                  <NuxtImg
                     v-if="item.image"
                     :src="item.image"
                     :alt="item.name"
+                    loading="lazy"
                     class="w-16 h-20 rounded-lg object-cover"
                     :class="{ grayscale: state.activeTab === 4 }"
-                  >
+                  />
                   <div v-else class="w-16 h-20 rounded-lg bg-gradient-to-br from-pink-100 to-purple-100 dark:from-pink-900/30 dark:to-purple-900/30 flex items-center justify-center text-gray-400 text-xs">
                     暂无
                   </div>
@@ -929,7 +930,7 @@ onActivated(() => {
                   <!-- 审核状态 -->
                   <span v-if="item.state === 0" class="inline-block mt-1 px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 rounded">审核中</span>
                   <span v-if="item.state === 2 && item.version_id !== item.review_version_id" class="inline-block mt-1 px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 rounded">新版本审核中</span>
-                  <!-- 电量 -->
+                  <!-- 妖力 -->
                   <span v-if="item.battery > 0" class="inline-flex items-center gap-1 mt-1 ml-1 px-1.5 py-0.5 text-xs bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 rounded">
                     <UIcon name="i-lucide-zap" class="w-3 h-3" />{{ item.battery }}
                   </span>
@@ -1101,7 +1102,7 @@ onActivated(() => {
         <!-- 执行列表 -->
         <div class="border rounded-lg dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-800 max-h-[300px] overflow-y-auto">
           <div v-for="(result, idx) in state.batchResults" :key="result.id" class="flex items-center gap-3 px-3 py-2">
-            <img v-if="selectedItems[idx]?.image" :src="selectedItems[idx].image" class="w-8 h-10 rounded object-cover shrink-0" />
+            <NuxtImg v-if="selectedItems[idx]?.image" :src="selectedItems[idx].image" loading="lazy" class="w-8 h-10 rounded object-cover shrink-0" />
             <div v-else class="w-8 h-10 rounded bg-gray-100 dark:bg-gray-800 shrink-0" />
             <div class="flex-1 min-w-0">
               <div class="text-sm font-medium truncate">{{ result.name }}</div>

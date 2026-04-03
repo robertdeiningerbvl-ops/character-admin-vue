@@ -35,7 +35,7 @@ const metrics = [
   { f: 'HY_YK_NUM', name: '游客人数', icon: 'lucide:user', color: 'info' },
   { f: 'AQ_NUM', name: '邀请人数', icon: 'lucide:share-2', color: 'secondary' },
   { f: 'DH_NUM', name: '对话数', icon: 'lucide:message-circle', color: 'primary' },
-  { f: 'XF_NUM', name: '消费电量', icon: 'lucide:zap', color: 'warning' },
+  { f: 'XF_NUM', name: '消费妖力', icon: 'lucide:zap', color: 'warning' },
   { f: 'CZ_SUCCESS', name: '成功订单', icon: 'lucide:check-circle', color: 'success' },
   { f: 'CZ_ERROR', name: '未付款单', icon: 'lucide:x-circle', color: 'error' }
 ]
@@ -79,7 +79,8 @@ const processData = () => {
   const summaryMap = new Map<string, number>()
   state.rawList.forEach((item: any) => {
     item.stats?.forEach((stat: any) => {
-      summaryMap.set(stat.f, (summaryMap.get(stat.f) || 0) + stat.num)
+      const value = stat.f === 'CZ_PRICE' ? stat.num / 100 : stat.num
+      summaryMap.set(stat.f, (summaryMap.get(stat.f) || 0) + value)
     })
   })
 
@@ -93,7 +94,7 @@ const processData = () => {
     .map((item) => {
       const result: any = { date: item.tm }
       item.stats?.forEach((stat: any) => {
-        result[stat.f] = stat.num
+        result[stat.f] = stat.f === 'CZ_PRICE' ? stat.num / 100 : stat.num
       })
       return result
     })

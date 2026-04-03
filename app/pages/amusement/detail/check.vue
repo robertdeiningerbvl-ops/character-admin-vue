@@ -357,7 +357,7 @@ onUnmounted(() => { window.removeEventListener('keydown', onKeydown) })
         <!-- 卡片信息和操作 -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 overflow-hidden">
           <div class="flex items-start gap-3 mb-3 min-w-0">
-            <img v-if="current.image" :src="current.image" class="w-14 h-18 rounded-lg object-cover shrink-0" />
+            <NuxtImg v-if="current.image" :src="current.image" class="w-14 h-18 rounded-lg object-cover shrink-0" loading="lazy" />
             <div class="flex-1 min-w-0 overflow-hidden">
               <p class="font-bold break-words">{{ current.name }}</p>
               <p class="text-xs text-gray-400 truncate" :title="`ID: ${current.id} · UID: ${current.uid || '-'} · ${current.username || current.member?.nickname || '-'}`">ID: {{ current.id }} · UID: {{ current.uid || '-' }} · {{ current.username || current.member?.nickname || '-' }}</p>
@@ -387,7 +387,7 @@ onUnmounted(() => { window.removeEventListener('keydown', onKeydown) })
             <div class="grid grid-cols-5 gap-2">
               <div class="p-2 bg-gray-50 dark:bg-gray-800 rounded text-center">
                 <div class="text-lg font-bold text-amber-500">{{ current.battery || 0 }}</div>
-                <div class="text-xs text-gray-500">电量</div>
+                <div class="text-xs text-gray-500">妖力</div>
               </div>
               <div class="p-2 bg-gray-50 dark:bg-gray-800 rounded text-center">
                 <div class="text-lg font-bold text-pink-500">{{ current.praise_count || 0 }}</div>

@@ -39,6 +39,11 @@ const streamEnabled = computed({
   set: (val) => { state.form.stream = val ? 1 : 0 }
 })
 
+const selectedModel = computed({
+  get: () => state.form.m,
+  set: (val) => { state.form.m = typeof val === 'string' ? val : val?.value }
+})
+
 const state = reactive({
   loading: false,
   testing: false,
@@ -138,6 +143,9 @@ watch(() => props.dialog, (val) => {
                 placeholder="选择模型类型"
               />
             </UFormField>
+            <UFormField label="排序" name="r">
+              <UInput v-model.number="state.form.r" type="number" placeholder="数值越大越靠前" />
+            </UFormField>
             <UFormField label="预设" name="preset_id" required>
               <USelect
                 v-model="state.form.preset_id"
@@ -171,10 +179,11 @@ watch(() => props.dialog, (val) => {
             <UFormField label="模型名称 (m)" name="m" required>
               <USelectMenu
                 v-if="state.modelOptions.length"
-                v-model="state.form.m"
+                v-model="selectedModel"
                 :items="state.modelOptions"
                 placeholder="选择模型名称"
                 searchable
+                class="w-full"
               />
               <UInput v-else v-model.trim="state.form.m" placeholder="点击测试链接获取模型列表" />
             </UFormField>

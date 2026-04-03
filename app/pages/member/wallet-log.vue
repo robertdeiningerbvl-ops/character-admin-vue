@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// import { cloneDeep } from 'lodash-es'
 import { baseColumns, type TableColumnList } from '@/components/member/wallet/columns'
 import { getMemberWalletLogList } from '@/api'
 
@@ -11,49 +10,24 @@ defineOptions({
   name: 'MemberWalletLogList'
 })
 
+const route = useRoute()
 const tableRef = ref()
-// const UDropdownMenu = resolveComponent('UDropdownMenu')
-// const UButton = resolveComponent('UButton')
-
-// const state = reactive({
-//   isDialog: false,
-//   currentForm: {}
-// })
 
 const columns: TableColumnList = [
   ...baseColumns
-  // {
-  //   id: 'actions',
-  //   meta: {
-  //     class: {
-  //       th: 'w-[80px]',
-  //       td: 'w-[80px]'
-  //     }
-  //   },
-  //   cell: ({ row }) => {
-  //     return h(
-  //       'div',
-  //       { class: 'text-right' },
-  //       h(
-  //         UDropdownMenu,
-  //         {
-  //           content: {
-  //             align: 'end'
-  //           }
-  //           // items: getRowItems(row)
-  //         },
-  //         () =>
-  //           h(UButton, {
-  //             icon: 'i-lucide-ellipsis-vertical',
-  //             color: 'neutral',
-  //             variant: 'ghost',
-  //             class: 'ml-auto'
-  //           })
-  //       )
-  //     )
-  //   }
-  // }
 ]
+
+const defaultSearchParams = computed(() => {
+  const params: any = {}
+  if (route.query.uid) {
+    params.uid = route.query.uid
+  }
+  return params
+})
+
+watch(() => route.query.uid, () => {
+  tableRef.value?.reload()
+})
 </script>
 
 <template>
@@ -62,6 +36,7 @@ const columns: TableColumnList = [
       ref="tableRef"
       :data-request="getMemberWalletLogList"
       :columns="columns"
+      :default-search-params="defaultSearchParams"
       scroll-x="min-w-[1200px]"
     />
   </DashboardLayout>

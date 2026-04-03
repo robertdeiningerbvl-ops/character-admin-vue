@@ -37,18 +37,18 @@ const tyOptions = ref<{ label: string, value: number }[]>([])
 
 const limitTypeOptions = [
   {
-    label: '范围金额',
-    value: 2
-  },
-  {
     label: '固定金额',
     value: 1
+  },
+  {
+    label: '范围金额',
+    value: 2
   }
 ]
 
 const signTyOptions = [
-  { label: 'MD5-方式1', value: 1 },
-  { label: 'MD5-方式2', value: 2 },
+  { label: 'MD5 签名(常规拼接方式&key=)', value: 1 },
+  { label: 'MD5 签名(常规拼接方式无key拼接)', value: 2 },
   { label: 'MD5-方式3', value: 3 },
   { label: 'MD5-方式4', value: 4 },
   { label: 'MD5-方式5', value: 5 }

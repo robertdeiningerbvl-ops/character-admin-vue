@@ -37,12 +37,13 @@ const thumbnailClass = computed(() => {
 <template>
   <div>
     <!-- 缩略图 -->
-    <img
+    <NuxtImg
       :src="src"
       :alt="alt"
       :class="thumbnailClass"
+      loading="lazy"
       @click="openPreview"
-    >
+    />
 
     <!-- 预览弹窗 -->
     <Teleport to="body">
@@ -66,12 +67,13 @@ const thumbnailClass = computed(() => {
             >
               ✕
             </button>
-            <img
+            <NuxtImg
               :src="src"
               :alt="alt"
               class="max-w-full max-h-[85vh] rounded-lg shadow-2xl"
+              loading="lazy"
               @click.stop
-            >
+            />
           </div>
         </div>
       </Transition>

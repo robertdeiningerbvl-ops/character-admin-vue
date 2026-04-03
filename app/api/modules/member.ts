@@ -64,3 +64,23 @@ export function getAmusementChatSummary(params?: any) {
 export function getAmusementChatHistory(params?: any) {
   return request.get<any>(apiRoute.amusementChatHistory, params)
 }
+
+/** 获取提现列表 */
+export function getMemberWithdrawList(params?: any) {
+  return request.get<any>(apiRoute.memberWithdrawList, params)
+}
+
+/** 提现审核 */
+export function auditMemberWithdraw(data: any) {
+  return request.post<any>(apiRoute.memberWithdrawAudit, data)
+}
+
+/** 协助提现 */
+export function applyMemberWithdraw(data: any) {
+  return request.post<any>(apiRoute.memberWithdrawApply, data)
+}
+
+/** 获取资金流水列表 */
+export function getMemberFundLogList(params?: any) {
+  return request.get<any>(apiRoute.memberFundLogList, params)
+}

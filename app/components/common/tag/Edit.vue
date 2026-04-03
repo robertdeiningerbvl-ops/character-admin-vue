@@ -77,6 +77,9 @@ watch(() => props.dialog, (val) => {
           <UFormField label="名称" name="name" required>
             <UInput v-model.trim="state.form.name" placeholder="请输入标签名称" class="w-full" />
           </UFormField>
+          <UFormField v-if="state.form.id" label="热度" name="hot">
+            <UInput v-model.number="state.form.hot" type="number" placeholder="请输入热度" class="w-full" />
+          </UFormField>
           <div class="grid grid-cols-2 gap-4">
             <UFormField label="类型" name="ty" required>
               <USelect

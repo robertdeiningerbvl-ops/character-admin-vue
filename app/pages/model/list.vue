@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { cloneDeep } from 'lodash-es'
-import { getCommonModelList } from '@/api'
+import { getCommonModelList, updateCommonModel } from '@/api'
 
 definePageMeta({ layout: 'app' })
 defineOptions({ name: 'CommonModelList' })
 
 const router = useRouter()
+const dialog = useDialog()
+const toast = useToast()
 
 type BadgeColor = 'error' | 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'neutral'
 
@@ -35,7 +37,7 @@ const loadData = async () => {
   state.loading = true
   try {
     const { data } = await getCommonModelList({})
-    state.list = data?.list || []
+    state.list = (data?.list || []).sort((a: any, b: any) => (b.r || 0) - (a.r || 0))
   } finally {
     state.loading = false
   }
@@ -49,6 +51,14 @@ const openEditModal = (record?: any) => {
 const refresh = () => {
   state.isDialog = false
   loadData()
+}
+
+const deleteModel = async (item: any) => {
+  const { error } = await updateCommonModel({ id: item.id, state: 4 })
+  if (!error) {
+    toast.add({ title: '删除成功', color: 'success' })
+    loadData()
+  }
 }
 
 onMounted(() => loadData())
@@ -115,6 +125,10 @@ onMounted(() => loadData())
               {{ streamMap[item.stream]?.[0] || '-' }}
             </UBadge>
           </div>
+          <div class="flex items-center gap-2">
+            <span class="text-(--ui-text-muted) w-16 shrink-0">排序</span>
+            <span>{{ item.r || 0 }}</span>
+          </div>
         </div>
 
         <!-- 描述 -->
@@ -142,8 +156,16 @@ onMounted(() => loadData())
             color="neutral"
             variant="ghost"
             icon="i-lucide-key"
-            label="Token"
+            label="上下文设置"
             @click="router.push(`/model/token/${item.id}`)"
+          />
+          <UButton
+            size="xs"
+            color="error"
+            variant="ghost"
+            icon="i-lucide-trash-2"
+            label="删除"
+            @click="dialog.open({ color: 'error', title: '删除模型', description: '确定要删除此模型吗？', onPositiveClick: () => deleteModel(item) })"
           />
         </div>
       </div>

@@ -28,6 +28,11 @@ const stateEnabled = computed({
   set: (val) => { state.form.state = val ? 2 : 4 }
 })
 
+const isDefault = computed({
+  get: () => state.form.default === 1,
+  set: (val) => { state.form.default = val ? 1 : 0 }
+})
+
 const state = reactive({
   loading: false,
   form: {} as any,
@@ -90,34 +95,36 @@ watch(() => props.dialog, (val) => {
         class="space-y-4"
         @submit="onSubmit"
       >
-        <UFormField label="关联模型" name="biz_id" required>
-          <USelect
-            v-model="state.form.biz_id"
-            :items="state.modelOptions"
-            :loading="state.modelLoading"
-            placeholder="选择模型"
-            :disabled="!!bizId"
-          />
-        </UFormField>
+       
 
         <div class="grid grid-cols-2 gap-4">
-          <UFormField label="最大 Token 数" name="max_token" required>
+           <UFormField label="关联模型" name="biz_id" required>
+            <USelect
+              v-model="state.form.biz_id"
+              :items="state.modelOptions"
+              :loading="state.modelLoading"
+              placeholder="选择模型"
+              :disabled="!!bizId"
+            />
+          </UFormField>
+
+          <UFormField label="上下文长度" name="max_token" required>
             <UInput
               v-model.number="state.form.max_token"
               type="number"
               :min="0"
-              placeholder="输入最大 Token"
-            />
-          </UFormField>
-          <UFormField label="每次消耗电量" name="battery">
-            <UInput
-              v-model.number="state.form.battery"
-              type="number"
-              :min="0"
-              placeholder="输入消耗电量"
+              placeholder="上下文长度"
             />
           </UFormField>
         </div>
+
+        <UFormField label="排序" name="sort">
+          <UInput
+            v-model.number="state.form.sort"
+            type="number"
+            placeholder="数字越小越靠前"
+          />
+        </UFormField>
 
         <UFormField label="说明" name="description">
           <UTextarea
@@ -129,12 +136,21 @@ watch(() => props.dialog, (val) => {
           />
         </UFormField>
 
+        <div class="grid grid-cols-2 gap-4">
         <UFormField label="状态" name="state">
           <div class="flex items-center h-9">
             <USwitch v-model="stateEnabled" />
             <span class="ml-2 text-sm">{{ stateEnabled ? '启用' : '关闭' }}</span>
           </div>
         </UFormField>
+
+        <UFormField label="默认" name="default">
+          <div class="flex items-center h-9">
+            <USwitch v-model="isDefault" />
+            <span class="ml-2 text-sm">{{ isDefault ? '默认' : '不默认' }}</span>
+          </div>
+        </UFormField>
+        </div>
       </UForm>
     </template>
 

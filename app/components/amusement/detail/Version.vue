@@ -78,7 +78,7 @@ const getStateColor = (state: number) => {
 }
 
 const canPublish = (version: any) => {
-  return version.state === 1 || version.state === 2
+  return version.state === 0 || version.state === 1 || version.state === 2
 }
 
 const openReviewDialog = (versionId: number) => {
@@ -646,7 +646,7 @@ const getVersionInfo = (versionId: number | null) => {
                     </div>
                     <!-- 图片预览 -->
                     <template v-if="field.isImage && field.leftVal">
-                      <img :src="field.leftVal" class="w-20 h-20 object-cover rounded">
+                      <NuxtImg :src="field.leftVal" class="w-20 h-20 object-cover rounded" loading="lazy" />
                     </template>
                     <!-- 文本内容 -->
                     <template v-else>
@@ -663,7 +663,7 @@ const getVersionInfo = (versionId: number | null) => {
                     </div>
                     <!-- 图片预览 -->
                     <template v-if="field.isImage && field.rightVal">
-                      <img :src="field.rightVal" class="w-20 h-20 object-cover rounded">
+                      <NuxtImg :src="field.rightVal" class="w-20 h-20 object-cover rounded" loading="lazy" />
                     </template>
                     <!-- 文本内容 -->
                     <template v-else>

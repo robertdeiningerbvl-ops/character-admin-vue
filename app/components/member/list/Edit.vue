@@ -193,7 +193,7 @@ watch(() => props.dialog, (newValue) => {
                 {{ state.form.invite || 0 }}
               </div>
               <div class="text-xs text-(--ui-text-muted)">
-                邀请
+                邀请人数
               </div>
             </div>
             <div class="p-2 rounded bg-(--ui-bg) border border-(--ui-border)">
@@ -201,23 +201,47 @@ watch(() => props.dialog, (newValue) => {
                 {{ state.form.battery || 0 }}
               </div>
               <div class="text-xs text-(--ui-text-muted)">
-                电量
+                现有妖力
+              </div>
+            </div>
+            <div class="p-2 rounded bg-(--ui-bg) border border-(--ui-border)">
+              <div class="text-lg font-semibold text-orange-500">
+                {{ state.form.income_battery || 0 }}
+              </div>
+              <div class="text-xs text-(--ui-text-muted)">
+                赠送妖力
+              </div>
+            </div>
+            <div class="p-2 rounded bg-(--ui-bg) border border-(--ui-border)">
+              <div class="text-lg font-semibold text-purple-500">
+                {{ state.form.invite_battery || 0 }}
+              </div>
+              <div class="text-xs text-(--ui-text-muted)">
+                邀请积分
               </div>
             </div>
             <div class="p-2 rounded bg-(--ui-bg) border border-(--ui-border)">
               <div class="text-lg font-semibold text-green-500">
-                {{ state.form.income_battery || 0 }}
+                ¥{{ (state.form.invite_amount || 0) / 100 }}
               </div>
               <div class="text-xs text-(--ui-text-muted)">
-                收益电量
+                邀请金额
+              </div>
+            </div>
+            <div class="p-2 rounded bg-(--ui-bg) border border-(--ui-border)">
+              <div class="text-lg font-semibold text-gray-500">
+                ¥{{ (state.form.income_amount || 0) / 100 }}
+              </div>
+              <div class="text-xs text-(--ui-text-muted)">
+                累计收益
               </div>
             </div>
             <div class="p-2 rounded bg-(--ui-bg) border border-(--ui-border)">
               <div class="text-lg font-semibold text-green-600">
-                ¥{{ state.form.income_amount || 0 }}
+                ¥{{ (state.form.amount || 0) / 100 }}
               </div>
               <div class="text-xs text-(--ui-text-muted)">
-                收益金额
+                可提现
               </div>
             </div>
           </div>

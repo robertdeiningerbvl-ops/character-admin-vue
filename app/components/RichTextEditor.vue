@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
+import { Underline } from '@tiptap/extension-underline'
+import { TextAlign } from '@tiptap/extension-text-align'
+import { Link } from '@tiptap/extension-link'
+import { TextStyle } from '@tiptap/extension-text-style'
+import { Color } from '@tiptap/extension-color'
+import { Highlight } from '@tiptap/extension-highlight'
 
 interface Props {
   modelValue?: string
@@ -17,12 +23,43 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits(['update:modelValue'])
 
 const editor = useEditor({
-  extensions: [StarterKit],
+  extensions: [
+    StarterKit,
+    Underline,
+    TextStyle,
+    Color,
+    Highlight.configure({ multicolor: true }),
+    Link.configure({
+      openOnClick: false,
+      HTMLAttributes: {
+        target: '_blank',
+        rel: 'noopener noreferrer'
+      }
+    }),
+    TextAlign.configure({
+      types: ['heading', 'paragraph']
+    })
+  ],
   content: props.modelValue,
   onUpdate({ editor }) {
     emit('update:modelValue', editor.getHTML())
   }
 })
+
+const setLink = () => {
+  const url = window.prompt('请输入链接地址:')
+  if (url && editor.value) {
+    editor.value.chain().focus().setLink({ href: url }).run()
+  }
+}
+
+const setColor = (color: string) => {
+  editor.value?.chain().focus().setColor(color).run()
+}
+
+const setHighlight = (color: string) => {
+  editor.value?.chain().focus().setHighlight({ color }).run()
+}
 
 // 监听外部值变化
 watch(
@@ -45,6 +82,7 @@ watch(
         v-for="btn in [
           { action: () => editor!.chain().focus().toggleBold().run(), active: editor.isActive('bold'), label: 'B', cls: 'font-bold' },
           { action: () => editor!.chain().focus().toggleItalic().run(), active: editor.isActive('italic'), label: 'I', cls: 'italic' },
+          { action: () => editor!.chain().focus().toggleUnderline().run(), active: editor.isActive('underline'), label: 'U', cls: 'underline' },
           { action: () => editor!.chain().focus().toggleStrike().run(), active: editor.isActive('strike'), label: 'S', cls: 'line-through' }
         ]"
         :key="btn.label"
@@ -67,6 +105,23 @@ watch(
         @click="editor!.chain().focus().toggleHeading({ level: level as any }).run()"
       >
         H{{ level }}
+      </button>
+
+      <div class="toolbar-divider" />
+
+      <button
+        v-for="align in [
+          { value: 'left', label: '左对齐' },
+          { value: 'center', label: '居中' },
+          { value: 'right', label: '右对齐' }
+        ]"
+        :key="align.value"
+        type="button"
+        class="toolbar-btn"
+        :class="{ active: editor.isActive({ textAlign: align.value }) }"
+        @click="editor!.chain().focus().setTextAlign(align.value).run()"
+      >
+        {{ align.label }}
       </button>
 
       <div class="toolbar-divider" />
@@ -101,9 +156,59 @@ watch(
       <button
         type="button"
         class="toolbar-btn"
+        :class="{ active: editor.isActive('link') }"
+        @click="setLink"
+      >
+        链接
+      </button>
+
+      <div class="toolbar-divider" />
+
+      <button
+        v-for="color in ['#000000', '#FF0000', '#00FF00', '#0000FF']"
+        :key="color"
+        type="button"
+        class="toolbar-btn-color"
+        :style="{ backgroundColor: color }"
+        @click="setColor(color)"
+      />
+
+      <div class="toolbar-divider" />
+
+      <button
+        v-for="highlight in ['#FFFF00', '#00FFFF', '#FF00FF']"
+        :key="highlight"
+        type="button"
+        class="toolbar-btn-color"
+        :style="{ backgroundColor: highlight }"
+        @click="setHighlight(highlight)"
+      />
+
+      <div class="toolbar-divider" />
+
+      <button
+        type="button"
+        class="toolbar-btn"
         @click="editor!.chain().focus().setHorizontalRule().run()"
       >
         分割线
+      </button>
+
+      <button
+        type="button"
+        class="toolbar-btn"
+        @click="editor!.chain().focus().undo().run()"
+        :disabled="!editor.can().undo()"
+      >
+        撤销
+      </button>
+      <button
+        type="button"
+        class="toolbar-btn"
+        @click="editor!.chain().focus().redo().run()"
+        :disabled="!editor.can().redo()"
+      >
+        重做
       </button>
     </div>
     <div class="editor-content p-4" :style="{ minHeight: minHeight }">
@@ -129,6 +234,24 @@ watch(
 .toolbar-btn.active {
   background-color: var(--ui-primary);
   color: var(--ui-bg);
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar-btn-color {
+  width: 24px;
+  height: 24px;
+  border-radius: 0.25rem;
+  border: 1px solid var(--ui-border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toolbar-btn-color:hover {
+  transform: scale(1.1);
 }
 
 .toolbar-divider {

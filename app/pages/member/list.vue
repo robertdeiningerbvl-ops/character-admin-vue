@@ -18,6 +18,8 @@ const UButton = resolveComponent('UButton')
 const state = reactive({
   isDialog: false,
   isDialogBattery: false,
+  isDialogExtra: false,
+  isDialogWithdraw: false,
   currentForm: {}
 })
 
@@ -35,10 +37,22 @@ const openEditBattery = async (record: any) => {
   state.currentForm = cloneDeep(record)
 }
 
+const openExtraConfig = async (record: any) => {
+  state.isDialogExtra = true
+  state.currentForm = cloneDeep(record)
+}
+
+const openWithdrawApply = async (record: any) => {
+  state.isDialogWithdraw = true
+  state.currentForm = cloneDeep(record)
+}
+
 const refresh = async () => {
   tableRef.value.reload()
   state.isDialog = false
   state.isDialogBattery = false
+  state.isDialogExtra = false
+  state.isDialogWithdraw = false
 }
 
 function getRowItems(row: any) {
@@ -57,6 +71,20 @@ function getRowItems(row: any) {
       icon: 'material-symbols:battery-charging-full',
       onSelect() {
         openEditBattery(row.original)
+      }
+    },
+    {
+      label: '协助提现',
+      icon: 'material-symbols:payments-outline',
+      onSelect() {
+        openWithdrawApply(row.original)
+      }
+    },
+    {
+      label: '返佣配置',
+      icon: 'material-symbols:settings-outline',
+      onSelect() {
+        openExtraConfig(row.original)
       }
     },
     {
@@ -87,6 +115,20 @@ function getRowItems(row: any) {
       icon: 'material-symbols:receipt-long-outline',
       onSelect() {
         router.push(`/member/wallet-log?uid=${row.original.id}`)
+      }
+    },
+    {
+      label: '查看资金流水',
+      icon: 'material-symbols:account-balance-wallet-outline',
+      onSelect() {
+        router.push(`/member/fund-log?uid=${row.original.id}`)
+      }
+    },
+    {
+      label: '查看提现记录',
+      icon: 'material-symbols:payments-outline',
+      onSelect() {
+        router.push(`/member/withdraw?uid=${row.original.id}`)
       }
     },
     {
@@ -154,6 +196,16 @@ const columns: TableColumnList = [
   />
   <MemberListBattery
     v-model:dialog="state.isDialogBattery"
+    :current-form="state.currentForm"
+    @refresh="refresh"
+  />
+  <MemberListExtraConfig
+    v-model:dialog="state.isDialogExtra"
+    :current-form="state.currentForm"
+    @refresh="refresh"
+  />
+  <MemberListWithdrawApply
+    v-model:dialog="state.isDialogWithdraw"
     :current-form="state.currentForm"
     @refresh="refresh"
   />

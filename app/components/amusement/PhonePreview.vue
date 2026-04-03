@@ -16,6 +16,8 @@ interface Props {
   showToggle?: boolean
 }
 
+const emit = defineEmits(['preview'])
+
 const props = withDefaults(defineProps<Props>(), {
   name: '未命名角色',
   backgroundImage: '',
@@ -67,11 +69,15 @@ const renderedMessages = computed(() => {
 // 点击预览
 const handlePreview = () => {
   showPreview.value = true
+  emit('preview')
 }
 
 // 关闭预览
 const closePreview = () => {
   showPreview.value = false
+  nextTick(() => {
+    console.log('nextTick后 showPreview:', showPreview.value)
+  })
 }
 
 // 暴露方法给父组件
@@ -100,7 +106,7 @@ defineExpose({
     </div>
 
     <!-- 预览状态 -->
-    <template v-else>
+    <template v-if="!showToggle || showPreview">
       <div class="flex-1 min-h-[500px] max-h-[700px] rounded-[2rem] border-[6px] border-gray-800 dark:border-gray-900 bg-gray-800 shadow-2xl overflow-hidden flex flex-col">
         <div
           class="flex-1 min-h-0 flex flex-col relative"
@@ -142,12 +148,13 @@ defineExpose({
               >
                 <!-- 头像 - 非用户消息始终显示 -->
                 <template v-if="msg.role !== 'user'">
-                  <img
+                  <NuxtImg
                     v-if="displayAvatar"
                     :src="displayAvatar"
                     alt=""
                     class="w-8 h-8 rounded-full mr-2 shrink-0 object-cover self-start"
-                  >
+                    loading="lazy"
+                  />
                   <div v-else class="w-8 h-8 rounded-full mr-2 shrink-0 bg-gray-300 flex items-center justify-center self-start">
                     <UIcon name="i-lucide-user" class="w-4 h-4 text-gray-500" />
                   </div>
@@ -211,12 +218,13 @@ defineExpose({
             <!-- 无聊天记录，显示第一句话 -->
             <template v-else-if="greetings && greetings[0]">
               <div class="flex justify-start">
-                <img
+                <NuxtImg
                   v-if="displayAvatar"
                   :src="displayAvatar"
                   alt=""
                   class="w-8 h-8 rounded-full mr-2 shrink-0 object-cover self-start"
-                >
+                  loading="lazy"
+                />
                 <div v-else class="w-8 h-8 rounded-full mr-2 shrink-0 bg-gray-300 flex items-center justify-center self-start">
                   <UIcon name="i-lucide-user" class="w-4 h-4 text-gray-500" />
                 </div>

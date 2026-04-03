@@ -1,1 +1,0 @@
-import{d as m}from"./BXV-v0wK.js";const n="YYYY-MM-DD HH:mm:ss";function s(o,t=n){typeof o=="string"&&o.length===13&&(o=Number(o));const r=m(o).format(t);return r==="Invalid Date"?String(o):r}export{s as f};

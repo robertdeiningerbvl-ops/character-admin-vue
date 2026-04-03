@@ -77,8 +77,7 @@ const configGroups = reactive([
       { key: 'INVITE', label: '邀请配置', icon: 'lucide:user-plus' },
       { key: 'OS', label: '系统优化', icon: 'lucide:cpu' },
       { key: 'KNOT', label: '聊天总结', icon: 'lucide:message-circle' },
-      { key: 'DOCTOR_CONFIG', label: '创作管理', icon: 'lucide:pen-tool' },
-      { key: 'RIGHT_NAV', label: '导航配置', icon: 'lucide:navigation' }
+      { key: 'DOCTOR_CONFIG', label: '创作管理', icon: 'lucide:pen-tool' }
     ]
   }
 ])
@@ -728,8 +727,8 @@ onActivated(() => init())
             </div>
           </div>
 
-          <div class="grid grid-cols-3 gap-4">
-            <UFormField label="邀请费率 (%)" hint="邀请奖励分成比例">
+          <div class="grid grid-cols-2 gap-4">
+            <UFormField label="邀请返现费率 (%)" hint="邀请用户充值时的返现比例">
               <UInput
                 v-model="state.currentForm.invite_rate"
                 type="number"
@@ -737,6 +736,17 @@ onActivated(() => init())
                 class="w-full"
               />
             </UFormField>
+            <UFormField label="返现次数" hint="-1:无限制 0:不返现 1:首充 其他:指定次数">
+              <UInput
+                v-model="state.currentForm.invite_times"
+                type="number"
+                placeholder="例如 -1"
+                class="w-full"
+              />
+            </UFormField>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
             <UFormField label="游戏费率 (%)" hint="游戏收益分成比例">
               <UInput
                 v-model="state.currentForm.game_rate"
@@ -815,41 +825,6 @@ onActivated(() => init())
               class="w-full"
             />
           </UFormField>
-
-          <UFormField label="备注">
-            <UInput v-model="state.currentForm.remarks" placeholder="备注信息" class="w-full" />
-          </UFormField>
-        </div>
-
-        <!-- RIGHT_NAV 导航配置 -->
-        <div v-if="state.activeConfigKey === 'RIGHT_NAV'" class="space-y-4">
-          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
-            <div class="flex items-start gap-3">
-              <UIcon name="lucide:info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
-              <div class="text-sm text-(--ui-text-muted)">
-                <p class="font-medium text-(--ui-text-highlighted) mb-1">导航配置说明</p>
-                <p>配置右侧导航菜单项，包括标题、角标内容和图标。</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="space-y-3">
-            <div
-              v-for="(item, index) in state.currentForm.right_nav"
-              :key="index"
-              class="flex items-center gap-3 p-3 rounded-lg border border-(--ui-border)"
-            >
-              <UInput v-model="item.title" placeholder="标题" class="flex-1" readonly />
-              <UInput v-model="item.content" placeholder="标记内容" class="w-24" />
-              <!-- <UButton
-                size="sm"
-                color="error"
-                variant="soft"
-                icon="lucide:trash-2"
-                @click="state.currentForm.right_nav.splice(index, 1)"
-              /> -->
-            </div>
-          </div>
 
           <UFormField label="备注">
             <UInput v-model="state.currentForm.remarks" placeholder="备注信息" class="w-full" />

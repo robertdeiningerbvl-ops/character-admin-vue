@@ -79,6 +79,15 @@ export const baseColumns: TableColumnList = [
     }
   },
   {
+    accessorKey: 'hot',
+    header: '热度',
+    meta: { class: { th: 'w-[100px]', td: 'w-[100px]' } },
+    cell: ({ row }) => {
+      const hot = row.original.hot || 0
+      return h('span', { class: 'font-medium text-(--ui-text)' }, hot)
+    }
+  },
+  {
     accessorKey: 'created_at',
     header: '创建时间',
     meta: { class: { th: 'w-[160px]', td: 'w-[160px]' } },

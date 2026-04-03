@@ -94,7 +94,7 @@ export const getBaseColumns = (updateStatus: (id: number, field: string, value: 
   },
   {
     accessorKey: 'battery',
-    header: '已获电量',
+    header: '已获妖力',
     meta: {
       class: {
         th: 'w-[100px]',

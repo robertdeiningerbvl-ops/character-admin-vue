@@ -19,6 +19,14 @@ export const apiRoute = {
   // 用户流水
   memberWalletLogList: 'member-wallet-log',
 
+  // 提现列表
+  memberWithdrawList: 'member-withdrawal-list',
+  memberWithdrawAudit: 'member-withdrawal-audit',
+  memberWithdrawApply: 'member-withdrawal-apply',
+
+  // 资金流水
+  memberFundLogList: 'member-income-list',
+
   // 用户兑换
   memberInvitationCodeList: 'member-invitation-code',
   memberInvitationCodeGenerate: 'member-invitation-code-generate',
@@ -41,6 +49,11 @@ export const apiRoute = {
   commonTagRemove: 'common-tag-remove',
   commonTagAdd: 'common-tag-add',
   commonTagEdit: 'common-tag-edit',
+
+  // 图片
+  imageList: 'image-list',
+  imageSave: 'image-save',
+  imageRemove: 'image-remove',
 
   // 模型
   commonModelList: 'common-model-list',

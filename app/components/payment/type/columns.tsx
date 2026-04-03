@@ -20,8 +20,8 @@ const tyEnum: any = {
 }
 
 const signTyEnum: any = {
-  1: 'MD5-方式1',
-  2: 'MD5-方式2',
+  1: 'MD5 签名(常规拼接方式&key=)',
+  2: 'MD5 签名(常规拼接方式无key拼接)',
   3: 'MD5-方式3',
   4: 'MD5-方式4',
   5: 'MD5-方式5'

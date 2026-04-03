@@ -86,7 +86,7 @@ onMounted(() => {
       >
         <!-- 封面图 -->
         <div class="relative h-32">
-          <img :src="item.image" :alt="item.name" class="w-full h-full object-cover">
+          <NuxtImg :src="item.image" :alt="item.name" class="w-full h-full object-cover" loading="lazy" />
           <div class="absolute top-2 right-2">
             <UBadge :color="stateMap[item.state]?.[1] || 'neutral'" variant="solid" size="xs">
               {{ stateMap[item.state]?.[0] || '未知' }}

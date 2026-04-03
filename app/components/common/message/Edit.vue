@@ -228,7 +228,7 @@ watch(
               <!-- 图片预览 -->
               <div v-else class="relative group">
                 <div class="border border-(--ui-border) rounded-lg overflow-hidden">
-                  <img :src="state.form.image" alt="宣传图" class="w-full h-48 object-cover">
+                  <NuxtImg :src="state.form.image" alt="宣传图" class="w-full h-48 object-cover" loading="lazy" />
                 </div>
                 <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 rounded-lg">
                   <UButton

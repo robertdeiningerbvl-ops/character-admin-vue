@@ -78,7 +78,7 @@ export const baseColumns: TableColumnList = [
   },
   {
     accessorKey: 'battery',
-    header: '奖励电量',
+    header: '奖励妖力',
     cell: ({ row }) => {
       const battery = row.original.battery
       if (!battery || battery === 0) return h('span', { class: 'text-gray-400' }, '-')

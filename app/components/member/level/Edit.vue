@@ -122,7 +122,7 @@ watch(
             <UInput v-model.trim="state.form.name" placeholder="请输入等级名称" class="w-full" />
           </UFormField>
           <div class="grid grid-cols-2 gap-4">
-            <UFormField label="所需电量" name="battery" required>
+            <UFormField label="所需妖力" name="battery" required>
               <UInput
                 v-model.number="state.form.battery"
                 placeholder="请输入"

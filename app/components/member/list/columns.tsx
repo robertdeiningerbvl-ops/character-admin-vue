@@ -64,25 +64,38 @@ export const baseColumns: TableColumnList = [
   },
   {
     accessorKey: 'battery',
-    header: '电量',
+    header: '妖力',
     meta: { class: { th: 'w-[100px]', td: 'w-[100px]' } },
     cell: ({ row }) => {
       const { battery, income_battery } = row.original
       return h('div', { class: 'flex flex-col text-xs' }, [
-        h('span', { class: 'inline-flex items-center gap-1 text-yellow-500' }, [h(UIcon, { name: 'i-lucide-zap', class: 'w-3 h-3' }), battery || 0]),
-        h('span', { class: 'inline-flex items-center gap-1 text-green-500' }, [h(UIcon, { name: 'i-lucide-trending-up', class: 'w-3 h-3' }), income_battery || 0])
+        h('span', { class: 'inline-flex items-center gap-1 text-yellow-500' }, [h(UIcon, { name: 'i-lucide-zap', class: 'w-3 h-3' }), '现有 ', battery || 0]),
+        h('span', { class: 'inline-flex items-center gap-1 text-orange-500' }, [h(UIcon, { name: 'i-lucide-gift', class: 'w-3 h-3' }), '赠送 ', income_battery || 0])
       ])
     }
   },
   {
     accessorKey: 'income_amount',
     header: '收益',
-    meta: { class: { th: 'w-[90px]', td: 'w-[90px]' } },
+    meta: { class: { th: 'w-[100px]', td: 'w-[100px]' } },
     cell: ({ row }) => {
       const { income_amount, amount } = row.original
+      const total = ((income_amount || 0) + (amount || 0)) / 100
       return h('div', { class: 'text-xs' }, [
-        h('div', { class: 'font-medium text-green-600' }, `¥${income_amount || 0}`),
-        h('div', { class: 'text-(--ui-text-muted)' }, `可提 ¥${amount || 0}`)
+        h('div', { class: 'text-(--ui-text-muted)' }, `累计 ¥${total}`),
+        h('div', { class: 'font-medium text-green-600' }, `可提 ¥${(amount || 0) / 100}`)
+      ])
+    }
+  },
+  {
+    accessorKey: 'invite',
+    header: '邀请',
+    meta: { class: { th: 'w-[100px]', td: 'w-[100px]' } },
+    cell: ({ row }) => {
+      const { invite_battery, invite_amount } = row.original
+      return h('div', { class: 'flex flex-col text-xs' }, [
+        h('span', { class: 'inline-flex items-center gap-1 text-purple-500' }, [h(UIcon, { name: 'i-lucide-zap', class: 'w-3 h-3' }), '积分 ', invite_battery || 0]),
+        h('span', { class: 'inline-flex items-center gap-1 text-green-500' }, [h(UIcon, { name: 'i-lucide-coins', class: 'w-3 h-3' }), '金额 ¥', (invite_amount || 0) / 100])
       ])
     }
   },
@@ -94,6 +107,16 @@ export const baseColumns: TableColumnList = [
     cell: ({ row }) => {
       const { code } = row.original
       return h('code', { class: 'text-xs font-mono bg-(--ui-bg-elevated) px-1.5 py-0.5 rounded' }, code || '-')
+    }
+  },
+  {
+    accessorKey: 'source',
+    header: '来源',
+    searchPlaceholder: '来源',
+    meta: { class: { th: 'w-[120px]', td: 'w-[120px]' } },
+    cell: ({ row }) => {
+      const { source } = row.original
+      return h('source', { class: 'text-xs font-mono bg-(--ui-bg-elevated) px-1.5 py-0.5 rounded' }, source || '-')
     }
   },
   {
@@ -126,20 +149,6 @@ export const baseColumns: TableColumnList = [
       const shortText = remarks.length > 6 ? remarks.slice(0, 6) + '...' : remarks
       return h(UTooltip, {
         text: remarks,
-        ui: { content: 'max-w-xs' }
-      }, () => h('span', { class: 'text-xs cursor-pointer text-(--ui-text-muted) hover:text-(--ui-text)' }, shortText))
-    }
-  },
-  {
-    accessorKey: 'summary',
-    header: '简介',
-    meta: { class: { th: 'w-[120px]', td: 'w-[120px]' } },
-    cell: ({ row }) => {
-      const summary = row.original.summary
-      if (!summary) return h('span', { class: 'text-gray-400' }, '-')
-      const shortText = summary.length > 6 ? summary.slice(0, 6) + '...' : summary
-      return h(UTooltip, {
-        text: summary,
         ui: { content: 'max-w-xs' }
       }, () => h('span', { class: 'text-xs cursor-pointer text-(--ui-text-muted) hover:text-(--ui-text)' }, shortText))
     }

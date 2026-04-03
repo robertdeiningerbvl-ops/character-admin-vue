@@ -71,7 +71,7 @@ export const baseColumns: TableColumnList = [
   },
   {
     accessorKey: 'battery',
-    header: '所需电量'
+    header: '所需妖力'
   },
   {
     accessorKey: 'divided',

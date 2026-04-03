@@ -19,7 +19,7 @@ pnpm run dev
 Build the application for production:
 
 ```bash
-npx nuxt generate
+pnpm run generate
 ```
 
 Locally preview production build:

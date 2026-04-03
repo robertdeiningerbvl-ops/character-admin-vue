@@ -88,7 +88,7 @@ export const baseColumns: TableColumnList = [
   },
   {
     accessorKey: 'battery',
-    header: '所需电量',
+    header: '所需妖力',
     cell: ({ row }) => {
       return h(UBadge,
         { variant: 'outline', color: 'primary' }, // 统一颜色
