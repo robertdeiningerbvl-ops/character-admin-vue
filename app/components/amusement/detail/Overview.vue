@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { uploadFile, getChatHistory } from '@/api'
+import { uploadFile, getChatHistory, updateAmusementState } from '@/api'
 
 const props = defineProps<{
   state: any
@@ -11,6 +11,35 @@ const toast = useToast()
 const localState = computed({
   get: () => props.state,
   set: val => emit('update:state', val)
+})
+
+// 监控封面图变化
+const initialCoverImage = ref<string>('')
+
+// 保存初始封面图
+watch(() => props.state.amusementId, (newId) => {
+  if (newId) {
+    initialCoverImage.value = props.state.coverImage || ''
+  }
+}, { immediate: true })
+
+// 监控封面图变化并自动提交
+watch(() => localState.value.coverImage, async (newValue, oldValue) => {
+  // 只有在已有 amusementId 且封面图确实变化时才提交
+  if (localState.value.amusementId && oldValue !== undefined && newValue !== oldValue) {
+    try {
+      const { error } = await updateAmusementState({
+        id: localState.value.amusementId,
+        image: newValue || ''
+      })
+      if (!error) {
+        initialCoverImage.value = newValue || ''
+        toast.add({ title: '封面图已更新', color: 'success' })
+      }
+    } catch (e: any) {
+      toast.add({ title: e.message || '更新封面图失败', color: 'error' })
+    }
+  }
 })
 
 // 时间判断函数
@@ -107,15 +136,18 @@ const handlePreviewClick = async () => {
 // 上传状态
 const uploadingBg = ref(false)
 const uploadingAvatar = ref(false)
+const uploadingCover = ref(false)
 const uploadingGallery = ref(false)
 const exporting = ref(false)
 
 // 文件上传
 const bgInputRef = ref<HTMLInputElement | null>(null)
 const avatarInputRef = ref<HTMLInputElement | null>(null)
+const coverInputRef = ref<HTMLInputElement | null>(null)
 const galleryInputRef = ref<HTMLInputElement | null>(null)
 const showBgPicker = ref(false)
 const showAvatarPicker = ref(false)
+const showCoverPicker = ref(false)
 const showGalleryPicker = ref(false)
 
 const handleBgUpload = async (e: Event) => {
@@ -165,6 +197,31 @@ const handleBgSelect = (url: string) => {
 
 const handleAvatarSelect = (url: string) => {
   props.state.avatarImage = url
+  toast.add({ title: '选择成功', color: 'success' })
+}
+
+const handleCoverUpload = async (e: Event) => {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  uploadingCover.value = true
+  try {
+    const formData = new FormData()
+    formData.append('image', file)
+    const { data } = await uploadFile(formData)
+    if (data?.uri) {
+      localState.value.coverImage = data.uri
+      toast.add({ title: '上传成功', color: 'success' })
+    }
+  } catch (err: any) {
+    toast.add({ title: err.message || '上传失败', color: 'error' })
+  } finally {
+    uploadingCover.value = false
+    ;(e.target as HTMLInputElement).value = ''
+  }
+}
+
+const handleCoverSelect = (url: string) => {
+  props.state.coverImage = url
   toast.add({ title: '选择成功', color: 'success' })
 }
 
@@ -502,6 +559,37 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
         >
       </div>
 
+      <!-- 封面图上传 -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">封面图</label>
+          <UButton size="xs" variant="ghost" icon="i-lucide-images" @click="showCoverPicker = true">图片库</UButton>
+        </div>
+        <div
+          class="w-64 h-80 rounded-xl bg-gray-50 dark:bg-gray-800/50 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-700 cursor-pointer hover:border-primary-400 dark:hover:border-primary-500 transition-all overflow-hidden group"
+          @click="!uploadingCover && coverInputRef?.click()"
+        >
+          <template v-if="uploadingCover">
+            <UIcon name="i-lucide-loader-2" class="w-8 h-8 text-gray-400 mb-2 animate-spin" />
+            <span class="text-sm text-gray-500">上传中...</span>
+          </template>
+          <template v-else-if="localState.coverImage">
+            <img :key="localState.coverImage" :src="localState.coverImage" alt="封面" loading="lazy" class="w-full h-full object-cover" />
+          </template>
+          <template v-else>
+            <UIcon name="i-lucide-image-plus" class="w-10 h-10 text-gray-400 mb-2 group-hover:text-primary-500 transition-colors" />
+            <span class="text-sm text-gray-500 group-hover:text-primary-500 transition-colors">点击上传封面图</span>
+          </template>
+        </div>
+        <input
+          ref="coverInputRef"
+          type="file"
+          accept="image/*"
+          class="hidden"
+          @change="handleCoverUpload"
+        >
+      </div>
+
       <!-- 图片合集 -->
       <div>
         <div class="flex items-center justify-between mb-2">
@@ -806,5 +894,6 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
 
   <CommonImagePicker v-model:dialog="showBgPicker" @select="handleBgSelect" />
   <CommonImagePicker v-model:dialog="showAvatarPicker" @select="handleAvatarSelect" />
+  <CommonImagePicker v-model:dialog="showCoverPicker" @select="handleCoverSelect" />
   <CommonImagePicker v-model:dialog="showGalleryPicker" @select="handleGallerySelect" />
 </template>

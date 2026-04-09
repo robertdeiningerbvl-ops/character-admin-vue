@@ -30,8 +30,23 @@ const state = reactive({
   loading: false,
   list: [] as any[],
   isDialog: false,
-  currentForm: {}
+  currentForm: {},
+  filterState: null as number | null,
+  filterName: ''
 })
+
+const filteredList = computed(() => {
+  return state.list.filter(item => {
+    const matchState = state.filterState === null || item.state === state.filterState
+    const matchName = !state.filterName || item.name?.includes(state.filterName)
+    return matchState && matchName
+  })
+})
+
+const resetFilter = () => {
+  state.filterState = null
+  state.filterName = ''
+}
 
 const loadData = async () => {
   state.loading = true
@@ -70,6 +85,18 @@ onMounted(() => loadData())
       <UButton label="新增" icon="i-lucide-plus" @click="openEditModal()" />
     </template>
 
+    <!-- 筛选栏 -->
+    <div class="flex items-center gap-2 mb-4">
+      <UInput v-model="state.filterName" placeholder="模型名称" class="w-40" />
+      <USelect
+        v-model="state.filterState"
+        :items="[{ label: '筛选状态', value: null }, { label: '启用', value: 2 }, { label: '关闭', value: 0 }]"
+        class="w-32"
+      />
+      <UButton icon="i-lucide-search" label="查询" color="neutral" @click="() => {}" />
+      <UButton icon="i-lucide-rotate-ccw" label="重置" color="neutral" variant="outline" @click="resetFilter" />
+    </div>
+
     <!-- 加载中 -->
     <div v-if="state.loading" class="flex items-center justify-center py-20">
       <UIcon name="i-lucide-loader" class="w-8 h-8 animate-spin text-(--ui-text-muted)" />
@@ -78,7 +105,7 @@ onMounted(() => loadData())
     <!-- 卡片列表 -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       <div
-        v-for="item in state.list"
+        v-for="item in filteredList"
         :key="item.id"
         class="p-4 rounded-xl bg-(--ui-bg-elevated) border border-(--ui-border) hover:border-(--ui-primary) transition-all"
       >
