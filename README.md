@@ -11,21 +11,21 @@ pnpm install
 Start the development server on `http://localhost:3000`:
 
 ```bash
-pnpm run dev
+npm run dev
 ```
 
 ## Production
 
-Build the application for production:
+Build the application for production 打包:
 
 ```bash
-pnpm run generate
+npm run generate
 ```
 
 Locally preview production build:
 
 ```bash
-pnpm run preview
+npm run preview
 ```
 
 

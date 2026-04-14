@@ -77,7 +77,8 @@ const configGroups = reactive([
       { key: 'INVITE', label: '邀请配置', icon: 'lucide:user-plus' },
       { key: 'OS', label: '系统优化', icon: 'lucide:cpu' },
       { key: 'KNOT', label: '聊天总结', icon: 'lucide:message-circle' },
-      { key: 'DOCTOR_CONFIG', label: '创作管理', icon: 'lucide:pen-tool' }
+      { key: 'DOCTOR_CONFIG', label: '创作管理', icon: 'lucide:pen-tool' },
+      { key: 'RIGHT_NAV', label: '右侧导航标记', icon: 'lucide:navigation' }
     ]
   }
 ])
@@ -102,6 +103,7 @@ const fetchConfig = async (key: string) => {
             ? data.content
             : { ...data.content }
           : '',
+        right_nav: Array.isArray(data.right_nav) ? data.right_nav : [],
         key: data.key || '',
         secret: data.secret || '',
         url: data.url || ''
@@ -908,6 +910,30 @@ onActivated(() => init())
           <UFormField label="备注">
             <UInput v-model="state.currentForm.remarks" placeholder="备注信息" class="w-full" />
           </UFormField>
+        </div>
+
+        <!-- RIGHT_NAV 右侧导航标记配置 -->
+        <div v-if="state.activeConfigKey === 'RIGHT_NAV'" class="space-y-4">
+          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
+              <div class="text-sm text-(--ui-text-muted)">
+                <p class="font-medium text-(--ui-text-highlighted) mb-1">右侧导航标记配置说明</p>
+                <p>配置右侧导航各菜单项的标记内容（如"热"、"新"等），标题不可修改。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div
+              v-for="item in state.currentForm.right_nav"
+              :key="item.type"
+              class="flex items-center gap-4 p-3 rounded-lg border border-(--ui-border) bg-(--ui-bg-elevated)"
+            >
+              <span class="w-24 shrink-0 text-sm font-medium text-(--ui-text-highlighted)">{{ item.title }}</span>
+              <UInput v-model="item.content" placeholder="标记内容（如：热、新）" class="flex-1" />
+            </div>
+          </div>
         </div>
 
         <!-- 底部保存按钮 -->

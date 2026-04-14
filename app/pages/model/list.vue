@@ -156,6 +156,10 @@ onMounted(() => loadData())
             <span class="text-(--ui-text-muted) w-16 shrink-0">排序</span>
             <span>{{ item.r || 0 }}</span>
           </div>
+          <div class="flex items-center gap-2">
+            <span class="text-(--ui-text-muted) w-16 shrink-0">价格</span>
+            <span class="font-medium text-(--ui-primary)">{{ item.price ?? '-' }}</span>
+          </div>
         </div>
 
         <!-- 描述 -->

@@ -33,6 +33,7 @@ const auth = useAuthStore()
 
 const schema = z.object({
   username: z.string().nonempty(),
+  email: z.string().nonempty(),
   password: z.string().min(8, '不能少于 8 个字符').optional().or(z.literal('')),
   group_id: z.number(),
   state: z.number()
@@ -171,6 +172,19 @@ watch(
             v-model.trim="state.form.username"
             :disabled="!!currentForm.id"
             placeholder="请输入用户名"
+            class="w-full"
+          >
+            <template #leading>
+              <UIcon name="i-lucide-user" class="w-4 h-4 text-(--ui-text-muted)" />
+            </template>
+          </UInput>
+        </UFormField>
+
+        <UFormField label="账号" name="email" required>
+          <UInput
+            v-model.trim="state.form.email"
+            :disabled="!!currentForm.id"
+            placeholder="请输入账号"
             class="w-full"
           >
             <template #leading>

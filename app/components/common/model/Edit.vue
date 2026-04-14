@@ -146,6 +146,9 @@ watch(() => props.dialog, (val) => {
             <UFormField label="排序" name="r">
               <UInput v-model.number="state.form.r" type="number" placeholder="数值越大越靠前" />
             </UFormField>
+            <UFormField label="模型价格" name="price">
+              <UInput v-model.number="state.form.price" type="number" :min="0" placeholder="不能小于0" />
+            </UFormField>
             <UFormField label="预设" name="preset_id" required>
               <USelect
                 v-model="state.form.preset_id"
