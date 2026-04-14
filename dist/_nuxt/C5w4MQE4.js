@@ -1,0 +1,1 @@
+import{L as s,M as i}from"./Btgigwi4.js";function e(t){return s.get(i.commonStatistics,t)}function n(){return s.get(i.commonStatisticsRefresh)}function m(t){return s.get(i.commonInviteStatistics,t)}export{m as a,e as g,n as r};

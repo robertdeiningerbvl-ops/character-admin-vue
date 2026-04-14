@@ -105,7 +105,7 @@ onMounted(() => loadData())
             </div>
             <div class="w-px h-8 bg-(--ui-border)" />
             <div class="text-center">
-              <div class="text-xs text-(--ui-text-muted) mb-0.5">电量</div>
+              <div class="text-xs text-(--ui-text-muted) mb-0.5">妖力</div>
               <div class="text-sm font-semibold text-cyan-500">{{ item.enter_battery }}</div>
             </div>
           </div>
@@ -117,7 +117,7 @@ onMounted(() => loadData())
             </div>
             <div class="w-px h-8 bg-(--ui-border)" />
             <div class="text-center">
-              <div class="text-xs text-(--ui-text-muted) mb-0.5">电量</div>
+              <div class="text-xs text-(--ui-text-muted) mb-0.5">妖力</div>
               <div class="text-sm font-semibold text-pink-500">{{ item.out_battery }}</div>
             </div>
           </div>

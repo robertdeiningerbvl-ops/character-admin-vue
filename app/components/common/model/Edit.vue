@@ -69,6 +69,9 @@ async function onSubmit() {
   state.loading = true
   try {
     const postForm = cloneDeep(state.form)
+    if (postForm.price != null) {
+      postForm.price = Math.round(postForm.price * 100)
+    }
     const { error } = await (postForm.id ? updateCommonModel : addCommonModel)(postForm)
     if (!error) {
       toast.add({ title: '保存成功', color: 'success' })
@@ -104,7 +107,11 @@ async function onTest() {
 watch(() => props.dialog, (val) => {
   if (val) {
     state.loading = false
-    state.form = cloneDeep(props.currentForm)
+    const form = cloneDeep(props.currentForm)
+    if (form.price != null) {
+      form.price = form.price / 100
+    }
+    state.form = form
     loadPresetOptions()
   }
 })
