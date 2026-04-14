@@ -76,6 +76,11 @@ export function testCommonModel(params: any) {
   return request.get<any>(apiRoute.commonModelTest, params)
 }
 
+/** 模型消费统计列表 */
+export function getCommonModelConsumeStatisticsList(params?: any) {
+  return request.get<any>(apiRoute.commonModelConsumeStatisticsList, params)
+}
+
 /** 模型预设列表 */
 export function getCommonModelPresetList(params?: any) {
   return request.get<any>(apiRoute.commonModelPresetList, params)

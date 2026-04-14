@@ -60,6 +60,7 @@ export const apiRoute = {
   commonModelEdit: 'common-model-edit',
   commonModelAdd: 'common-model-add',
   commonModelTest: 'common-model-test',
+  commonModelConsumeStatisticsList: 'common-model-consume-statistics-list',
 
   // 模型预设
   commonModelPresetList: 'common-model-preset-list',
