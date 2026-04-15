@@ -80,9 +80,6 @@ watch(
     if (newValue) {
       state.loading = false
       state.form = cloneDeep(props.currentForm)
-      if (state.form.real_amount) {
-        state.form.real_amount = state.form.real_amount / 100
-      }
     }
   }
 )
@@ -133,7 +130,7 @@ watch(
             </div>
             <div>
               <span class="text-(--ui-text-muted)">订单金额：</span>
-              <span class="font-medium">¥{{ (state.form.order_amount || 0) / 100 }}</span>
+              <span class="font-medium">¥{{ state.form.order_amount || 0 }}</span>
             </div>
             <div>
               <span class="text-(--ui-text-muted)">状态：</span>
@@ -154,7 +151,6 @@ watch(
             <UInput
               v-model.number="state.form.real_amount"
               type="number"
-              step="0.01"
               min="0"
               placeholder="0.00"
               class="w-full"

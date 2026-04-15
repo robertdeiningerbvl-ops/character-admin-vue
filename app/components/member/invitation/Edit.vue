@@ -134,10 +134,10 @@ watch(
             </UFormField>
           </div>
           <div class="grid grid-cols-2 gap-4">
-            <UFormField label="能量值" name="coins" required>
+            <UFormField label="妖力值" name="coins" required>
               <UInput
                 v-model.number="state.form.coins"
-                placeholder="请输入能量值"
+                placeholder="请输入妖力值"
                 type="number"
                 min="0"
                 class="w-full"

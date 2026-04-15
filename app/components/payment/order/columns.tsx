@@ -86,7 +86,7 @@ export const baseColumns: TableColumnList = [
   },
   {
     accessorKey: 'coins',
-    header: '能量',
+    header: '妖力',
     cell: ({ row }) => {
       const coins = row.original.coins || 0
       return h('span', { class: 'font-semibold text-yellow-600 dark:text-yellow-400' }, coins)
@@ -102,7 +102,7 @@ export const baseColumns: TableColumnList = [
     accessorKey: 'order_amount',
     header: '订单金额',
     cell: ({ row }) => {
-      const amount = (row.original.order_amount || 0) / 100
+      const amount = row.original.order_amount || 0
       return h('span', { class: 'font-semibold text-gray-900 dark:text-white' }, `¥${amount}`)
     },
     meta: {
@@ -116,7 +116,7 @@ export const baseColumns: TableColumnList = [
     accessorKey: 'real_amount',
     header: '实付金额',
     cell: ({ row }) => {
-      const realAmount = (row.original.real_amount || 0) / 100
+      const realAmount = row.original.real_amount || 0
       return h('span', { class: 'font-semibold text-green-600 dark:text-green-400' }, `¥${realAmount}`)
     },
     meta: {

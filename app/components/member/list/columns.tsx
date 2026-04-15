@@ -69,8 +69,8 @@ export const baseColumns: TableColumnList = [
     cell: ({ row }) => {
       const { battery, income_battery } = row.original
       return h('div', { class: 'flex flex-col text-xs' }, [
-        h('span', { class: 'inline-flex items-center gap-1 text-yellow-500' }, [h(UIcon, { name: 'i-lucide-zap', class: 'w-3 h-3' }), '现有 ', battery || 0]),
-        h('span', { class: 'inline-flex items-center gap-1 text-orange-500' }, [h(UIcon, { name: 'i-lucide-gift', class: 'w-3 h-3' }), '赠送 ', income_battery || 0])
+        h('span', { class: 'inline-flex items-center gap-1 text-yellow-500' }, [h(UIcon, { name: 'i-lucide-zap', class: 'w-3 h-3' }), '现有 ', ((battery || 0) / 100).toFixed(2)]),
+        h('span', { class: 'inline-flex items-center gap-1 text-orange-500' }, [h(UIcon, { name: 'i-lucide-gift', class: 'w-3 h-3' }), '赠送 ', ((income_battery || 0) )])
       ])
     }
   },

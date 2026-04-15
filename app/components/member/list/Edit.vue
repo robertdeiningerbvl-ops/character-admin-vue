@@ -198,7 +198,7 @@ watch(() => props.dialog, (newValue) => {
             </div>
             <div class="p-2 rounded bg-(--ui-bg) border border-(--ui-border)">
               <div class="text-lg font-semibold text-yellow-500">
-                {{ state.form.battery || 0 }}
+                {{ state.form.battery ?  ((state.form.battery || 0) / 100).toFixed(2): '0.00' }}
               </div>
               <div class="text-xs text-(--ui-text-muted)">
                 现有妖力

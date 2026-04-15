@@ -42,15 +42,18 @@ export const baseColumns: TableColumnList = [
   },
   {
     accessorKey: 'before_battery',
-    header: '帐变前余额'
+    header: '帐变前余额',
+    cell: ({ row }) => h('span', {}, ((row.original.before_battery || 0) / 100).toFixed(2))
   },
   {
     accessorKey: 'battery',
-    header: '帐变金额'
+    header: '帐变金额',
+    cell: ({ row }) => h('span', {}, ((row.original.battery || 0) / 100).toFixed(2))
   },
   {
     accessorKey: 'after_battery',
-    header: '帐变后余额'
+    header: '帐变后余额',
+    cell: ({ row }) => h('span', {}, ((row.original.after_battery || 0) / 100).toFixed(2))
   },
   {
     accessorKey: 'type',
