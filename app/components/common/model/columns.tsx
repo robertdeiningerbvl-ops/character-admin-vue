@@ -39,20 +39,12 @@ export const baseColumns: TableColumnList = [
     header: '模型名称'
   },
   {
-    accessorKey: 'f',
-    header: '模型标识'
-  },
-  {
     accessorKey: 'm',
     header: 'm'
   },
   {
     accessorKey: 'description',
     header: '描述'
-  },
-  {
-    accessorKey: 'uri',
-    header: '请求地址'
   },
   {
     accessorKey: 'preset_name',

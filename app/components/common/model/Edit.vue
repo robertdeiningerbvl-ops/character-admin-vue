@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { cloneDeep } from 'lodash-es'
-import { addCommonModel, updateCommonModel, getCommonModelPresetList, testCommonModel } from '@/api'
+import { addCommonModel, updateCommonModel, getCommonModelPresetList, testCommonModel, getLlmRouterBackendList } from '@/api'
 
 const props = withDefaults(defineProps<{
   dialog?: boolean
@@ -39,25 +39,38 @@ const streamEnabled = computed({
   set: (val) => { state.form.stream = val ? 1 : 0 }
 })
 
-const selectedModel = computed({
-  get: () => state.form.m,
-  set: (val) => { state.form.m = typeof val === 'string' ? val : val?.value }
-})
-
 const state = reactive({
   loading: false,
   testing: false,
   form: {} as any,
   presetOptions: [] as any[],
-  modelOptions: [] as any[],
-  modelLoading: false
+  modelLoading: false,
+  backendOptions: [] as any[],
+  backendList: [] as any[]
+})
+
+// 根据选中的渠道动态生成模型选项
+const modelOptions = computed(() => {
+  const backend = state.backendList.find((b: any) => b.id === state.form.llm_router_backend_id)
+  if (!backend?.models) return []
+  return backend.models.split(',').map((m: string) => ({ label: m.trim(), value: m.trim() }))
 })
 
 const loadPresetOptions = async () => {
   state.modelLoading = true
-  const { data } = await getCommonModelPresetList({})
-  if (data) {
-    state.presetOptions = data.list.map((item: any) => ({
+  const [presetRes, backendRes] = await Promise.all([
+    getCommonModelPresetList({}),
+    getLlmRouterBackendList({})
+  ])
+  if (presetRes.data) {
+    state.presetOptions = presetRes.data.list.map((item: any) => ({
+      label: item.name,
+      value: item.id
+    }))
+  }
+  if (backendRes.data) {
+    state.backendList = backendRes.data.list || []
+    state.backendOptions = state.backendList.map((item: any) => ({
       label: item.name,
       value: item.id
     }))
@@ -92,11 +105,6 @@ async function onTest() {
   try {
     const { data, error } = await testCommonModel({ id: state.form.id })
     if (!error && data?.list) {
-      state.modelOptions = data.list.map((m: string) => ({ label: m, value: m }))
-      // 如果当前值在列表中则保持，否则清空
-      if (state.form.m && !data.list.includes(state.form.m)) {
-        state.modelOptions.unshift({ label: state.form.m, value: state.form.m })
-      }
       toast.add({ title: '获取模型列表成功', color: 'success' })
     }
   } finally {
@@ -156,8 +164,19 @@ watch(() => props.dialog, (val) => {
             <UFormField label="模型价格" name="price">
               <UInput v-model.number="state.form.price" type="number" :min="0" placeholder="不能小于0" />
             </UFormField>
-            <UFormField label="渠道" name="channel">
-              <UInput v-model.trim="state.form.channel" placeholder="输入渠道标识" />
+            <UFormField label="模型渠道" name="llm_router_backend_id">
+              <USelect
+                v-model="state.form.llm_router_backend_id"
+                :items="state.backendOptions"
+                placeholder="选择模型渠道"
+              />
+            </UFormField>
+            <UFormField label="模型名称 (m)" name="m" required>
+              <USelect
+                v-model="state.form.m"
+                :items="modelOptions"
+                placeholder="选择模型名称"
+              />
             </UFormField>
             <UFormField label="预设" name="preset_id" required>
               <USelect
@@ -172,58 +191,6 @@ watch(() => props.dialog, (val) => {
                 v-model.trim="state.form.description"
                 placeholder="输入描述"
                 :rows="3"
-                autoresize
-                class="w-full"
-              />
-            </UFormField>
-          </div>
-        </div>
-
-        <!-- 模型配置 -->
-        <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
-          <div class="flex items-center gap-2 mb-4">
-            <UIcon name="i-lucide-settings" class="w-4 h-4 text-(--ui-primary)" />
-            <span class="text-sm font-medium">模型配置</span>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <UFormField label="模型标识 (f)" name="f" required>
-              <UInput v-model.trim="state.form.f" placeholder="输入模型标识" :disabled="!!currentForm.id" />
-            </UFormField>
-            <UFormField label="模型名称 (m)" name="m" required>
-              <USelectMenu
-                v-if="state.modelOptions.length"
-                v-model="selectedModel"
-                :items="state.modelOptions"
-                placeholder="选择模型名称"
-                searchable
-                class="w-full"
-              />
-              <UInput v-else v-model.trim="state.form.m" placeholder="点击测试链接获取模型列表" />
-            </UFormField>
-            <UFormField
-              label="Key"
-              name="key"
-              required
-              class="col-span-2"
-            >
-              <UTextarea
-                v-model.trim="state.form.key"
-                placeholder="输入 Key"
-                :rows="2"
-                autoresize
-                class="w-full"
-              />
-            </UFormField>
-            <UFormField
-              label="请求地址"
-              name="uri"
-              required
-              class="col-span-2"
-            >
-              <UTextarea
-                v-model.trim="state.form.uri"
-                placeholder="输入请求地址"
-                :rows="2"
                 autoresize
                 class="w-full"
               />

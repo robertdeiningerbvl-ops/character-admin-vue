@@ -81,6 +81,11 @@ export function getCommonModelConsumeStatisticsList(params?: any) {
   return request.get<any>(apiRoute.commonModelConsumeStatisticsList, params)
 }
 
+/** LLM路由后端列表 */
+export function getLlmRouterBackendList(params?: any) {
+  return request.get<any>(apiRoute.llmRouterBackendList, params)
+}
+
 /** 模型预设列表 */
 export function getCommonModelPresetList(params?: any) {
   return request.get<any>(apiRoute.commonModelPresetList, params)

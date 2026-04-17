@@ -135,10 +135,6 @@ onMounted(() => loadData())
         <!-- 信息 -->
         <div class="space-y-2 text-xs mb-3">
           <div class="flex items-center gap-2">
-            <span class="text-(--ui-text-muted) w-16 shrink-0">模型标识</span>
-            <code class="bg-(--ui-bg) px-1.5 py-0.5 rounded truncate">{{ item.f || '-' }}</code>
-          </div>
-          <div class="flex items-center gap-2">
             <span class="text-(--ui-text-muted) w-16 shrink-0">模型名称</span>
             <code class="bg-(--ui-bg) px-1.5 py-0.5 rounded truncate">{{ item.m || '-' }}</code>
           </div>
@@ -159,10 +155,6 @@ onMounted(() => loadData())
           <div class="flex items-center gap-2">
             <span class="text-(--ui-text-muted) w-16 shrink-0">价格</span>
             <span class="font-medium text-(--ui-primary)">{{ item.price != null ? (item.price / 100).toFixed(2) : '-' }}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-(--ui-text-muted) w-16 shrink-0">渠道</span>
-            <span>{{ item.channel || '-' }}</span>
           </div>
         </div>
 
