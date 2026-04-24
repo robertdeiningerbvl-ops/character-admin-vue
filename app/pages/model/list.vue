@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { cloneDeep } from 'lodash-es'
-import { getCommonModelList, updateCommonModel } from '@/api'
+import { getCommonModelList, updateCommonModel, getLlmRouterBackendList } from '@/api'
 
 definePageMeta({ layout: 'app' })
 defineOptions({ name: 'CommonModelList' })
@@ -32,27 +32,35 @@ const state = reactive({
   isDialog: false,
   currentForm: {},
   filterState: null as number | null,
-  filterName: ''
+  filterName: '',
+  filterBackendId: null as number | null,
+  backendOptions: [] as { label: string, value: number }[]
 })
 
 const filteredList = computed(() => {
   return state.list.filter(item => {
     const matchState = state.filterState === null || item.state === state.filterState
     const matchName = !state.filterName || item.name?.includes(state.filterName)
-    return matchState && matchName
+    const matchBackend = state.filterBackendId === null || item.llm_router_backend_id === state.filterBackendId
+    return matchState && matchName && matchBackend
   })
 })
 
 const resetFilter = () => {
   state.filterState = null
   state.filterName = ''
+  state.filterBackendId = null
 }
 
 const loadData = async () => {
   state.loading = true
   try {
-    const { data } = await getCommonModelList({})
-    state.list = (data?.list || []).sort((a: any, b: any) => (b.r || 0) - (a.r || 0))
+    const [modelRes, backendRes] = await Promise.all([
+      getCommonModelList({}),
+      getLlmRouterBackendList({})
+    ])
+    state.list = (modelRes.data?.list || []).sort((a: any, b: any) => (b.r || 0) - (a.r || 0))
+    state.backendOptions = (backendRes.data?.list || []).map((item: any) => ({ label: item.name, value: item.id }))
   } finally {
     state.loading = false
   }
@@ -92,6 +100,11 @@ onMounted(() => loadData())
         v-model="state.filterState"
         :items="[{ label: '筛选状态', value: null }, { label: '启用', value: 2 }, { label: '关闭', value: 0 }]"
         class="w-32"
+      />
+      <USelect
+        v-model="state.filterBackendId"
+        :items="[{ label: '全部渠道', value: null }, ...state.backendOptions]"
+        class="w-36"
       />
       <UButton icon="i-lucide-search" label="查询" color="neutral" @click="() => {}" />
       <UButton icon="i-lucide-rotate-ccw" label="重置" color="neutral" variant="outline" @click="resetFilter" />
