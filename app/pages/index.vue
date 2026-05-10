@@ -79,7 +79,7 @@ const processData = () => {
   const summaryMap = new Map<string, number>()
   state.rawList.forEach((item: any) => {
     item.stats?.forEach((stat: any) => {
-      const value = stat.f === 'CZ_PRICE' || stat.f === 'XF_NUM' ? stat.num / 100 : stat.num
+      const value = stat.f === 'XF_NUM' ? stat.num / 100 : stat.num
       summaryMap.set(stat.f, (summaryMap.get(stat.f) || 0) + value)
     })
   })
@@ -94,7 +94,7 @@ const processData = () => {
     .map((item) => {
       const result: any = { date: item.tm }
       item.stats?.forEach((stat: any) => {
-        result[stat.f] = stat.f === 'CZ_PRICE' || stat.f === 'XF_NUM' ? +(stat.num / 100).toFixed(2) : stat.num
+        result[stat.f] = stat.f === 'XF_NUM' ? +(stat.num / 100).toFixed(2) : stat.num
       })
       return result
     })

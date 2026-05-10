@@ -24,6 +24,12 @@ const typeEnum: any = {
 
 export const baseColumns: TableColumnList = [
   {
+    accessorKey: 'item_id',
+    header: '业务ID',
+    searchPlaceholder: '业务ID',
+    hideInTable: false
+  },
+  {
     accessorKey: 'uid',
     header: '用户信息',
     searchPlaceholder: '用户ID',
