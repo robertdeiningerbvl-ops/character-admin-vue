@@ -33,7 +33,7 @@ const schema = z.object({
   battery: z.number().min(0, '奖励妖力不能小于0'),
   num: z.number().min(0, '需要次数不能小于0'),
   amount: z.number().min(0, '奖励金额不能小于0'),
-  show: z.number(),
+  type: z.number(),
   state: z.number(),
   content: z.string().optional()
 })
@@ -43,9 +43,9 @@ const stateOptions = [
   { label: '启用', value: 2 }
 ]
 
-const showOptions = [
-  { label: '隐藏', value: 0 },
-  { label: '显示', value: 2 }
+const typeOptions = [
+  { label: '每日任务', value: 1 },
+  { label: '一次任务', value: 2 }
 ]
 
 interface FormState {
@@ -59,7 +59,7 @@ interface FormState {
     amount?: number
     remark?: string
     content?: string
-    show?: number
+    type?: number
     state?: number
   }
 }
@@ -67,11 +67,6 @@ interface FormState {
 const state = reactive<FormState>({
   loading: false,
   form: {}
-})
-
-const showEnabled = computed({
-  get: () => state.form.show === 2,
-  set: (val: boolean) => { state.form.show = val ? 2 : 0 }
 })
 
 const stateEnabled = computed({
@@ -272,8 +267,8 @@ watch(
             <span class="text-sm font-medium text-(--ui-text-highlighted)">状态配置</span>
           </div>
           <div class="flex items-center gap-8">
-            <UFormField label="是否显示" name="show">
-              <USwitch v-model="showEnabled" />
+            <UFormField label="任务类型" name="type">
+              <USelect v-model="state.form.type" :items="typeOptions" class="w-32" />
             </UFormField>
             <UFormField label="是否启用" name="state">
               <USwitch v-model="stateEnabled" />

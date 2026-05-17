@@ -5,12 +5,19 @@ import { getMarketingList } from '@/api'
 definePageMeta({ layout: 'app' })
 defineOptions({ name: 'MarketingList' })
 
+const typeMap: Record<number, string> = { 1: '每日任务', 2: '一次任务' }
+
 const state = reactive({
   isDialog: false,
   currentForm: {},
   loading: false,
-  list: [] as any[]
+  list: [] as any[],
+  filterType: null as number | null
 })
+
+const filteredList = computed(() =>
+  state.filterType === null ? state.list : state.list.filter(i => i.type === state.filterType)
+)
 
 const loadData = async () => {
   state.loading = true
@@ -37,6 +44,15 @@ onMounted(() => loadData())
 
 <template>
   <DashboardLayout>
+    <!-- 筛选栏 -->
+    <div class="flex items-center gap-2 mb-4">
+      <USelect
+        v-model="state.filterType"
+        :items="[{ label: '全部类型', value: null }, { label: '每日任务', value: 1 }, { label: '一次任务', value: 2 }]"
+        class="w-32"
+      />
+    </div>
+
     <!-- 加载中 -->
     <div v-if="state.loading" class="flex items-center justify-center py-20">
       <UIcon name="i-lucide-loader" class="w-8 h-8 animate-spin text-(--ui-text-muted)" />
@@ -45,7 +61,7 @@ onMounted(() => loadData())
     <!-- 卡片列表 -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-stretch">
       <div
-        v-for="item in state.list"
+        v-for="item in filteredList"
         :key="item.id"
         class="relative p-4 rounded-xl bg-(--ui-bg-elevated) border border-(--ui-border) hover:border-(--ui-primary) transition-all group h-full flex flex-col"
       >
@@ -86,8 +102,8 @@ onMounted(() => loadData())
             <UBadge :color="item.state === 2 ? 'success' : 'error'" variant="subtle">
               {{ item.state === 2 ? '启用' : '关闭' }}
             </UBadge>
-            <UBadge :color="item.show === 2 ? 'info' : 'neutral'" variant="subtle">
-              {{ item.show === 2 ? '显示' : '隐藏' }}
+            <UBadge v-if="item.type" color="info" variant="subtle">
+              {{ typeMap[item.type] || '未知' }}
             </UBadge>
           </div>
           <UButton

@@ -81,7 +81,7 @@ watch(() => props.dialog, (val) => {
                 当前妖力
               </div>
               <div class="text-lg font-semibold text-yellow-500">
-                {{ currentForm.battery || 0 }}
+                {{ ((currentForm.battery || 0) / 100).toFixed(2) }}
               </div>
             </div>
           </div>
@@ -107,7 +107,7 @@ watch(() => props.dialog, (val) => {
             </UInput>
           </UFormField>
           <div class="text-xs text-(--ui-text-muted)">
-            充值后妖力: <span class="text-yellow-500 font-medium">{{ (currentForm.battery || 0) + (state.form.battery || 0) }}</span>
+            充值后妖力: <span class="text-yellow-500 font-medium">{{ (((currentForm.battery || 0) + (state.form.battery || 0)) / 100).toFixed(2) }}</span>
           </div>
         </div>
       </UForm>

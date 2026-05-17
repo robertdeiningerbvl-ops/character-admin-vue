@@ -46,7 +46,8 @@ const configGroups = reactive([
     label: '基础能力',
     items: [
       { key: 'SMS', label: '短信服务', icon: 'lucide:message-square' },
-      { key: 'GOOGLE_AUTH', label: 'Google 认证', icon: 'lucide:shield-check' }
+      { key: 'GOOGLE_AUTH', label: 'Google 认证', icon: 'lucide:shield-check' },
+      { key: 'TELEGRAM_AUTH', label: 'Telegram 认证', icon: 'lucide:send' }
     ]
   },
   {
@@ -364,6 +365,36 @@ onActivated(() => init())
               :rows="3"
               class="w-full"
             />
+          </UFormField>
+        </div>
+
+        <!-- TELEGRAM_AUTH -->
+        <div v-if="state.activeConfigKey === 'TELEGRAM_AUTH'" class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <UFormField label="机器人密钥 (key)">
+              <UInput v-model="state.currentForm.key" placeholder="Bot Token" class="w-full" />
+            </UFormField>
+            <UFormField label="角色卡分享群密钥 (send_key)">
+              <UInput v-model="state.currentForm.send_key" placeholder="Send Key" class="w-full" />
+            </UFormField>
+            <UFormField label="群组链接 (group_url)">
+              <UInput v-model="state.currentForm.group_url" placeholder="https://t.me/..." class="w-full" />
+            </UFormField>
+            <UFormField label="角色卡群ID (channel_id)">
+              <UInput v-model="state.currentForm.channel_id" placeholder="-100xxxxxxxxx" class="w-full" />
+            </UFormField>
+            <UFormField label="机器人链接 (bot_url)">
+              <UInput v-model="state.currentForm.bot_url" placeholder="https://t.me/xxx_bot" class="w-full" />
+            </UFormField>
+            <UFormField label="小程序链接 (bot_app_url)">
+              <UInput v-model="state.currentForm.bot_app_url" placeholder="https://t.me/xxx_bot/app" class="w-full" />
+            </UFormField>
+            <UFormField label="网站链接 (app_url)" class="col-span-2">
+              <UInput v-model="state.currentForm.app_url" placeholder="https://example.com" class="w-full" />
+            </UFormField>
+          </div>
+          <UFormField label="备注">
+            <UTextarea v-model="state.currentForm.remarks" placeholder="请输入说明内容" :rows="2" class="w-full" />
           </UFormField>
         </div>
 

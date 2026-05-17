@@ -164,6 +164,9 @@ watch(() => props.dialog, (val) => {
             <UFormField label="模型价格" name="price">
               <UInput v-model.number="state.form.price" type="number" :min="0" placeholder="不能小于0" />
             </UFormField>
+            <UFormField label="免费次数" name="free_times">
+              <UInput v-model.number="state.form.free_times" type="number" :min="0" placeholder="0表示不免费" />
+            </UFormField>
             <UFormField label="模型渠道" name="llm_router_backend_id">
               <USelect
                 v-model="state.form.llm_router_backend_id"
