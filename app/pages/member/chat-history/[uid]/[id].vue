@@ -10,7 +10,10 @@ const amusementId = computed(() => route.params.id as string)
 
 const state = reactive({
   loading: false,
-  list: [] as any[]
+  list: [] as any[],
+  total: 0,
+  page: 1,
+  pageSize: 20
 })
 
 const loadData = async () => {
@@ -18,12 +21,20 @@ const loadData = async () => {
   try {
     const { data } = await getAmusementChatHistory({
       uid: uid.value,
-      biz_id: amusementId.value
+      biz_id: amusementId.value,
+      page: state.page,
+      pagesize: state.pageSize
     })
     state.list = data?.history || []
+    state.total = data?.num || 0
   } finally {
     state.loading = false
   }
+}
+
+const onPageChange = (page: number) => {
+  state.page = page
+  loadData()
 }
 
 onMounted(() => loadData())
@@ -34,7 +45,7 @@ onMounted(() => loadData())
     <div class="mb-4 flex items-center gap-2">
       <UButton icon="i-lucide-arrow-left" color="neutral" variant="ghost" :to="`/member/chat/${uid}`" />
       <h2 class="text-lg font-semibold">聊天历史</h2>
-      <UBadge color="neutral" variant="subtle">共 {{ state.list.length }} 条</UBadge>
+      <UBadge color="neutral" variant="subtle">共 {{ state.total }} 条</UBadge>
     </div>
 
     <div v-if="state.loading" class="flex items-center justify-center py-20">
@@ -61,6 +72,10 @@ onMounted(() => loadData())
     <div v-if="!state.loading && state.list.length === 0" class="text-center py-20 text-(--ui-text-muted)">
       <UIcon name="i-lucide-message-circle-x" class="w-12 h-12 mx-auto mb-2 opacity-50" />
       <p>暂无聊天历史</p>
+    </div>
+
+    <div v-if="state.total > state.pageSize" class="mt-4 flex justify-end">
+      <UPagination :model-value="state.page" :total="state.total" :page-count="state.pageSize" @update:model-value="onPageChange" />
     </div>
   </DashboardLayout>
 </template>
