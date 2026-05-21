@@ -75,7 +75,7 @@ onMounted(() => loadData())
     </div>
 
     <div v-if="state.total > state.pageSize" class="mt-4 flex justify-end">
-      <UPagination :model-value="state.page" :total="state.total" :page-count="state.pageSize" @update:model-value="onPageChange" />
+      <UPagination :page="state.page" :total="state.total" :page-count="state.pageSize" @update:page="onPageChange" />
     </div>
   </DashboardLayout>
 </template>
