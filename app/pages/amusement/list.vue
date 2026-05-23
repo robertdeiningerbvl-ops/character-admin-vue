@@ -932,7 +932,7 @@ onActivated(() => {
                   <span v-if="item.state === 2 && item.version_id !== item.review_version_id" class="inline-block mt-1 px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 rounded">新版本审核中</span>
                   <!-- 妖力 -->
                   <span v-if="item.battery > 0" class="inline-flex items-center gap-1 mt-1 ml-1 px-1.5 py-0.5 text-xs bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 rounded">
-                    <UIcon name="i-lucide-zap" class="w-3 h-3" />{{ item.battery }}
+                    <UIcon name="i-lucide-zap" class="w-3 h-3" />{{ (item.battery / 100).toFixed(2) }}
                   </span>
                 </div>
               </div>
