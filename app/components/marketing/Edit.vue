@@ -34,6 +34,7 @@ const schema = z.object({
   num: z.number().min(0, '需要次数不能小于0'),
   amount: z.number().min(0, '奖励金额不能小于0'),
   type: z.number(),
+  show: z.number(),
   state: z.number(),
   content: z.string().optional()
 })
@@ -60,6 +61,7 @@ interface FormState {
     remark?: string
     content?: string
     type?: number
+    show?: number
     state?: number
   }
 }
@@ -72,6 +74,11 @@ const state = reactive<FormState>({
 const stateEnabled = computed({
   get: () => state.form.state === 2,
   set: (val: boolean) => { state.form.state = val ? 2 : 0 }
+})
+
+const showEnabled = computed({
+  get: () => state.form.show === 2,
+  set: (val: boolean) => { state.form.show = val ? 2 : 0 }
 })
 
 // 判断是否为签到任务
@@ -269,6 +276,9 @@ watch(
           <div class="flex items-center gap-8">
             <UFormField label="任务类型" name="type">
               <USelect v-model="state.form.type" :items="typeOptions" class="w-32" />
+            </UFormField>
+            <UFormField label="是否显示" name="show">
+              <USwitch v-model="showEnabled" />
             </UFormField>
             <UFormField label="是否启用" name="state">
               <USwitch v-model="stateEnabled" />

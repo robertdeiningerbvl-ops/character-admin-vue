@@ -105,6 +105,9 @@ onMounted(() => loadData())
             <UBadge v-if="item.type" color="info" variant="subtle">
               {{ typeMap[item.type] || '未知' }}
             </UBadge>
+            <UBadge :color="item.show === 2 ? 'info' : 'neutral'" variant="subtle">
+              {{ item.show === 2 ? '显示' : '隐藏' }}
+            </UBadge>
           </div>
           <UButton
             size="xs"
