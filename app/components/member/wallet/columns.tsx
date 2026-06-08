@@ -19,7 +19,8 @@ const typeEnum: any = {
   6: '角色卡消费',
   7: '能量打赏',
   8: '系统充值',
-  9: '角色卡创造'
+  9: '角色卡创造',
+  11: '额度转换'
 }
 
 export const baseColumns: TableColumnList = [
@@ -78,7 +79,8 @@ export const baseColumns: TableColumnList = [
           { label: '角色卡消费', value: 6 },
           { label: '能量打赏', value: 7 },
           { label: '系统充值', value: 8 },
-          { label: '角色卡创造', value: 9 }
+          { label: '角色卡创造', value: 9 },
+          { label: '额度转换', value: 11 }
         ]
       }
     },

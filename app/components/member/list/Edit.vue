@@ -45,6 +45,11 @@ const isAdminOptions = [
   { label: '是', value: 2 }
 ]
 
+const isAgentOptions = [
+  { label: '否', value: 0 },
+  { label: '是', value: 1 }
+]
+
 const state = reactive({
   loading: false,
   avatarLoading: false,
@@ -292,6 +297,17 @@ watch(() => props.dialog, (newValue) => {
               />
             </UFormField>
           </div>
+          <div class="grid grid-cols-2 gap-4">
+            <UFormField label="是否代理" name="is_agent">
+              <USelect v-model="state.form.is_agent" :items="isAgentOptions" placeholder="请选择" class="w-full" />
+            </UFormField>
+            <UFormField label="代理分佣比例" name="agent_commission">
+              <UInput v-model.number="state.form.agent_commission" type="number" :min="0" :max="100" placeholder="0-100" class="w-full" />
+            </UFormField>
+          </div>
+          <UFormField label="邮箱" name="email">
+            <UInput v-model.trim="state.form.email" placeholder="请输入邮箱" class="w-full" />
+          </UFormField>
           <UFormField label="备注" name="remarks">
             <UTextarea
               v-model.trim="state.form.remarks"
