@@ -84,3 +84,8 @@ export function applyMemberWithdraw(data: any) {
 export function getMemberFundLogList(params?: any) {
   return request.get<any>(apiRoute.memberFundLogList, params)
 }
+
+/** 获取邀请码统计列表 */
+export function getMemberInviteStatisticalList(params?: any) {
+  return request.get<any>(apiRoute.memberInviteStatisticalList, params)
+}

@@ -88,6 +88,7 @@ export const apiRoute = {
   commonStatistics: 'common-statistics',
   commonStatisticsRefresh: 'common-statistics-refresh',
   commonInviteStatistics: 'common-invite-statistics',
+  memberInviteStatisticalList: 'admin/member-invite-statistical-list',
 
   /** common  end */
 
