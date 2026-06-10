@@ -39,6 +39,8 @@ const state = reactive({
   batchProcessing: false,
   batchResults: [] as { id: number; name: string; status: 'pending' | 'processing' | 'success' | 'skip' | 'error'; msg?: string }[],
   batchDateValue: '',
+  editingHotId: null as number | null,
+  editingHotValue: 0,
   pagination: {
     page: 1,
     pagesize: 100,
@@ -156,6 +158,20 @@ const setPublishState = async (item: any) => {
     toast.add({ title: newState === 2 ? '已发布' : '已取消发布', color: 'success' })
     loadCurrentList(state.pagination.page)
   }
+}
+
+const startEditHot = (item: any) => {
+  state.editingHotId = item.id
+  state.editingHotValue = item.hot || 0
+}
+
+const confirmEditHot = async (item: any) => {
+  const { error } = await updateAmusementState({ id: item.id, hot: state.editingHotValue })
+  if (!error) {
+    item.hot = state.editingHotValue
+    toast.add({ title: '热度已更新', color: 'success' })
+  }
+  state.editingHotId = null
 }
 
 // 确认日期推荐
@@ -995,6 +1011,16 @@ onActivated(() => {
                 </UTooltip>
                 <UTooltip text="评分人数">
                   <span class="flex items-center gap-1 cursor-help"><UIcon name="i-lucide-users" class="w-3 h-3 text-indigo-500" />{{ item.score_count || 0 }}</span>
+                </UTooltip>
+                <UTooltip text="热度（点击修改）">
+                  <span v-if="state.editingHotId !== item.id" class="flex items-center gap-1 cursor-pointer" @click.stop="startEditHot(item)">
+                    <UIcon name="i-lucide-flame" class="w-3 h-3 text-red-500" />{{ item.hot || 0 }}
+                  </span>
+                  <span v-else class="flex items-center gap-1" @click.stop>
+                    <UInput v-model.number="state.editingHotValue" type="number" size="xs" class="w-16" @keyup.enter="confirmEditHot(item)" @keyup.esc="state.editingHotId = null" />
+                    <UButton size="xs" color="primary" variant="ghost" icon="i-lucide-check" @click.stop="confirmEditHot(item)" />
+                    <UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-x" @click.stop="state.editingHotId = null" />
+                  </span>
                 </UTooltip>
               </div>
             </div>
