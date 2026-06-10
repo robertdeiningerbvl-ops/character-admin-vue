@@ -338,7 +338,7 @@ onActivated(() => {
             <!-- 左上角标签 -->
             <div class="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
               <UBadge
-                v-if="item.anonymous === 2"
+                v-if="item.anonymous === 1"
                 color="primary"
                 variant="solid"
                 size="md"

@@ -935,7 +935,7 @@ onActivated(() => {
                     <UIcon name="i-lucide-zap" class="w-3 h-3" />{{ (item.battery / 100).toFixed(2) }}
                   </span>
                   <!-- 隐私 -->
-                  <span v-if="item.anonymous === 2" class="inline-flex items-center gap-1 mt-1 ml-1 px-1.5 py-0.5 text-[10px] font-medium bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 rounded">
+                  <span v-if="item.anonymous === 1" class="inline-flex items-center gap-1 mt-1 ml-1 px-1.5 py-0.5 text-[10px] font-medium bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 rounded">
                     <UIcon name="i-lucide-lock" class="w-3 h-3" />隐私
                   </span>
                 </div>

@@ -205,7 +205,7 @@ export const getBaseColumns = (updateStatus: (id: number, field: string, value: 
     },
     cell: ({ row }) => {
       return h(USwitch, {
-        'modelValue': row.original.anonymous === 2,
+        'modelValue': row.original.anonymous === 1
         'onUpdate:modelValue': async (val: boolean) => {
           const newValue = val ? 2 : 0
           await updateStatus(row.original.id, 'anonymous', newValue)
