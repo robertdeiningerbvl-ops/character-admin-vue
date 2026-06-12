@@ -719,7 +719,7 @@ onActivated(() => {
               :items="[
                 { label: '默认', value: 'all' },
                 { label: '妖力', value: 'battery' },
-                { label: '播放数', value: 'play_count' },
+                { label: '游玩人数', value: 'play_count' },
                 { label: '浏览量', value: 'browse_count' },
                 { label: '点赞数', value: 'praise_count' },
                 { label: '收藏数', value: 'collect_count' },
@@ -997,14 +997,14 @@ onActivated(() => {
                 <UTooltip text="评论数">
                   <span class="flex items-center gap-1 cursor-help"><UIcon name="i-lucide-message-circle" class="w-3 h-3 text-blue-500" />{{ item.comment_count || 0 }}</span>
                 </UTooltip>
-                <UTooltip text="播放次数">
-                  <span class="flex items-center gap-1 cursor-help"><UIcon name="i-lucide-play" class="w-3 h-3 text-green-500" />{{ item.play_count || 0 }}</span>
+                <UTooltip text="游玩人数">
+                  <span class="flex items-center gap-1 cursor-help"><UIcon name="i-lucide-user" class="w-3 h-3 text-green-500" />{{ item.play_count || 0 }}</span>
                 </UTooltip>
                 <UTooltip text="浏览量">
                   <span class="flex items-center gap-1 cursor-help"><UIcon name="i-lucide-eye" class="w-3 h-3 text-cyan-500" />{{ item.browse_count || 0 }}</span>
                 </UTooltip>
-                <UTooltip text="对话人数">
-                  <span class="flex items-center gap-1 cursor-help"><UIcon name="i-lucide-users" class="w-3 h-3 text-purple-500" />{{ item.dialogue_count || 0 }}</span>
+                <UTooltip text="对话数">
+                  <span class="flex items-center gap-1 cursor-help"><UIcon name="i-lucide-message-square" class="w-3 h-3 text-purple-500" />{{ item.dialogue_count || 0 }}</span>
                 </UTooltip>
                 <UTooltip text="评分">
                   <span class="flex items-center gap-1 cursor-help"><UIcon name="i-lucide-star" class="w-3 h-3 text-yellow-500" />{{ item.score || 0 }}</span>
