@@ -153,6 +153,7 @@ const applyData = async (data: any, applyContent = true) => {
     state.isNsfw = item.nsfw === 1
     state.isRepost = item.source === 1
     state.sourceUrl = item.source_url || ''
+    state.summary = item.summary || ''
   }
 
   // 设置版本列表后，加载第一个版本的内容
@@ -182,7 +183,7 @@ const applyCharacterCard = (card: any) => {
   const data = card.data || card
   state.name = data.name || card.name || ''
   state.creatorName = data.creator || ''
-  state.summary = data.summary || ''
+  if (data.summary) state.summary = data.summary
   state.description = data.description || ''
   state.personality = data.personality || ''
   state.scenario = data.scenario || ''
