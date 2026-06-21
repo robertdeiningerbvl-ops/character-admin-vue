@@ -13,7 +13,7 @@ defineOptions({
 
 const state = reactive({
   loading: true,
-  range: 7,
+  range: 0,
   rangeOptions: [
     { label: '今日', value: 0 },
     { label: '昨天', value: 1 },
