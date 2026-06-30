@@ -81,6 +81,13 @@ export const apiRoute = {
   commonLangEdit: 'common-language-edit',
   commonLangRemove: 'common-language-remove',
 
+  // TTS 声优
+  commonTtsVoiceList: 'common-tts-voice-list',
+  commonTtsVoiceAdd: 'common-tts-voice-add',
+  commonTtsVoiceEdit: 'common-tts-voice-edit',
+  commonTtsVoiceRemove: 'common-tts-voice-remove',
+  commonTtsVoiceDetail: 'common-tts-voice-detail',
+
   // 配置项
   configList: 'system',
   configEdit: 'system-edit',

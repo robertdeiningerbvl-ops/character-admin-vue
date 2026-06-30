@@ -190,3 +190,28 @@ export function updateCommonFeed(data: any) {
 export function removeCommonFeed(data: any) {
   return request.post<any>(apiRoute.commonFeedRemove, data)
 }
+
+/** TTS声优列表 */
+export function getCommonTtsVoiceList(params?: any) {
+  return request.get<any>(apiRoute.commonTtsVoiceList, params)
+}
+
+/** TTS声优新增 */
+export function addCommonTtsVoice(data: any) {
+  return request.post<any>(apiRoute.commonTtsVoiceAdd, data)
+}
+
+/** TTS声优修改 */
+export function updateCommonTtsVoice(data: any) {
+  return request.post<any>(apiRoute.commonTtsVoiceEdit, data)
+}
+
+/** TTS声优删除 */
+export function removeCommonTtsVoice(data: any) {
+  return request.post<any>(apiRoute.commonTtsVoiceRemove, data)
+}
+
+/** TTS声优详情 */
+export function getCommonTtsVoiceDetail(params: any) {
+  return request.get<any>(apiRoute.commonTtsVoiceDetail, params)
+}
