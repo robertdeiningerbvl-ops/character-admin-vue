@@ -66,7 +66,7 @@ export default defineNuxtConfig({
             // 将工具库分离
             'utils-vendor': ['lodash-es', 'dayjs'],
             // 将图表库分离
-            'chart-vendor': ['@unovis/vue'],
+            'chart-vendor': ['@unovis/vue', 'echarts', 'vue-echarts'],
             // 将编辑器分离
             'editor-vendor': ['@tiptap/vue-3', '@tiptap/starter-kit'],
             // 将 VueUse 分离
