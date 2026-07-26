@@ -3,6 +3,7 @@ import { getAgentChannelAttrs, getAgentChannelAttrsDay } from '@/api'
 import type { AgentChannelAttrsParams } from '@/api/modules/agent'
 import { summaryColumns, dailyColumns } from '@/components/agent/channel-attrs/columns'
 import FilterForm from '@/components/agent/channel-attrs/FilterForm.vue'
+import ChartModal from '@/components/agent/channel-attrs/ChartModal.vue'
 
 definePageMeta({ layout: 'app' })
 defineOptions({ name: 'AgentChannelAttrs' })
@@ -36,9 +37,37 @@ const dailyData = reactive({
   pagesize: 10
 })
 
-// 当前表格列配置
+// 图表弹窗状态
+const chartModal = reactive({
+  visible: false,
+  filterParams: {} as AgentChannelAttrsParams
+})
+
+// 添加操作列
+const UButton = resolveComponent('UButton')
+const actionColumn = {
+  accessorKey: 'actions',
+  header: '操作',
+  cell: ({ row }: any) => h(UButton, {
+    color: 'primary',
+    variant: 'outline',
+    label: '查看图表',
+    icon: 'i-lucide-bar-chart-3',
+    size: 'sm',
+    onClick: () => handleViewChart(row.original)
+  }),
+  meta: {
+    class: {
+      th: 'w-[120px]',
+      td: 'w-[120px]'
+    }
+  }
+}
+
+// 当前表格列配置（包含操作列）
 const currentColumns = computed(() => {
-  return activeTab.value === 'summary' ? summaryColumns : dailyColumns
+  const baseColumns = activeTab.value === 'summary' ? summaryColumns : dailyColumns
+  return [...baseColumns, actionColumn]
 })
 
 // 当前数据状态
@@ -140,6 +169,21 @@ const handlePageChange = (page: number) => {
   }
 }
 
+// 处理查看图表
+const handleViewChart = (row: any) => {
+  chartModal.filterParams = {
+    ...filterParams,
+    agent_code: row.agent_code,
+    channel_id: row.channel_id
+  }
+  chartModal.visible = true
+}
+
+// 处理关闭图表
+const handleCloseChart = () => {
+  chartModal.visible = false
+}
+
 // 初始化加载
 onMounted(() => {
   loadSummaryData()
@@ -193,6 +237,13 @@ onMounted(() => {
         @update:model-value="handlePageChange"
       />
     </div>
+
+    <!-- 图表弹窗 -->
+    <ChartModal
+      :visible="chartModal.visible"
+      :filter-params="chartModal.filterParams"
+      @close="handleCloseChart"
+    />
   </DashboardLayout>
 </template>
 
