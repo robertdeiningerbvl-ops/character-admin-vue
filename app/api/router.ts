@@ -96,6 +96,7 @@ export const apiRoute = {
   commonStatisticsRefresh: 'common-statistics-refresh',
   commonInviteStatistics: 'common-invite-statistics',
   memberInviteStatisticalList: 'member-invite-statistical-list',
+  memberInviteChannelStatisticsList: 'member-invite-channel-statistics-list',
 
   /** common  end */
 
@@ -198,7 +199,11 @@ export const apiRoute = {
   rbacMenuRemove: 'rbac-menu-remove',
   rbacGroupAdd: 'rbac-group-add',
   rbacGroupMenu: 'rbac-group-menu',
-  rbacAdminGroup: 'rbac-admin-group'
+  rbacAdminGroup: 'rbac-admin-group',
+
+  // 代理管理
+  agentChannelAttrs: 'agent-channel-attrs',
+  agentChannelAttrsDay: 'agent-channel-attrs-day'
 
 } as const
 export const values = Object.values(apiRoute)
