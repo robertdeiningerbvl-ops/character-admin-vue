@@ -202,6 +202,8 @@ export const apiRoute = {
   rbacAdminGroup: 'rbac-admin-group',
 
   // 代理管理
+  agentUser: 'agent-user',
+  agentChannelList: 'agent-channel-list',
   agentChannelAttrs: 'agent-channel-attrs',
   agentChannelAttrsDay: 'agent-channel-attrs-day'
 
