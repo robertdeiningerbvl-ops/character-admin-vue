@@ -1,3 +1,4 @@
+import { h, resolveComponent } from 'vue'
 import type { DataTableColumn } from '@/types/table'
 import type { AgentChannelAttrsItem } from '@/api/modules/agent'
 

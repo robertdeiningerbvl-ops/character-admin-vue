@@ -71,12 +71,11 @@ export interface AgentUserResponse {
 
 /** 代理用户创建/更新参数 */
 export interface AgentUserFormData {
+  id?: number
   username?: string
-  code?: string
-  parent_code?: string
-  balance?: number
+  password?: string
   commission_ratio?: number
-  commission_diff_ratio?: number
+  withdraw_amount?: number
   state?: number
 }
 
@@ -92,7 +91,7 @@ export function createAgentUser(data: AgentUserFormData) {
 
 /** 更新代理用户 */
 export function updateAgentUser(data: AgentUserFormData) {
-  return request.put<any>(apiRoute.agentUser, data)
+  return request.post<any>(apiRoute.agentUserEdit, data)
 }
 
 /** 代理渠道列表筛选参数 */

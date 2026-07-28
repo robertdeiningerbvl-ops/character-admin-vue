@@ -36,7 +36,8 @@ const tyMap: Record<number, string> = {
   1: '支付宝',
   2: '微信',
   3: 'USDT',
-  4: '自建'
+  4: '自建',
+  5: 'PayPal'
 }
 
 type BadgeColor = 'error' | 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'neutral'

@@ -203,6 +203,7 @@ export const apiRoute = {
 
   // 代理管理
   agentUser: 'agent-user',
+  agentUserEdit: 'agent-user-edit',
   agentChannelList: 'agent-channel-list',
   agentChannelAttrs: 'agent-channel-attrs',
   agentChannelAttrsDay: 'agent-channel-attrs-day'

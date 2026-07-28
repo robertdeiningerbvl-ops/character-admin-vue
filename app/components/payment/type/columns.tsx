@@ -16,7 +16,8 @@ const tyEnum: any = {
   1: ['支付宝', 'info'],
   2: ['微信', 'success'],
   3: ['USDT', 'warning'],
-  4: ['自建', 'neutral']
+  4: ['自建', 'neutral'],
+  5: ['PayPal', 'primary']
 }
 
 const signTyEnum: any = {

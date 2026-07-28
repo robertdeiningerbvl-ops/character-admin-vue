@@ -48,6 +48,10 @@ export const baseColumns: TableColumnList = [
       componentProps: {
         options: [
           {
+            label: '信用卡',
+            value: 5
+          },
+          {
             label: '自建',
             value: 4
           },

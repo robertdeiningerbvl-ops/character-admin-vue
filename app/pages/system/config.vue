@@ -79,7 +79,8 @@ const configGroups = reactive([
       { key: 'OS', label: '系统优化', icon: 'lucide:cpu' },
       { key: 'KNOT', label: '聊天总结', icon: 'lucide:message-circle' },
       { key: 'DOCTOR_CONFIG', label: '创作管理', icon: 'lucide:pen-tool' },
-      { key: 'RIGHT_NAV', label: '右侧导航标记', icon: 'lucide:navigation' }
+      { key: 'RIGHT_NAV', label: '右侧导航标记', icon: 'lucide:navigation' },
+      { key: 'PRO_DOMAIN', label: '推广域名', icon: 'lucide:link' }
     ]
   }
 ])
@@ -90,6 +91,34 @@ const fetchConfig = async (key: string) => {
     const { data, error } = await getConfig({ key })
     if (!error) {
       const useNumericOpen = ['KNOT', 'DOCTOR_CONFIG'].includes(key)
+
+      // 处理推广域名的特殊逻辑
+      let content = data.content
+      if (key === 'PRO_DOMAIN') {
+        if (typeof data.content === 'string') {
+          // 如果是逗号分隔的字符串，直接split
+          content = data.content.split(',').filter((url: string) => url.trim())
+        } else if (data.content && typeof data.content === 'object' && !Array.isArray(data.content)) {
+          // 如果是对象且有content属性
+          if (typeof data.content.content === 'string') {
+            content = data.content.content.split(',').filter((url: string) => url.trim())
+          } else {
+            content = []
+          }
+        } else if (Array.isArray(data.content)) {
+          // 如果已经是数组，直接使用
+          content = data.content
+        } else {
+          content = []
+        }
+      } else {
+        content = data.content
+          ? typeof data.content === 'string' || Array.isArray(data.content)
+            ? data.content
+            : { ...data.content }
+          : ''
+      }
+
       const form: ConfigForm = {
         ...cloneDeep(data),
         open: useNumericOpen ? Number(data.open) : Boolean(data.open),
@@ -99,11 +128,7 @@ const fetchConfig = async (key: string) => {
             ? data.desc
             : { ...data.desc }
           : '',
-        content: data.content
-          ? typeof data.content === 'string' || Array.isArray(data.content)
-            ? data.content
-            : { ...data.content }
-          : '',
+        content,
         right_nav: Array.isArray(data.right_nav) ? data.right_nav : [],
         key: data.key || '',
         secret: data.secret || '',
@@ -123,10 +148,18 @@ const saving = ref(false)
 const saveConfig = async () => {
   try {
     saving.value = true
+
+    // 处理推广域名的特殊逻辑
+    let contentForSave = state.currentForm.content
+    if (state.activeConfigKey === 'PRO_DOMAIN' && Array.isArray(state.currentForm.content)) {
+      const validDomains = state.currentForm.content.filter((url: string) => url.trim())
+      contentForSave = validDomains.join(',')
+    }
+
     const formCopy: ConfigForm = {
       ...state.currentForm,
       open: typeof state.currentForm.open === 'boolean' ? (state.currentForm.open ? 2 : 0) : state.currentForm.open,
-      content: state.currentForm.content,
+      content: contentForSave,
       ip: Array.isArray(state.currentForm.ip) ? state.currentForm.ip : [],
       desc: state.currentForm.desc
     }
@@ -138,8 +171,9 @@ const saveConfig = async () => {
     const { error } = await updateConfig(payload)
     if (!error) {
       toast.add({ title: '操作成功', color: 'success' })
-      state.configs[state.activeConfigKey] = cloneDeep(formCopy)
-      state.currentForm = cloneDeep(formCopy)
+      // 保存成功后，保持原始表单数据（数组格式）
+      const cacheForm = cloneDeep(state.currentForm)
+      state.configs[state.activeConfigKey] = cacheForm
     } else {
       toast.add({ title: '保存失败', color: 'error' })
     }
@@ -159,6 +193,19 @@ const selectConfig = async (key: string) => {
   } else {
     const data = state.configs[key]
     const useNumericOpen = ['KNOT', 'DOCTOR_CONFIG'].includes(key)
+
+    // 处理推广域名的特殊逻辑
+    let content
+    if (key === 'PRO_DOMAIN' && typeof data.content === 'string') {
+      content = data.content.split(',').filter((url: string) => url.trim())
+    } else {
+      content = data.content
+        ? typeof data.content === 'string' || Array.isArray(data.content)
+          ? data.content
+          : { ...data.content }
+        : ''
+    }
+
     state.currentForm = {
       ...cloneDeep(data),
       open: useNumericOpen ? Number(data.open) : Boolean(data.open),
@@ -169,11 +216,7 @@ const selectConfig = async (key: string) => {
           ? data.desc
           : { ...data.desc }
         : '',
-      content: data.content
-        ? typeof data.content === 'string' || Array.isArray(data.content)
-          ? data.content
-          : { ...data.content }
-        : ''
+      content
     }
   }
 }
@@ -205,6 +248,20 @@ const addHelpItem = (): void => {
 }
 const delHelpItem = (id: number) => {
   state.currentForm.desc = state.currentForm.desc?.filter((i: HelpItem) => i.id !== id)
+}
+
+/* ================= 推广域名操作 ================= */
+const addDomain = (): void => {
+  if (!Array.isArray(state.currentForm.content)) {
+    state.currentForm.content = []
+  }
+  state.currentForm.content.push('')
+}
+
+const removeDomain = (index: number): void => {
+  if (Array.isArray(state.currentForm.content)) {
+    state.currentForm.content.splice(index, 1)
+  }
 }
 
 /* ================= 模型列表 ================= */
@@ -965,6 +1022,74 @@ onActivated(() => init())
               <UInput v-model="item.content" placeholder="标记内容（如：热、新）" class="flex-1" />
             </div>
           </div>
+        </div>
+
+        <!-- PRO_DOMAIN 推广域名配置 -->
+        <div v-if="state.activeConfigKey === 'PRO_DOMAIN'" class="space-y-4">
+          <!-- 说明卡片 -->
+          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
+              <div class="text-sm text-(--ui-text-muted)">
+                <p class="font-medium text-(--ui-text-highlighted) mb-1">
+                  推广域名配置说明
+                </p>
+                <p>配置用于推广的域名列表，每个域名占一行。点击"新增域名"可以添加更多域名。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 域名列表 -->
+          <div class="space-y-3">
+            <div
+              v-for="(domain, index) in state.currentForm.content"
+              :key="index"
+              class="flex items-center gap-3"
+            >
+              <UFormField :label="`域名 ${index + 1}`" class="flex-1">
+                <UInput
+                  v-model="state.currentForm.content[index]"
+                  placeholder="请输入推广域名，例如：https://www.example.com"
+                  class="w-full"
+                />
+              </UFormField>
+              <UButton
+                size="sm"
+                color="error"
+                variant="soft"
+                icon="i-lucide-trash-2"
+                class="mt-6"
+                @click="removeDomain(index)"
+              />
+            </div>
+
+            <!-- 空状态提示 -->
+            <div
+              v-if="!state.currentForm.content || state.currentForm.content.length === 0"
+              class="p-8 text-center rounded-lg border border-dashed border-(--ui-border)"
+            >
+              <UIcon name="i-lucide-link-2" class="w-10 h-10 mx-auto mb-2 text-(--ui-text-dimmed)" />
+              <p class="text-sm text-(--ui-text-muted)">
+                暂无推广域名，点击下方按钮添加
+              </p>
+            </div>
+          </div>
+
+          <!-- 添加按钮 -->
+          <div class="flex justify-start">
+            <UButton
+              size="sm"
+              color="neutral"
+              variant="soft"
+              icon="i-lucide-plus"
+              label="新增域名"
+              @click="addDomain"
+            />
+          </div>
+
+          <UFormField label="备注">
+            <UInput v-model="state.currentForm.remarks" placeholder="备注信息" class="w-full" />
+          </UFormField>
         </div>
 
         <!-- 底部保存按钮 -->

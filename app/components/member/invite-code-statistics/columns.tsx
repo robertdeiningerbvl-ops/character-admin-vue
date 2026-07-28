@@ -2,16 +2,24 @@ import type { DataTableColumn } from '@/types/table'
 
 export type TableColumnList = DataTableColumn<any>[]
 
-const UBadge = resolveComponent('UBadge')
-
-const tyMap: Record<number, [string, string]> = {
-  1: ['bt', 'warning'],
-  2: ['web', 'info']
-}
-
-const fmt = (v: number) => `¥${(v / 100).toFixed(2)}`
+const UButton = resolveComponent('UButton')
 
 export const baseColumns: TableColumnList = [
+  {
+    accessorKey: 'stat_date',
+    header: '统计日期',
+    searchPlaceholder: '统计日期',
+    cell: ({ row }) => {
+      const date = row.original.stat_date
+      // 格式化日期：YYYY-MM-DD
+      const formatted = date ? new Date(date).toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).replace(/\//g, '-') : '-'
+      return h('span', { class: 'font-medium text-gray-700 dark:text-gray-300' }, formatted)
+    }
+  },
   {
     accessorKey: 'uid',
     header: '用户ID',
@@ -25,75 +33,116 @@ export const baseColumns: TableColumnList = [
     cell: ({ row }) => h('span', { class: 'font-mono text-sm text-gray-700 dark:text-gray-300' }, row.original.invite_code)
   },
   {
-    accessorKey: 'ty',
-    header: '类型',
-    meta: { class: { th: 'w-[100px]', td: 'w-[100px]' } },
+    accessorKey: 'consume_battery',
+    header: '日消耗积分',
+    meta: { class: { th: 'w-[120px]', td: 'w-[120px]' } },
     cell: ({ row }) => {
-      const [label, color] = tyMap[row.original.ty] || ['未知', 'neutral']
-      return h(UBadge, { variant: 'subtle', color }, () => label)
+      const v = row.original.consume_battery
+      return h('span', { class: v > 0 ? 'font-semibold text-blue-600 dark:text-blue-400' : 'text-gray-400' }, v || '-')
     }
   },
   {
-    accessorKey: 'today_user_count',
-    header: '当日注册用户',
-    meta: { class: { th: 'w-[120px]', td: 'w-[100px]' } },
-    cell: ({ row }) => h('span', { class: 'font-semibold' }, row.original.today_user_count)
+    accessorKey: 'signin_user_count',
+    header: '签到用户数',
+    meta: { class: { th: 'w-[110px]', td: 'w-[110px]' } },
+    cell: ({ row }) => h('span', { class: 'font-semibold' }, row.original.signin_user_count)
   },
   {
-    accessorKey: 'user_count',
-    header: '注册总用户',
-    meta: { class: { th: 'w-[120px]', td: 'w-[100px]' } },
-    cell: ({ row }) => h('span', { class: 'font-semibold' }, row.original.user_count)
+    accessorKey: 'chat_once_user_count',
+    header: '1次对话用户',
+    meta: { class: { th: 'w-[120px]', td: 'w-[120px]' } },
+    cell: ({ row }) => h('span', { class: 'font-semibold' }, row.original.chat_once_user_count)
   },
   {
-    accessorKey: 'top_up_user_count',
-    header: '充值用户',
-    meta: { class: { th: 'w-[100px]', td: 'w-[100px]' } },
+    accessorKey: 'chat_ten_user_count',
+    header: '10次+对话用户',
+    meta: { class: { th: 'w-[130px]', td: 'w-[130px]' } },
     cell: ({ row }) => {
-      const v = row.original.top_up_user_count
+      const v = row.original.chat_ten_user_count
       return h('span', { class: v > 0 ? 'font-semibold text-green-600 dark:text-green-400' : 'text-gray-400' }, v || '-')
     }
   },
   {
-    accessorKey: 'first_commission',
-    header: '首充佣金',
-    meta: { class: { th: 'w-[120px]', td: 'w-[120px]' } },
+    accessorKey: 'first_topup_count',
+    header: '首充用户数',
+    meta: { class: { th: 'w-[110px]', td: 'w-[110px]' } },
     cell: ({ row }) => {
-      const v = row.original.first_commission
-      return h('span', { class: v > 0 ? 'font-semibold text-amber-600 dark:text-amber-400' : 'text-gray-400' }, v > 0 ? fmt(v) : '-')
+      const v = row.original.first_topup_count
+      return h('span', { class: v > 0 ? 'font-semibold text-amber-600 dark:text-amber-400' : 'text-gray-400' }, v || '-')
     }
   },
   {
-    accessorKey: 'first_topup_amount',
-    header: '首充金额',
-    meta: { class: { th: 'w-[120px]', td: 'w-[120px]' } },
+    accessorKey: 'repeat_topup_count',
+    header: '复充用户数',
+    meta: { class: { th: 'w-[110px]', td: 'w-[110px]' } },
     cell: ({ row }) => {
-      const v = row.original.first_topup_amount
-      return h('span', { class: v > 0 ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-400' }, v > 0 ? fmt(v) : '-')
+      const v = row.original.repeat_topup_count
+      return h('span', { class: v > 0 ? 'font-semibold text-purple-600 dark:text-purple-400' : 'text-gray-400' }, v || '-')
     }
   },
   {
-    accessorKey: 'total_commission',
-    header: '总佣金',
-    meta: { class: { th: 'w-[120px]', td: 'w-[120px]' } },
+    accessorKey: 'retention_day1',
+    header: '1日留存',
+    meta: { class: { th: 'w-[100px]', td: 'w-[100px]' } },
     cell: ({ row }) => {
-      const v = row.original.total_commission
-      return h('span', { class: v > 0 ? 'font-semibold text-green-600 dark:text-green-400' : 'text-gray-400' }, v > 0 ? fmt(v) : '-')
+      const v = row.original.retention_day1
+      return h('span', { class: v > 0 ? 'font-semibold text-green-600 dark:text-green-400' : 'text-gray-400' }, v || '-')
     }
   },
   {
-    accessorKey: 'total_topup_amount',
-    header: '总充值',
-    meta: { class: { th: 'w-[120px]', td: 'w-[120px]' } },
+    accessorKey: 'retention_day3',
+    header: '3日留存',
+    meta: { class: { th: 'w-[100px]', td: 'w-[100px]' } },
     cell: ({ row }) => {
-      const v = row.original.total_topup_amount
-      return h('span', { class: v > 0 ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-400' }, v > 0 ? fmt(v) : '-')
+      const v = row.original.retention_day3
+      return h('span', { class: v > 0 ? 'font-semibold text-teal-600 dark:text-teal-400' : 'text-gray-400' }, v || '-')
     }
   },
   {
-    accessorKey: 'created_at',
-    header: '创建时间',
-    meta: { class: { th: 'w-[160px]', td: 'w-[160px]' } },
-    cell: ({ row }) => h('span', { class: 'text-sm text-gray-600 dark:text-gray-300' }, formatToDateTime(row.original.created_at))
+    accessorKey: 'retention_day7',
+    header: '7日留存',
+    meta: { class: { th: 'w-[100px]', td: 'w-[100px]' } },
+    cell: ({ row }) => {
+      const v = row.original.retention_day7
+      return h('span', { class: v > 0 ? 'font-semibold text-cyan-600 dark:text-cyan-400' : 'text-gray-400' }, v || '-')
+    }
+  },
+  {
+    accessorKey: 'retention_day30',
+    header: '30日留存',
+    meta: { class: { th: 'w-[100px]', td: 'w-[100px]' } },
+    cell: ({ row }) => {
+      const v = row.original.retention_day30
+      return h('span', { class: v > 0 ? 'font-semibold text-indigo-600 dark:text-indigo-400' : 'text-gray-400' }, v || '-')
+    }
+  },
+  {
+    accessorKey: 'actions',
+    header: '操作',
+    meta: { class: { th: 'w-[200px]', td: 'w-[200px]' } },
+    cell: ({ row, table }) => {
+      return h('div', { class: 'flex gap-2' }, [
+        h(UButton, {
+          size: 'xs',
+          color: 'primary',
+          variant: 'soft',
+          label: '邀请码图表',
+          onClick: () => {
+            // @ts-ignore
+            table.options.meta?.onShowInviteCodeChart?.(row.original)
+          }
+        }),
+        h(UButton, {
+          size: 'xs',
+          color: 'cyan',
+          variant: 'soft',
+          label: '代理图表',
+          onClick: () => {
+            // @ts-ignore
+            table.options.meta?.onShowAgentChart?.(row.original)
+          }
+        })
+      ])
+    }
   }
 ]

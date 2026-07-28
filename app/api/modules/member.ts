@@ -89,3 +89,8 @@ export function getMemberFundLogList(params?: any) {
 export function getMemberInviteStatisticalList(params?: any) {
   return request.get<any>(apiRoute.memberInviteStatisticalList, params)
 }
+
+/** 获取邀请码渠道统计列表 */
+export function getMemberInviteChannelStatisticsList(params?: any) {
+  return request.get<any>(apiRoute.memberInviteChannelStatisticsList, params)
+}

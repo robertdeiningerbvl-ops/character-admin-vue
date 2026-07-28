@@ -37,7 +37,8 @@ const tyOptions = [
   { label: '支付宝', value: 1 },
   { label: '微信', value: 2 },
   { label: 'USDT', value: 3 },
-  { label: '自建', value: 4 }
+  { label: '自建', value: 4 },
+  { label: '信用卡', value: 5 }
 ]
 
 const state = reactive({

@@ -1,0 +1,1 @@
+import{L as e,M as n}from"./CvVYdBJh.js";function a(t){return e.get(n.agentChannelAttrs,t)}function s(t){return e.get(n.agentChannelAttrsDay,t)}function g(t){return e.get(n.agentUser,t)}function u(t){return e.post(n.agentUser,t)}function i(t){return e.post(n.agentUserEdit,t)}function o(t){return e.get(n.agentChannelList,t)}export{o as a,s as b,u as c,a as d,g,i as u};
