@@ -125,3 +125,74 @@ export interface AgentChannelListResponse {
 export function getAgentChannelList(params?: AgentChannelListParams) {
   return request.get<AgentChannelListResponse>(apiRoute.agentChannelList, params)
 }
+
+/** 代理提现订单筛选参数 */
+export interface AgentWithdrawalParams {
+  page?: number
+  pagesize?: number
+  agent_code?: string
+  state?: number
+  start_time?: string
+  end_time?: string
+}
+
+/** 代理提现订单数据项 */
+export interface AgentWithdrawalItem {
+  id: number
+  order_no: string
+  agent_code: string
+  amount: number
+  fee: number
+  actual_amount: number
+  withdraw_type: number
+  state: number
+  bank_name?: string
+  bank_account?: string
+  bank_account_name?: string
+  alipay_account?: string
+  alipay_name?: string
+  wechat_account?: string
+  wechat_name?: string
+  remark?: string
+  reject_reason?: string
+  created_at: string
+  updated_at: string
+}
+
+/** 代理提现订单列表响应 */
+export interface AgentWithdrawalResponse {
+  list: AgentWithdrawalItem[]
+  count: number
+}
+
+/** 审核通过参数 */
+export interface AgentWithdrawalApproveParams {
+  id: number
+  remark?: string
+}
+
+/** 审核拒绝参数 */
+export interface AgentWithdrawalRejectParams {
+  id: number
+  reject_reason: string
+}
+
+/** 获取代理提现订单列表 */
+export function getAgentWithdrawalList(params?: AgentWithdrawalParams) {
+  return request.get<AgentWithdrawalResponse>(apiRoute.agentWithdrawalList, params)
+}
+
+/** 获取代理提现订单详情 */
+export function getAgentWithdrawalDetail(id: number) {
+  return request.get<AgentWithdrawalItem>(apiRoute.agentWithdrawalGet, { id })
+}
+
+/** 审核通过 */
+export function approveAgentWithdrawal(data: AgentWithdrawalApproveParams) {
+  return request.post<any>(apiRoute.agentWithdrawalApprove, data)
+}
+
+/** 审核拒绝 */
+export function rejectAgentWithdrawal(data: AgentWithdrawalRejectParams) {
+  return request.post<any>(apiRoute.agentWithdrawalReject, data)
+}

@@ -206,7 +206,13 @@ export const apiRoute = {
   agentUserEdit: 'agent-user-edit',
   agentChannelList: 'agent-channel-list',
   agentChannelAttrs: 'agent-channel-attrs',
-  agentChannelAttrsDay: 'agent-channel-attrs-day'
+  agentChannelAttrsDay: 'agent-channel-attrs-day',
+
+  // 代理提现管理
+  agentWithdrawalList: 'agent-withdrawal-list',
+  agentWithdrawalGet: 'agent-withdrawal-get',
+  agentWithdrawalApprove: 'agent-withdrawal-approve',
+  agentWithdrawalReject: 'agent-withdrawal-reject'
 
 } as const
 export const values = Object.values(apiRoute)

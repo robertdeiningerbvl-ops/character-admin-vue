@@ -15,6 +15,11 @@ const tyEnum: Record<number, [string, string, string]> = {
   1: ['业务', 'success', 'i-lucide-tag']
 }
 
+const isDoingsEnum: Record<number, [string, string]> = {
+  0: ['未开启', 'neutral'],
+  1: ['开启', 'success']
+}
+
 export const baseColumns: TableColumnList = [
   {
     accessorKey: 'id',
@@ -85,6 +90,16 @@ export const baseColumns: TableColumnList = [
     cell: ({ row }) => {
       const hot = row.original.hot || 0
       return h('span', { class: 'font-medium text-(--ui-text)' }, hot)
+    }
+  },
+  {
+    accessorKey: 'is_doings',
+    header: '是否活动',
+    meta: { class: { th: 'w-[100px]', td: 'w-[100px]' } },
+    cell: ({ row }) => {
+      const isDoingsInfo = isDoingsEnum[row.original.is_doings ?? 0]
+      if (!isDoingsInfo) return h('span', { class: 'text-(--ui-text-muted)' }, '-')
+      return h(UBadge, { variant: 'subtle', color: isDoingsInfo[1] }, () => isDoingsInfo[0])
     }
   },
   {

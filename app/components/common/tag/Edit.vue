@@ -98,6 +98,12 @@ watch(() => props.dialog, (val) => {
               />
             </UFormField>
           </div>
+          <UFormField label="是否活动" name="is_doings">
+            <div class="flex items-center h-9">
+              <USwitch :model-value="state.form.is_doings === 1" @update:model-value="state.form.is_doings = $event ? 1 : 0" />
+              <span class="ml-2 text-sm">{{ state.form.is_doings === 1 ? '开启' : '未开启' }}</span>
+            </div>
+          </UFormField>
         </div>
       </UForm>
     </template>
