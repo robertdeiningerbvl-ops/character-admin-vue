@@ -31,7 +31,9 @@ const stateEnabled = computed({
 
 const typeOptions = [
   { label: '聊天模型', value: 0 },
-  { label: '创作模型', value: 1 }
+  { label: '创作模型', value: 1 },
+  { label: '文生图模型', value: 5 },
+  { label: '图生图模型', value: 6 }
 ]
 
 const streamEnabled = computed({
@@ -48,6 +50,30 @@ const state = reactive({
   backendOptions: [] as any[],
   backendList: [] as any[]
 })
+
+// 表单验证规则
+const validate = (formState: any): Array<{ path: string; message: string }> => {
+  const errors: Array<{ path: string; message: string }> = []
+
+  if (!formState.name?.trim()) {
+    errors.push({ path: 'name', message: '名称不能为空' })
+  }
+
+  // ty 可以是 0，所以检查是否在有效值范围内
+  if (formState.ty === undefined || formState.ty === null || ![0, 1, 5, 6].includes(formState.ty)) {
+    errors.push({ path: 'ty', message: '模型类型不能为空' })
+  }
+
+  if (!formState.m?.trim()) {
+    errors.push({ path: 'm', message: '模型名称不能为空' })
+  }
+
+  if (!formState.preset_id) {
+    errors.push({ path: 'preset_id', message: '预设不能为空' })
+  }
+
+  return errors
+}
 
 // 根据选中的渠道动态生成模型选项
 const modelOptions = computed(() => {
@@ -138,6 +164,7 @@ watch(() => props.dialog, (val) => {
       <UForm
         ref="formRef"
         :state="state.form"
+        :validate="validate"
         class="space-y-4"
         @submit="onSubmit"
       >
@@ -193,6 +220,15 @@ watch(() => props.dialog, (val) => {
               <UTextarea
                 v-model.trim="state.form.description"
                 placeholder="输入描述"
+                :rows="3"
+                autoresize
+                class="w-full"
+              />
+            </UFormField>
+            <UFormField label="额外参数 (extra_params)" name="extra_params" class="col-span-2">
+              <UTextarea
+                v-model.trim="state.form.extra_params"
+                placeholder="输入额外参数（JSON格式），例如: {&quot;temperature&quot;: 0.7, &quot;max_tokens&quot;: 1000}"
                 :rows="3"
                 autoresize
                 class="w-full"

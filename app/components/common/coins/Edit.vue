@@ -239,10 +239,10 @@ watch(
               <UFormField label="妖力数量" :name="`tier_json.${index}.coins`">
                 <UInput v-model.number="tier.coins" type="number" placeholder="0" />
               </UFormField>
-              <UFormField label="美元价格（分）" :name="`tier_json.${index}.us`">
+              <UFormField label="美元价格（元）" :name="`tier_json.${index}.us`">
                 <UInput v-model.number="tier.us" type="number" placeholder="0" />
               </UFormField>
-              <UFormField label="人民币价格（分）" :name="`tier_json.${index}.CNY`">
+              <UFormField label="人民币价格（元）" :name="`tier_json.${index}.CNY`">
                 <UInput v-model.number="tier.CNY" type="number" placeholder="0" />
               </UFormField>
               <UFormField label="优惠比例" :name="`tier_json.${index}.rebate`">

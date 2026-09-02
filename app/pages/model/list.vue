@@ -23,7 +23,9 @@ const streamMap: Record<number, [string, BadgeColor]> = {
 
 const typeMap: Record<number, [string, BadgeColor]> = {
   0: ['聊天模型', 'primary'],
-  1: ['创作模型', 'warning']
+  1: ['创作模型', 'warning'],
+  5: ['文生图', 'success'],
+  6: ['图生图', 'info']
 }
 
 const state = reactive({

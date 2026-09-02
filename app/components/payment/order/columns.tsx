@@ -71,7 +71,7 @@ export const baseColumns: TableColumnList = [
   {
     accessorKey: 'trade_no',
     searchPlaceholder: '请输入支付单号',
-    header: '支付单号',
+    header: '三方支付单号',
     cell: ({ row }) => {
       const tradeNo = row.original.trade_no
       if (!tradeNo) return h('span', { class: 'text-gray-400' }, '-')
@@ -145,9 +145,9 @@ export const baseColumns: TableColumnList = [
     accessorKey: 'payment_type',
     header: '支付渠道',
     cell: ({ row }) => {
-      const paymentType = row.original.payment_type
-      if (!paymentType?.name) return h('span', { class: 'text-gray-400' }, '-')
-      return h(UBadge, { variant: 'subtle', color: 'neutral' }, () => paymentType.name)
+      const paymentTypeName = row.original.payment_type_name
+      if (!paymentTypeName) return h('span', { class: 'text-gray-400' }, '-')
+      return h('span', { class: 'text-sm text-gray-600 dark:text-gray-300 truncate' }, paymentTypeName)
     },
     meta: {
       class: {
