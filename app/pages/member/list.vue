@@ -104,7 +104,7 @@ function getRowItems(row: any) {
       label: '查看邀请',
       icon: 'material-symbols:visibility-outline',
       onSelect() {
-        router.push(`/member/invite/${row.original.id}`)
+        router.push(`/member/invite-code-statistics?uid=${row.original.id}`)
       }
     },
     {

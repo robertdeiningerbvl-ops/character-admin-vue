@@ -2,8 +2,6 @@ import type { DataTableColumn } from '@/types/table'
 
 export type TableColumnList = DataTableColumn<any>[]
 
-const UButton = resolveComponent('UButton')
-
 export const baseColumns: TableColumnList = [
   {
     accessorKey: 'stat_date',
@@ -81,6 +79,24 @@ export const baseColumns: TableColumnList = [
     }
   },
   {
+    accessorKey: 'first_topup_amount',
+    header: '首充用户金额',
+    meta: { class: { th: 'w-[130px]', td: 'w-[130px]' } },
+    cell: ({ row }) => {
+      const v = Number(row.original.first_topup_amount ?? 0) || 0
+      return h('span', { class: 'font-semibold text-amber-600 dark:text-amber-400' }, `¥${v.toFixed(2)}`)
+    }
+  },
+  {
+    accessorKey: 'repeat_topup_amount',
+    header: '复充用户金额',
+    meta: { class: { th: 'w-[130px]', td: 'w-[130px]' } },
+    cell: ({ row }) => {
+      const v = Number(row.original.repeat_topup_amount ?? 0) || 0
+      return h('span', { class: 'font-semibold text-purple-600 dark:text-purple-400' }, `¥${v.toFixed(2)}`)
+    }
+  },
+  {
     accessorKey: 'retention_day1',
     header: '1日留存',
     meta: { class: { th: 'w-[100px]', td: 'w-[100px]' } },
@@ -116,33 +132,4 @@ export const baseColumns: TableColumnList = [
       return h('span', { class: v > 0 ? 'font-semibold text-indigo-600 dark:text-indigo-400' : 'text-gray-400' }, v || '-')
     }
   },
-  {
-    accessorKey: 'actions',
-    header: '操作',
-    meta: { class: { th: 'w-[200px]', td: 'w-[200px]' } },
-    cell: ({ row, table }) => {
-      return h('div', { class: 'flex gap-2' }, [
-        h(UButton, {
-          size: 'xs',
-          color: 'primary',
-          variant: 'soft',
-          label: '邀请码图表',
-          onClick: () => {
-            // @ts-ignore
-            table.options.meta?.onShowInviteCodeChart?.(row.original)
-          }
-        }),
-        h(UButton, {
-          size: 'xs',
-          color: 'cyan',
-          variant: 'soft',
-          label: '代理图表',
-          onClick: () => {
-            // @ts-ignore
-            table.options.meta?.onShowAgentChart?.(row.original)
-          }
-        })
-      ])
-    }
-  }
 ]

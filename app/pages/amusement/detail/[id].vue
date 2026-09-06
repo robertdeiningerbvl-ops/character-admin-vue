@@ -154,6 +154,8 @@ const applyData = async (data: any, applyContent = true) => {
     state.isRepost = item.source === 1
     state.sourceUrl = item.source_url || ''
     state.summary = item.summary || ''
+    state.backgroundImage = item.image || ''
+    state.avatarImage = item.avatar || ''
   }
 
   // 设置版本列表后，加载第一个版本的内容
@@ -215,8 +217,6 @@ const applyCharacterCard = (card: any) => {
 
   // anohana 数据
   if (card.anohana) {
-    if (card.anohana.image) state.backgroundImage = card.anohana.image
-    if (card.anohana.avatar) state.avatarImage = card.anohana.avatar
     if (card.anohana.cover_image) state.coverImage = card.anohana.cover_image
     if (card.anohana.summary) state.summary = card.anohana.summary
     state.images = card.anohana.images || []

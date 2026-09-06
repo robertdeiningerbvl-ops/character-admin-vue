@@ -50,6 +50,7 @@ const state = reactive({
     id: '',
     uid: '',
     name: '',
+    lv: '',
     category_id: 'all',
     anonymous: 'all',
     recommend: 'all',
@@ -94,6 +95,16 @@ const setRecommend = async (item: any) => {
   const { error } = await updateAmusementState({ id: item.id, recommend: newVal })
   if (!error) {
     toast.add({ title: newVal === 2 ? '已设为推荐' : '已取消推荐', color: 'success' })
+    loadCurrentList(state.pagination.page)
+  }
+}
+
+// 设置热门
+const setHot = async (item: any) => {
+  const newVal = item.recommend === 3 ? 0 : 3
+  const { error } = await updateAmusementState({ id: item.id, recommend: newVal })
+  if (!error) {
+    toast.add({ title: newVal === 3 ? '已设为热门' : '已取消热门', color: 'success' })
     loadCurrentList(state.pagination.page)
   }
 }
@@ -219,6 +230,8 @@ const batchActionConfig: Record<string, { label: string; field: string; targetVa
   unpublish: { label: '取消发布', field: 'state', targetValue: 0, checkField: 'state', checkValue: 0 },
   recommend: { label: '推荐', field: 'recommend', targetValue: 2, checkField: 'recommend', checkValue: 2 },
   unrecommend: { label: '取消推荐', field: 'recommend', targetValue: 0, checkField: 'recommend', checkValue: 0 },
+  hot: { label: '热门', field: 'recommend', targetValue: 3, checkField: 'recommend', checkValue: 3 },
+  unhot: { label: '取消热门', field: 'recommend', targetValue: 0, checkField: 'recommend', checkValue: 0 },
   daily: { label: '日推', field: 'day_recommend', targetValue: 2, checkField: 'day_recommend', checkValue: 2 },
   undaily: { label: '取消日推', field: 'day_recommend', targetValue: 0, checkField: 'day_recommend', checkValue: 0 },
   weekRecommend: { label: '周推', field: 'week_recommend', targetValue: '' },
@@ -442,6 +455,9 @@ const loadCurrentList = async (page = 1) => {
   if (state.search.name) {
     params.name = state.search.name
   }
+  if (state.search.lv) {
+    params.lv = state.search.lv
+  }
   if (state.search.category_id && state.search.category_id !== 'all') {
     params.category_id = state.search.category_id
   }
@@ -481,6 +497,7 @@ const handleReset = () => {
   state.search.id = ''
   state.search.uid = ''
   state.search.name = ''
+  state.search.lv = ''
   state.search.category_id = 'all'
   state.search.sort = 'all'
   state.search.anonymous = 'all'
@@ -589,6 +606,27 @@ onActivated(() => {
                 size="sm"
                 icon="i-lucide-circle-x"
                 @click="state.search.name = ''"
+              />
+            </template>
+          </UInput>
+          <UInput
+            v-model="state.search.lv"
+            placeholder=""
+            class="w-[180px]"
+            :ui="{ base: 'peer', trailing: 'pe-1' }"
+            @keyup.enter="handleSearch"
+          >
+            <label class="pointer-events-none absolute left-0 -top-2.5 text-highlighted text-xs font-medium px-1.5 transition-all peer-focus:-top-2.5 peer-focus:text-highlighted peer-focus:text-xs peer-focus:font-medium peer-placeholder-shown:text-sm peer-placeholder-shown:text-dimmed peer-placeholder-shown:top-1.5 peer-placeholder-shown:font-normal">
+              <span class="inline-flex bg-default px-1">卡片智能等级</span>
+            </label>
+            <template #trailing>
+              <UButton
+                v-if="state.search.lv"
+                color="neutral"
+                variant="link"
+                size="sm"
+                icon="i-lucide-circle-x"
+                @click="state.search.lv = ''"
               />
             </template>
           </UInput>
@@ -796,6 +834,8 @@ onActivated(() => {
         <UButton size="sm" color="neutral" variant="outline" @click="openBatchModal('unpublish')">取消发布</UButton>
         <UButton size="sm" @click="openBatchModal('recommend')">推荐</UButton>
         <UButton size="sm" color="neutral" variant="outline" @click="openBatchModal('unrecommend')">取消推荐</UButton>
+        <UButton size="sm" @click="openBatchModal('hot')">热门</UButton>
+        <UButton size="sm" color="neutral" variant="outline" @click="openBatchModal('unhot')">取消热门</UButton>
         <UButton size="sm" @click="openBatchModal('daily')">日推</UButton>
         <UButton size="sm" color="neutral" variant="outline" @click="openBatchModal('undaily')">取消日推</UButton>
         <UButton size="sm" @click="openBatchModal('weekRecommend')">周推</UButton>
@@ -876,6 +916,10 @@ onActivated(() => {
               <div v-if="item.recommend === 2" class="absolute top-0 right-0 w-0 h-0 border-t-[32px] border-t-amber-500 dark:border-t-amber-600 border-l-[32px] border-l-transparent">
                 <span class="absolute -top-[30px] right-[3px] text-white text-xs font-bold">精</span>
               </div>
+              <!-- 右上角三角形标签 - 热 -->
+              <div v-if="item.recommend === 3" class="absolute top-0 right-0 w-0 h-0 border-t-[32px] border-t-red-500 dark:border-t-red-600 border-l-[32px] border-l-transparent">
+                <span class="absolute -top-[30px] right-[3px] text-white text-xs font-bold">热</span>
+              </div>
 
               <div class="flex items-start gap-3">
                 <!-- 左侧图片 -->
@@ -906,6 +950,7 @@ onActivated(() => {
                         [
                           { label: item.state === 2 ? '取消发布' : '设为发布', icon: 'i-lucide-check-circle', onSelect: () => setPublishState(item) },
                           { label: item.recommend === 2 ? '取消推荐' : '设为推荐', icon: 'i-lucide-star', onSelect: () => setRecommend(item) },
+                          { label: item.recommend === 3 ? '取消热门' : '设为热门', icon: 'i-lucide-flame', onSelect: () => setHot(item) },
                           { label: item.day_recommend === 2 ? '取消日推' : '设为日推', icon: 'i-lucide-sun', onSelect: () => setDailyRecommend(item) },
                           { label: '周推设置', icon: 'i-lucide-calendar-days', onSelect: () => openWeekPicker(item) },
                           { label: '月推设置', icon: 'i-lucide-calendar-range', onSelect: () => openMonthPicker(item) },
@@ -975,6 +1020,7 @@ onActivated(() => {
                 <span v-if="item.state === 2" class="px-1.5 py-0.5 text-[10px] font-medium bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400 rounded">已发布</span>
                 <span v-else class="px-1.5 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 rounded">未发布</span>
                 <span v-if="item.recommend === 2" class="px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 rounded">推荐</span>
+                <span v-if="item.recommend === 3" class="px-1.5 py-0.5 text-[10px] font-medium bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 rounded">热门</span>
                 <span v-if="item.day_recommend === 2" class="px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 rounded">日推</span>
                 <span v-if="item.week_recommend && (Array.isArray(item.week_recommend) ? item.week_recommend.length > 0 : item.week_recommend !== '')" class="px-1.5 py-0.5 text-[10px] font-medium bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400 rounded">周推{{ formatWeekRecommend(item.week_recommend) }}</span>
                 <span v-if="item.month_recommend && (Array.isArray(item.month_recommend) ? item.month_recommend.length > 0 : item.month_recommend !== '')" class="px-1.5 py-0.5 text-[10px] font-medium bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 rounded">月推{{ formatMonthRecommend(item.month_recommend) }}</span>
@@ -1011,6 +1057,9 @@ onActivated(() => {
                 </UTooltip>
                 <UTooltip text="评分人数">
                   <span class="flex items-center gap-1 cursor-help"><UIcon name="i-lucide-users" class="w-3 h-3 text-indigo-500" />{{ item.score_count || 0 }}</span>
+                </UTooltip>
+                <UTooltip text="卡片智能等级">
+                  <span class="flex items-center gap-1 cursor-help"><UIcon name="i-lucide-sparkles" class="w-3 h-3 text-violet-500" />{{ item.lv ?? '-' }}</span>
                 </UTooltip>
                 <UTooltip text="热度（点击修改）">
                   <span v-if="state.editingHotId !== item.id" class="flex items-center gap-1 cursor-pointer" @click.stop="startEditHot(item)">
