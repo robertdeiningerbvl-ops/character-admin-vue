@@ -5,6 +5,11 @@ export function getMemberList(params?: any) {
   return request.get<any>(apiRoute.memberList, params)
 }
 
+/** 获取用户聊天会话目录列表 */
+export function getMemberConversationList(params?: any) {
+  return request.get<any>(apiRoute.memberConversationList, params)
+}
+
 /** 编辑客户 */
 export function updateMember(data: any) {
   return request.post<any>(apiRoute.memberEdit, data)

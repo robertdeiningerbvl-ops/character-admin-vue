@@ -7,6 +7,7 @@ defineOptions({ name: 'MemberChatHistory' })
 const route = useRoute()
 const uid = computed(() => route.params.uid as string)
 const amusementId = computed(() => route.params.id as string)
+const conversationId = computed(() => route.query.con_id as string | undefined)
 
 const state = reactive({
   loading: false,
@@ -22,6 +23,7 @@ const loadData = async () => {
     const { data } = await getAmusementChatHistory({
       uid: uid.value,
       biz_id: amusementId.value,
+      con_id: conversationId.value,
       page: state.page,
       pagesize: state.pageSize
     })
