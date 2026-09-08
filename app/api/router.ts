@@ -7,7 +7,7 @@ export const apiRoute = {
   memberEdit: 'member-edit',
   memberBatteryEdit: 'member-battery-edit',
   memberSelectList: 'member-select-list',
-  memberConversationList: 'member-conversation-listx',
+  memberConversationList: 'member-conversation-list',
 
   // 用户等级
   memberLvList: 'member-lv-list',
