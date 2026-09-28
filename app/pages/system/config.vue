@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { cloneDeep } from 'lodash-es'
-import { getConfig, updateConfig, getCommonModelList } from '@/api'
+import { getConfig, updateConfig, getCommonModelList, uploadFile } from '@/api'
 
 definePageMeta({ layout: 'app' })
 defineOptions({ name: 'SystemConfig' })
@@ -67,6 +67,7 @@ const configGroups = reactive([
     label: '文档与协议',
     items: [
       { key: 'HELP', label: '帮助中心', icon: 'lucide:circle-help' },
+      { key: 'COMMUNITY_LINKS', label: '社区链接', icon: 'lucide:link-2' },
       { key: 'PRIVACY', label: '隐私政策', icon: 'lucide:eye-off' },
       { key: 'PROVISION', label: '服务条款', icon: 'lucide:scroll-text' }
     ]
@@ -84,6 +85,57 @@ const configGroups = reactive([
     ]
   }
 ])
+
+const communityGroups = [
+  { key: 'tg_group', label: 'Telegram 群组' },
+  { key: 'x', label: 'X' },
+  { key: 'discord', label: 'Discord' }
+] as const
+
+function normalizeCommunityLinks(raw: any): Record<string, any> {
+  let parsed = raw
+  if (typeof raw === 'string') {
+    try {
+      parsed = JSON.parse(raw)
+    } catch {
+      parsed = {}
+    }
+  }
+
+  if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.content !== undefined) {
+    parsed = typeof parsed.content === 'string'
+      ? (() => {
+          try {
+            return JSON.parse(parsed.content)
+          } catch {
+            return {}
+          }
+        })()
+      : parsed.content
+  }
+
+  const source = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+    ? parsed
+    : {}
+  const result: Record<string, any> = {}
+
+  for (const group of communityGroups) {
+    const rawGroup = source[group.key]
+    const groupItem = rawGroup && typeof rawGroup === 'object' && !Array.isArray(rawGroup)
+      ? { ...rawGroup }
+      : Array.isArray(rawGroup) && rawGroup.length > 0
+        ? { ...rawGroup[0] }
+        : {}
+
+    result[group.key] = {
+      link: groupItem.link || '',
+      img: groupItem.img || '',
+      remark: groupItem.remark || ''
+    }
+  }
+
+  return result
+}
 
 /* ================= 获取配置 ================= */
 const fetchConfig = async (key: string) => {
@@ -111,6 +163,8 @@ const fetchConfig = async (key: string) => {
         } else {
           content = []
         }
+      } else if (key === 'COMMUNITY_LINKS') {
+        content = normalizeCommunityLinks(data)
       } else {
         content = data.content
           ? typeof data.content === 'string' || Array.isArray(data.content)
@@ -198,6 +252,8 @@ const selectConfig = async (key: string) => {
     let content
     if (key === 'PRO_DOMAIN' && typeof data.content === 'string') {
       content = data.content.split(',').filter((url: string) => url.trim())
+    } else if (key === 'COMMUNITY_LINKS') {
+      content = normalizeCommunityLinks(data.content)
     } else {
       content = data.content
         ? typeof data.content === 'string' || Array.isArray(data.content)
@@ -261,6 +317,35 @@ const addDomain = (): void => {
 const removeDomain = (index: number): void => {
   if (Array.isArray(state.currentForm.content)) {
     state.currentForm.content.splice(index, 1)
+  }
+}
+
+/* ================= 社区链接操作 ================= */
+const communityUploading = ref(false)
+
+const isCommunityLinksReady = computed(() => {
+  const content = state.currentForm.content
+  return Boolean(content && typeof content === 'object' && !Array.isArray(content))
+})
+
+const uploadCommunityImage = async (groupKey: string, row: any, event: Event) => {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+
+  communityUploading.value = true
+  try {
+    const formData = new FormData()
+    formData.append('image', file)
+    const { data } = await uploadFile(formData)
+    if (data?.uri) {
+      row.img = data.uri
+      toast.add({ title: '图片上传成功', color: 'success' })
+    }
+  } catch (err: any) {
+    toast.add({ title: err.message || '图片上传失败', color: 'error' })
+  } finally {
+    communityUploading.value = false
+    ;(event.target as HTMLInputElement).value = ''
   }
 }
 
@@ -597,6 +682,64 @@ onActivated(() => init())
               <UButton size="sm" color="error" variant="soft" icon="i-lucide-trash-2" class="mt-1" @click="delHelpItem(row.id)" />
             </div>
             <UButton size="sm" color="neutral" variant="soft" icon="i-lucide-plus" label="新增条目" @click="addHelpItem" />
+          </div>
+
+          <UFormField label="备注">
+            <UInput v-model="state.currentForm.remarks" placeholder="备注" class="w-full" />
+          </UFormField>
+        </div>
+
+        <!-- 社区链接 -->
+        <div v-if="state.activeConfigKey === 'COMMUNITY_LINKS' && isCommunityLinksReady" class="space-y-5">
+          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-link-2" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
+              <div class="text-sm text-(--ui-text-muted)">
+                <p class="font-medium text-(--ui-text-highlighted) mb-1">社区链接配置说明</p>
+                <p>配置 Telegram、X、Discord 等社区入口，可为每个入口设置链接、备注和图片。</p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            v-for="group in communityGroups"
+            :key="group.key"
+            class="p-4 rounded-lg border border-(--ui-border) space-y-3"
+          >
+            <p class="font-medium text-(--ui-text-highlighted)">{{ group.label }}</p>
+
+            <div
+              class="flex items-start gap-3"
+            >
+              <UInput
+                v-model="state.currentForm.content[group.key].link"
+                placeholder="链接"
+                class="flex-1"
+              />
+              <UInput
+                v-model="state.currentForm.content[group.key].remark"
+                placeholder="备注"
+                class="flex-1"
+              />
+              <div class="flex items-center gap-2">
+                <NuxtImg
+                  v-if="state.currentForm.content[group.key].img"
+                  :src="state.currentForm.content[group.key].img"
+                  class="h-9 w-9 rounded-lg object-cover"
+                />
+                <label class="cursor-pointer inline-flex items-center gap-1 text-sm text-(--ui-primary)">
+                  <UIcon name="i-lucide-image-plus" class="size-4" />
+                  {{ state.currentForm.content[group.key].img ? '更换' : '上传' }}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    class="hidden"
+                    :disabled="communityUploading"
+                    @change="uploadCommunityImage(group.key, state.currentForm.content[group.key], $event)"
+                  >
+                </label>
+              </div>
+            </div>
           </div>
 
           <UFormField label="备注">
