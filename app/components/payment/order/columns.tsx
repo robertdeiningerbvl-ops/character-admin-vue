@@ -5,6 +5,7 @@ export type TableColumnList = DataTableColumn<any>[]
 const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
 const UAvatar = resolveComponent('UAvatar')
+const UTooltip = resolveComponent('UTooltip')
 
 const stateEnum: any = {
   0: ['待支付', 'warning'],
@@ -66,6 +67,23 @@ export const baseColumns: TableColumnList = [
         th: 'w-[180px]',
         td: 'w-[180px]'
       }
+    }
+  },
+  {
+    accessorKey: 'package_info',
+    header: '套餐信息',
+    meta: {
+      class: {
+        th: 'w-[200px]',
+        td: 'w-[200px]'
+      }
+    },
+    cell: ({ row }) => {
+      const packageInfo = row.original.package_info
+      if (!packageInfo) return h('span', { class: 'text-gray-400' }, '-')
+      return h(UTooltip, { text: packageInfo }, {
+        default: () => h('span', { class: 'text-sm text-gray-600 dark:text-gray-300 truncate max-w-[180px]' }, packageInfo)
+      })
     }
   },
   {

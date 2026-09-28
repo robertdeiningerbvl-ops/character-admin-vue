@@ -21,6 +21,21 @@ export function removeCommonCoins(data: any) {
   return request.post<any>(apiRoute.commonCoinsRemove, data)
 }
 
+/** VIP套餐列表 */
+export function getCommonVipList(params?: any) {
+  return request.get<any>(apiRoute.commonVipList, params)
+}
+
+/** VIP套餐新增 */
+export function addCommonVip(data: any) {
+  return request.post<any>(apiRoute.commonVipAdd, data)
+}
+
+/** VIP套餐修改 */
+export function updateCommonVip(data: any) {
+  return request.post<any>(apiRoute.commonVipEdit, data)
+}
+
 /** 标签列表 */
 export function getCommonTagList(params?: any) {
   return request.get<any>(apiRoute.commonTagList, params)

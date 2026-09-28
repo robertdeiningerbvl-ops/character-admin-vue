@@ -14,12 +14,8 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits(['update:dialog', 'refresh'])
 
 const drawerVisible = computed({
-  get() {
-    return props.dialog
-  },
-  set(visible) {
-    emit('update:dialog', visible)
-  }
+  get: () => props.dialog,
+  set: visible => emit('update:dialog', visible)
 })
 
 const closeModal = () => {
@@ -29,6 +25,7 @@ const closeModal = () => {
 const formRef = useTemplateRef('formRef')
 const avatarFileRef = ref<HTMLInputElement>()
 const audioFileRef = ref<HTMLInputElement>()
+const toast = useToast()
 
 const state = reactive({
   loading: false,
@@ -37,68 +34,41 @@ const state = reactive({
   form: {} as any
 })
 
-const genderOptions = [
-  { label: '未知', value: 0 },
-  { label: '男', value: 1 },
-  { label: '女', value: 2 },
-  { label: '其他', value: 3 }
-]
-
-const visibilityOptions = [
-  { label: '公有', value: 1 },
-  { label: '私有', value: 2 }
-]
-
-const sourceOptions = [
-  { label: '系统内置', value: 1 },
-  { label: '用户克隆', value: 2 },
-  { label: '第三方导入', value: 3 }
-]
-
 const stateOptions = [
   { label: '正常', value: 1 },
-  { label: '待审核', value: 2 },
-  { label: '禁用', value: 3 }
+  { label: '删除', value: 9 }
 ]
 
-const isHotOptions = [
-  { label: '否', value: 0 },
-  { label: '是', value: 1 }
+const vipOptions = [
+  { label: '普通语音', value: 0 },
+  { label: 'VIP语音', value: 1 }
 ]
 
 const initFormDefaults = () => ({
   id: 0,
-  uid: 0,
+  provider_voice_key: '',
   name: '',
   avatar: '',
   demo_audio: '',
-  summary: '',
   description: '',
-  gender: 0,
-  language: 'zh-CN',
-  visibility: 1,  // 默认公有
-  source: 1,      // 默认系统内置
-  state: 1,       // 默认正常
-  sort: 0,
-  is_hot: 1       // 默认热门
+  state: 1,
+  vip: 0,
+  sort: 0
 })
-
-const toast = useToast()
 
 const onAvatarFileChange = async (e: Event) => {
   const input = e.target as HTMLInputElement
   if (!input.files?.length) return
 
   const file = input.files[0]
+  if (!file) return
 
-  // 验证文件格式
   if (!imageFormat(file)) {
     input.value = ''
     return
   }
 
   state.avatarLoading = true
-
   try {
     const { data, error } = await uploadFile({ image: file })
     if (error) {
@@ -111,7 +81,7 @@ const onAvatarFileChange = async (e: Event) => {
     toast.add({ title: '上传失败，请重试', color: 'error' })
   } finally {
     state.avatarLoading = false
-    input.value = ''  // 重置 input，允许重新选择同一文件
+    input.value = ''
   }
 }
 
@@ -124,9 +94,9 @@ const onAudioFileChange = async (e: Event) => {
   if (!input.files?.length) return
 
   const file = input.files[0]
-
-  // 验证音频格式
+  if (!file) return
   const validFormats = ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/x-m4a']
+
   if (!validFormats.includes(file.type)) {
     toast.add({ title: '仅支持 MP3、WAV、M4A 格式', color: 'error' })
     input.value = ''
@@ -134,7 +104,6 @@ const onAudioFileChange = async (e: Event) => {
   }
 
   state.audioLoading = true
-
   try {
     const { data, error } = await uploadFile({ image: file })
     if (error) {
@@ -147,7 +116,7 @@ const onAudioFileChange = async (e: Event) => {
     toast.add({ title: '上传失败，请重试', color: 'error' })
   } finally {
     state.audioLoading = false
-    input.value = ''  // 重置 input，允许重新选择同一文件
+    input.value = ''
   }
 }
 
@@ -156,11 +125,31 @@ const onAudioFileClick = () => {
 }
 
 const handleSubmit = async () => {
-  state.loading = true
-  const isEdit = state.form.id > 0
-  const apiFunc = isEdit ? updateCommonTtsVoice : addCommonTtsVoice
+  const name = String(state.form.name ?? '').trim()
+  if (!name) {
+    toast.add({ title: '声优名称不能为空', color: 'error' })
+    return
+  }
 
-  const { error } = await apiFunc(cloneDeep(state.form))
+  state.loading = true
+  const isEdit = Number(state.form.id) > 0
+  const postForm: any = {
+    provider_voice_key: String(state.form.provider_voice_key ?? '').trim(),
+    name,
+    avatar: state.form.avatar,
+    demo_audio: state.form.demo_audio,
+    description: state.form.description,
+    state: Number(state.form.state),
+    vip: Number(state.form.vip) === 1 ? 1 : 0,
+    sort: Number(state.form.sort) || 0
+  }
+
+  if (isEdit) {
+    postForm.id = state.form.id
+  }
+
+  const apiFunc = isEdit ? updateCommonTtsVoice : addCommonTtsVoice
+  const { error } = await apiFunc(postForm)
   state.loading = false
 
   if (!error) {
@@ -170,20 +159,21 @@ const handleSubmit = async () => {
   }
 }
 
-watch(() => props.dialog, (val) => {
-  if (val) {
-    state.loading = false
-    // 编辑时使用现有数据，新增时使用默认值
-    if (props.currentForm?.id) {
-      state.form = cloneDeep(props.currentForm)
-    } else {
-      state.form = initFormDefaults()
+watch(
+  () => props.dialog,
+  (visible) => {
+    if (visible) {
+      state.loading = false
+      if (props.currentForm?.id) {
+        state.form = cloneDeep(props.currentForm)
+      } else {
+        state.form = initFormDefaults()
+      }
     }
   }
-})
+)
 </script>
 
-<template>
 <template>
   <UModal v-model:open="drawerVisible" :ui="{ content: 'sm:max-w-2xl', footer: 'justify-end' }">
     <template #header>
@@ -200,7 +190,7 @@ watch(() => props.dialog, (val) => {
         class="space-y-4"
         @submit="handleSubmit"
       >
-        <!-- 头像上传 -->
+        <!-- 声优头像 -->
         <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border) space-y-4">
           <div class="flex items-center gap-2">
             <UIcon name="i-lucide-image" class="w-4 h-4 text-(--ui-primary)" />
@@ -267,33 +257,14 @@ watch(() => props.dialog, (val) => {
           <UFormField label="声优名称" name="name" required>
             <UInput v-model.trim="state.form.name" placeholder="请输入声优名称" class="w-full" />
           </UFormField>
-          <div class="grid grid-cols-2 gap-4">
-            <UFormField label="性别" name="gender" required>
-              <USelect
-                v-model="state.form.gender"
-                :items="genderOptions"
-                placeholder="请选择"
-                class="w-full"
-              />
-            </UFormField>
-            <UFormField label="可见性" name="visibility">
-              <USelect
-                v-model="state.form.visibility"
-                :items="visibilityOptions"
-                placeholder="请选择"
-                class="w-full"
-              />
-            </UFormField>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <UFormField label="来源" name="source">
-              <USelect
-                v-model="state.form.source"
-                :items="sourceOptions"
-                placeholder="请选择"
-                class="w-full"
-              />
-            </UFormField>
+          <UFormField label="第三方 voice_id" name="provider_voice_key">
+            <UInput
+              v-model.trim="state.form.provider_voice_key"
+              placeholder="fish.audio 的 reference_id"
+              class="w-full"
+            />
+          </UFormField>
+          <div class="grid grid-cols-3 gap-4">
             <UFormField label="状态" name="state">
               <USelect
                 v-model="state.form.state"
@@ -302,40 +273,30 @@ watch(() => props.dialog, (val) => {
                 class="w-full"
               />
             </UFormField>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <UFormField label="是否热门" name="is_hot">
+            <UFormField label="语音类型" name="vip">
               <USelect
-                v-model="state.form.is_hot"
-                :items="isHotOptions"
+                v-model="state.form.vip"
+                :items="vipOptions"
                 placeholder="请选择"
                 class="w-full"
               />
             </UFormField>
-            <UFormField label="排序" name="sort">
+            <UFormField label="排序权重" name="sort">
               <UInput v-model.number="state.form.sort" type="number" placeholder="数字越大越靠前" class="w-full" />
             </UFormField>
           </div>
         </div>
 
-        <!-- 详细信息 -->
+        <!-- 详细描述 -->
         <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border) space-y-4">
           <div class="flex items-center gap-2">
             <UIcon name="i-lucide-file-text" class="w-4 h-4 text-(--ui-primary)" />
-            <span class="text-sm font-medium">详细信息</span>
+            <span class="text-sm font-medium">详细描述</span>
           </div>
-          <UFormField label="简介" name="summary">
-            <UTextarea
-              v-model.trim="state.form.summary"
-              placeholder="简短介绍(255字符内)"
-              class="w-full"
-              :rows="2"
-            />
-          </UFormField>
-          <UFormField label="详细描述" name="description">
+          <UFormField label="描述" name="description">
             <UTextarea
               v-model.trim="state.form.description"
-              placeholder="详细描述"
+              placeholder="请输入详细描述"
               class="w-full"
               :rows="4"
             />
@@ -354,5 +315,4 @@ watch(() => props.dialog, (val) => {
       <UButton :loading="state.loading" label="确认" @click="formRef?.submit()" />
     </template>
   </UModal>
-</template>
 </template>

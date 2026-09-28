@@ -45,6 +45,11 @@ export const apiRoute = {
   commonCoinsEdit: 'common-coins-edit',
   commonCoinsRemove: 'common-coins-remove',
 
+  // VIP 套餐
+  commonVipList: 'common-vip',
+  commonVipAdd: 'common-vip-add',
+  commonVipEdit: 'common-vip-edit',
+
   // 标签
   commonTagList: 'common-tag-list',
   commonTagRemove: 'common-tag-remove',

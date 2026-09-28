@@ -9,6 +9,7 @@ defineOptions({ name: 'CommonTtsVoiceList' })
 const tableRef = ref()
 const UButton = resolveComponent('UButton')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
+const toast = useToast()
 
 const state = reactive({
   isDialog: false,
@@ -28,7 +29,7 @@ const refresh = () => {
 const handleRemove = async (id: number) => {
   const { error } = await removeCommonTtsVoice({ id })
   if (!error) {
-    showToast('删除成功')
+    toast.add({ title: '删除成功', color: 'success' })
     refresh()
   }
 }
@@ -104,7 +105,7 @@ const columns: TableColumnList = [
       ref="tableRef"
       :data-request="getCommonTtsVoiceList"
       :columns="columns"
-      scroll-x="min-w-[1600px]"
+      scroll-x="min-w-[1300px]"
     />
   </DashboardLayout>
 
