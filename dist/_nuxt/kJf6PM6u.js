@@ -1,0 +1,1 @@
+import{A as e,Lt as t}from"./BNibDJhR.js";import{v as n}from"#entry";function r(r){let i=n({dir:t(`ltr`)});return e(()=>r?.value||i.dir?.value||`ltr`)}export{r as t};

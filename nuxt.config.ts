@@ -1,4 +1,12 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+// postcss-merge-longhand 使用了 ES2024 的 Set.prototype.difference，
+// 在 Node 20 等低版本上构建会报错，这里补一个等价实现。
+if (typeof (Set.prototype as any).difference !== 'function') {
+  ;(Set.prototype as any).difference = function difference(this: Set<any>, other: Set<unknown>) {
+    return new Set([...this].filter(value => !other.has(value)))
+  }
+}
+
 const isDev = process.env.NODE_ENV === 'development'
 
 export default defineNuxtConfig({

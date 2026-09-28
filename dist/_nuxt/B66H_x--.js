@@ -1,0 +1,1 @@
+import{u as e}from"./CAZ9c8vO.js";import{B as t,Ct as n,P as r,at as i}from"./BNibDJhR.js";import{t as a}from"./CNs_Ozdc.js";var o=t({__name:`vip`,async setup(t){let o,s;return a({layout:`app`}),[o,s]=n(()=>e(`/vip`,{replace:!0})),await o,s(),(e,t)=>(i(),r(`div`))}});export{o as default};
