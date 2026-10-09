@@ -83,7 +83,9 @@ async function fetchLevelList() {
 
 async function onSubmit() {
   state.loading = true
-  const { error } = await updateMember(cloneDeep(state.form))
+  const postForm = cloneDeep(state.form)
+  delete postForm.vip_name
+  const { error } = await updateMember(postForm)
   if (!error) {
     toast.add({ title: '操作成功', color: 'success' })
     emit('refresh')
@@ -211,7 +213,7 @@ watch(() => props.dialog, (newValue) => {
             </div>
             <div class="p-2 rounded bg-(--ui-bg) border border-(--ui-border)">
               <div class="text-lg font-semibold text-orange-500">
-                {{ state.form.income_battery || 0 }}
+                {{ ((state.form.income_battery || 0) / 100).toFixed(2) }}
               </div>
               <div class="text-xs text-(--ui-text-muted)">
                 赠送妖力
@@ -324,6 +326,11 @@ watch(() => props.dialog, (newValue) => {
             <UIcon name="i-lucide-file-text" class="w-4 h-4 text-(--ui-primary)" />
             <span class="text-sm font-medium">详细信息</span>
           </div>
+          <UFormField label="VIP等级" name="vip_name">
+            <div class="w-full min-h-9 px-3 py-2 rounded-md bg-(--ui-bg) border border-(--ui-border) text-sm text-(--ui-text-highlighted)">
+              {{ state.form.vip_name || '-' }}
+            </div>
+          </UFormField>
           <UFormField label="简介" name="summary">
             <UTextarea
               v-model.trim="state.form.summary"

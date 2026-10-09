@@ -64,15 +64,22 @@ export const baseColumns: TableColumnList = [
   },
   {
     accessorKey: 'battery',
-    header: '妖力',
-    meta: { class: { th: 'w-[100px]', td: 'w-[100px]' } },
+    header: '账户',
+    meta: { class: { th: 'w-[160px]', td: 'w-[160px]' } },
     cell: ({ row }) => {
-      const { battery, income_battery } = row.original
+      const { amount, radish, battery } = row.original
       return h('div', { class: 'flex flex-col text-xs' }, [
-        h('span', { class: 'inline-flex items-center gap-1 text-yellow-500' }, [h(UIcon, { name: 'i-lucide-zap', class: 'w-3 h-3' }), '现有 ', ((battery || 0) / 100).toFixed(2)]),
-        h('span', { class: 'inline-flex items-center gap-1 text-orange-500' }, [h(UIcon, { name: 'i-lucide-gift', class: 'w-3 h-3' }), '赠送 ', ((income_battery || 0) / 100).toFixed(2)])
+        h('span', { class: 'inline-flex items-center gap-1 text-violet-500' }, [h(UIcon, { name: 'i-lucide-gem', class: 'w-3 h-3' }), '灵丹 ', ((amount || 0) / 100).toFixed(2)]),
+        h('span', { class: 'inline-flex items-center gap-1 text-orange-500' }, [h(UIcon, { name: 'i-lucide-carrot', class: 'w-3 h-3' }), '萝卜 ', ((radish || 0) / 100).toFixed(2)]),
+        h('span', { class: 'inline-flex items-center gap-1 text-yellow-500' }, [h(UIcon, { name: 'i-lucide-zap', class: 'w-3 h-3' }), '妖力 ', ((battery || 0) / 100).toFixed(2)])
       ])
     }
+  },
+  {
+    accessorKey: 'vip_name',
+    header: 'VIP等级',
+    meta: { class: { th: 'w-[120px]', td: 'w-[120px]' } },
+    cell: ({ row }) => h('span', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.vip_name || '-')
   },
   {
     accessorKey: 'income_amount',
