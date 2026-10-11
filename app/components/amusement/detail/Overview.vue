@@ -5,7 +5,7 @@ const props = defineProps<{
   state: any
 }>()
 
-const emit = defineEmits(['update:state', 'save'])
+const emit = defineEmits(['update:state', 'save', 'generate-cover'])
 const toast = useToast()
 
 const localState = computed({
@@ -25,6 +25,10 @@ watch(() => props.state.amusementId, (newId) => {
 
 // 监控封面图变化并自动提交
 watch(() => localState.value.coverImage, async (newValue, oldValue) => {
+  if (localState.value.skipCoverAutoSave) {
+    localState.value.skipCoverAutoSave = false
+    return
+  }
   // 只有在已有 amusementId 且封面图确实变化时才提交
   if (localState.value.amusementId && oldValue !== undefined && newValue !== oldValue) {
     try {
@@ -563,7 +567,18 @@ const insertPngTextChunk = (pngData: Uint8Array, keyword: string, text: string):
       <div>
         <div class="flex items-center justify-between mb-2">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">封面图</label>
-          <UButton size="xs" variant="ghost" icon="i-lucide-images" @click="showCoverPicker = true">图片库</UButton>
+          <div class="flex items-center gap-2">
+            <UButton
+              size="xs"
+              variant="ghost"
+              icon="i-lucide-sparkles"
+              :loading="props.state.generatingCover"
+              @click="emit('generate-cover')"
+            >
+              AI生成封面
+            </UButton>
+            <UButton size="xs" variant="ghost" icon="i-lucide-images" @click="showCoverPicker = true">图片库</UButton>
+          </div>
         </div>
         <div
           class="w-64 h-80 rounded-xl bg-gray-50 dark:bg-gray-800/50 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-700 cursor-pointer hover:border-primary-400 dark:hover:border-primary-500 transition-all overflow-hidden group"

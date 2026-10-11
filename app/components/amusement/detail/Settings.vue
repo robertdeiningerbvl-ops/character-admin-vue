@@ -5,7 +5,7 @@ const props = defineProps<{
   state: any
 }>()
 
-const emit = defineEmits(['update:state'])
+const emit = defineEmits(['update:state', 'generate-tags'])
 const toast = useToast()
 
 const localState = computed({
@@ -236,7 +236,18 @@ onMounted(() => {
 
       <!-- 标签 -->
       <div>
-        <label class="block text-sm text-gray-500 mb-2">标签</label>
+        <div class="flex items-center justify-between mb-2">
+          <label class="block text-sm text-gray-500">标签</label>
+          <UButton
+            size="xs"
+            variant="ghost"
+            icon="i-lucide-sparkles"
+            :loading="props.state.generatingTags"
+            @click="emit('generate-tags')"
+          >
+            AI生成标签
+          </UButton>
+        </div>
         <!-- 已选标签 -->
         <div v-if="localState.tags.length > 0" class="flex flex-wrap gap-2 mb-3">
           <span

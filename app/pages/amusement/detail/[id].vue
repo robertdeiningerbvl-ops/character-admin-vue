@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getAmusementDetail, updateAmusement, getAmusementVersionDetail, submitAmusement, updateAmusementVersion } from '@/api'
+import { getAmusementDetail, updateAmusement, getAmusementVersionDetail, submitAmusement, updateAmusementVersion, generateAmusementCover, generateAmusementTags, updateAmusementState } from '@/api'
 
 definePageMeta({
   layout: 'app'
@@ -34,6 +34,13 @@ const state = reactive({
   loading: false,
   saving: false,
   publishing: false,
+  generatingCover: false,
+  generatingTags: false,
+  pendingCoverImage: '',
+  pendingTags: [] as string[],
+  coverConfirmVisible: false,
+  tagsConfirmVisible: false,
+  skipCoverAutoSave: false,
   // 基础信息
   name: '',
   creatorName: '',
@@ -361,6 +368,103 @@ const handlePublish = async (versionId: number, options: { seeking?: number, sta
   }
 }
 
+// 根据角色卡内容生成封面
+const handleGenerateCover = async () => {
+  if (!state.name.trim()) {
+    toast.add({ title: '请先填写角色名称', color: 'error' })
+    return
+  }
+  state.generatingCover = true
+  try {
+    const params: any = {
+      content: JSON.stringify(buildCharacterData()),
+      extra: ''
+    }
+    if (state.amusementId) {
+      params.id = state.amusementId
+    }
+    const { data, error } = await generateAmusementCover(params)
+    if (!error && data?.image) {
+      state.pendingCoverImage = data.image
+      state.coverConfirmVisible = true
+    } else if (!error) {
+      toast.add({ title: '封面生成失败，请重试', color: 'error' })
+    }
+  } catch (e: any) {
+    toast.add({ title: e.message || '生成封面失败', color: 'error' })
+  } finally {
+    state.generatingCover = false
+  }
+}
+
+// 根据角色卡内容生成标签
+const handleGenerateTags = async () => {
+  if (!state.name.trim() && !state.description.trim() && !state.personality.trim() && !state.scenario.trim()) {
+    toast.add({ title: '请先填写角色信息', color: 'error' })
+    return
+  }
+  state.generatingTags = true
+  try {
+    const { data, error } = await generateAmusementTags({
+      name: state.name,
+      description: state.description,
+      personality: state.personality,
+      scenario: state.scenario
+    })
+    if (!error && data?.tags?.length) {
+      state.pendingTags = data.tags
+      state.tagsConfirmVisible = true
+    } else if (!error) {
+      toast.add({ title: '标签生成失败，请重试', color: 'error' })
+    }
+  } catch (e: any) {
+    toast.add({ title: e.message || '生成标签失败', color: 'error' })
+  } finally {
+    state.generatingTags = false
+  }
+}
+
+// 确认使用生成的封面
+const confirmGeneratedCover = async () => {
+  if (!state.pendingCoverImage) return
+  const cover = state.pendingCoverImage
+  state.skipCoverAutoSave = true
+  state.coverImage = cover
+
+  if (state.amusementId) {
+    const { error } = await updateAmusementState({ id: state.amusementId, image: cover })
+    if (error) {
+      toast.add({ title: '封面保存失败', color: 'error' })
+    } else {
+      toast.add({ title: '封面已保存', color: 'success' })
+    }
+  } else {
+    toast.add({ title: '封面已填入，请保存角色卡', color: 'success' })
+  }
+
+  state.coverConfirmVisible = false
+  state.pendingCoverImage = ''
+}
+
+const cancelGeneratedCover = () => {
+  state.coverConfirmVisible = false
+  state.pendingCoverImage = ''
+}
+
+// 确认使用生成的标签
+const confirmGeneratedTags = () => {
+  if (!state.pendingTags.length) return
+  state.tags = [...new Set(state.pendingTags)].slice(0, 10)
+  state.tagsConfirmVisible = false
+  state.pendingTags = []
+  toast.add({ title: '标签已填入，请保存角色卡', color: 'success' })
+}
+
+const cancelGeneratedTags = () => {
+  state.tagsConfirmVisible = false
+  state.pendingTags = []
+}
+
 // 切换版本
 const handleSwitchVersion = async (versionId: number) => {
   const version = state.versions.find(v => v.id === versionId)
@@ -479,12 +583,14 @@ onMounted(() => {
             v-if="activeTab === 'overview'"
             v-model:state="state"
             @save="handleSave"
+            @generate-cover="handleGenerateCover"
           />
 
           <!-- 设定 -->
           <AmusementDetailSettings
             v-if="activeTab === 'settings'"
             v-model:state="state"
+            @generate-tags="handleGenerateTags"
           />
 
           <!-- 世界书 -->
@@ -515,5 +621,55 @@ onMounted(() => {
         </template>
       </div>
     </div>
+
+    <!-- 生成封面确认 -->
+    <UModal v-model:open="state.coverConfirmVisible" :ui="{ content: 'sm:max-w-md', footer: 'justify-end' }">
+      <template #header>
+        <div class="flex items-center gap-2">
+          <UIcon name="i-lucide-sparkles" class="w-4 h-4 text-(--ui-primary)" />
+          <span class="font-semibold">确认使用生成的封面</span>
+        </div>
+      </template>
+      <template #body>
+        <div class="space-y-3">
+          <div class="overflow-hidden rounded-lg border border-(--ui-border)">
+            <img :src="state.pendingCoverImage" alt="生成的封面" class="w-full h-auto object-cover" />
+          </div>
+          <p class="text-xs text-(--ui-text-muted)">确认后会保存为当前角色卡的封面图。</p>
+        </div>
+      </template>
+      <template #footer>
+        <UButton label="取消" color="neutral" variant="outline" @click="cancelGeneratedCover" />
+        <UButton label="确认保存" icon="i-lucide-check" @click="confirmGeneratedCover" />
+      </template>
+    </UModal>
+
+    <!-- 生成标签确认 -->
+    <UModal v-model:open="state.tagsConfirmVisible" :ui="{ content: 'sm:max-w-lg', footer: 'justify-end' }">
+      <template #header>
+        <div class="flex items-center gap-2">
+          <UIcon name="i-lucide-tags" class="w-4 h-4 text-(--ui-primary)" />
+          <span class="font-semibold">确认使用生成的标签</span>
+        </div>
+      </template>
+      <template #body>
+        <div class="space-y-3">
+          <div class="flex flex-wrap gap-2">
+            <span
+              v-for="tag in state.pendingTags"
+              :key="tag"
+              class="px-3 py-1 text-sm rounded-full bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
+            >
+              {{ tag }}
+            </span>
+          </div>
+          <p class="text-xs text-(--ui-text-muted)">确认后会填入当前角色的标签栏，仍需点击页面保存按钮才会写入角色卡。</p>
+        </div>
+      </template>
+      <template #footer>
+        <UButton label="取消" color="neutral" variant="outline" @click="cancelGeneratedTags" />
+        <UButton label="确认使用" icon="i-lucide-check" @click="confirmGeneratedTags" />
+      </template>
+    </UModal>
   </ConfigLayout>
 </template>

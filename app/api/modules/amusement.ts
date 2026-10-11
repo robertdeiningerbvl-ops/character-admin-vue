@@ -61,6 +61,25 @@ export function submitAmusement(data: any) {
   return request.post<any>(apiRoute.amusementSubmit, data)
 }
 
+/** 批量导入角色卡 */
+export function importAmusement(data: FormData) {
+  return request.post<any>(apiRoute.amusementImport, data, {
+    headers: {
+      'content-type': 'multipart/form-data'
+    }
+  })
+}
+
+/** 根据角色卡内容生成封面图 */
+export function generateAmusementCover(data: any) {
+  return request.post<any>(apiRoute.amusementCoverGenerate, data)
+}
+
+/** 根据角色卡内容生成标签 */
+export function generateAmusementTags(data: any) {
+  return request.post<any>(apiRoute.amusementGenerateTags, data)
+}
+
 /** 获取版本详情 */
 export function getAmusementVersionDetail(params: any) {
   return request.get<any>(apiRoute.amusementVersionDetail, params)

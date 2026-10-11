@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getAmusementList, removeAmusement, hardRemoveAmusement, getCommonTagList, updateAmusementState, getAmusementCategoryList } from '@/api'
+import { getAmusementList, removeAmusement, hardRemoveAmusement, getCommonTagList, updateAmusementState, getAmusementCategoryList, getAmusementDetail, generateAmusementCover, generateAmusementTags } from '@/api'
 
 definePageMeta({
   layout: 'app'
@@ -17,6 +17,7 @@ const state = reactive({
   tagsOptions: [] as any,
   categoryOptions: [] as any,
   activeTab: 0, // 0=全部, 2=待审核, 3=版本升级审核, 5=已发布, 4=已删除
+  importDialogVisible: false,
   currentList: [] as any[],
   loading: false,
   // 日期推荐弹框
@@ -236,6 +237,8 @@ const batchActionConfig: Record<string, { label: string; field: string; targetVa
   undaily: { label: '取消日推', field: 'day_recommend', targetValue: 0, checkField: 'day_recommend', checkValue: 0 },
   weekRecommend: { label: '周推', field: 'week_recommend', targetValue: '' },
   monthRecommend: { label: '月推', field: 'month_recommend', targetValue: '' },
+  generateCover: { label: '生成封面', field: '', targetValue: null },
+  generateTags: { label: '生成标签', field: '', targetValue: null },
   delete: { label: '删除', field: '', targetValue: null },
   dateRecommend: { label: '日期推荐', field: 'recommend_time', targetValue: '' },
   hardDelete: { label: '物理删除', field: '', targetValue: null }
@@ -295,6 +298,26 @@ const executeBatchAction = async () => {
       } else if (state.batchAction === 'monthRecommend') {
         const { error } = await updateAmusementState({ id: item.id, month_recommend: state.batchMonthValue.join(',') })
         result.status = error ? 'error' : 'success'
+      } else if (state.batchAction === 'generateCover') {
+        const { data, error } = await generateAmusementCover({ id: item.id })
+        result.status = error ? 'error' : 'success'
+        result.msg = error ? '生成失败' : (data?.image ? `已生成：${data.image}` : '已生成')
+      } else if (state.batchAction === 'generateTags') {
+        const params: any = { name: item.name || '', description: '', personality: '', scenario: '' }
+        try {
+          const detail = await getAmusementDetail({ biz_id: item.id })
+          if (detail?.data?.body) {
+            const card = JSON.parse(detail.data.body)
+            const d = card?.data || card || {}
+            params.name = d.name || item.name || ''
+            params.description = d.description || ''
+            params.personality = d.personality || ''
+            params.scenario = d.scenario || ''
+          }
+        } catch { /* 使用列表字段兜底 */ }
+        const { data, error } = await generateAmusementTags(params)
+        result.status = error ? 'error' : 'success'
+        result.msg = error ? '生成失败' : (data?.tags?.length ? `生成标签：${data.tags.join('、')}` : '已生成')
       } else {
         const { error } = await updateAmusementState({ id: item.id, [config.field]: config.targetValue })
         result.status = error ? 'error' : 'success'
@@ -795,6 +818,13 @@ onActivated(() => {
               variant="soft"
               @click="router.push('/amusement/detail/check')"
             />
+            <UButton
+              label="批量导入"
+              icon="i-lucide-upload"
+              color="neutral"
+              variant="soft"
+              @click="state.importDialogVisible = true"
+            />
           </div>
         </div>
       </UCard>
@@ -841,6 +871,8 @@ onActivated(() => {
         <UButton size="sm" @click="openBatchModal('weekRecommend')">周推</UButton>
         <UButton size="sm" @click="openBatchModal('monthRecommend')">月推</UButton>
         <UButton size="sm" @click="openBatchModal('dateRecommend')">日期推荐</UButton>
+        <UButton size="sm" @click="openBatchModal('generateCover')">生成封面</UButton>
+        <UButton size="sm" color="neutral" variant="outline" @click="openBatchModal('generateTags')">生成标签</UButton>
         <UButton size="sm" color="error" @click="openBatchModal('delete')">删除</UButton>
         <div class="h-4 w-px bg-gray-200 dark:bg-gray-700" />
         <UButton size="sm" variant="ghost" @click="state.selectedIds.clear(); state.selectedIds = new Set()">取消选择</UButton>
@@ -1091,6 +1123,11 @@ onActivated(() => {
     :current-form="state.currentForm"
     :tags-options="state.tagsOptions"
     @refresh="refresh"
+  />
+
+  <AmusementListImport
+    v-model:dialog="state.importDialogVisible"
+    @refresh="loadCurrentList(state.pagination.page)"
   />
 
   <!-- 日期推荐弹框 -->
