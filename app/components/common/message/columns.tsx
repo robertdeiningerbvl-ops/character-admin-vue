@@ -13,9 +13,9 @@ const stateEnum: Record<number, [string, 'success' | 'error']> = {
 
 const typeEnum: Record<number, [string, 'secondary' | 'primary' | 'info' | 'neutral']> = {
   1: ['互动消息', 'secondary'],
-  2: ['系统消息', 'primary'],
-  3: ['公告', 'info'],
-  4: ['营销', 'neutral']
+  2: ['公告', 'primary'],
+  3: ['活动', 'info'],
+  4: ['其他', 'neutral']
 }
 
 export const baseColumns: TableColumnList = [

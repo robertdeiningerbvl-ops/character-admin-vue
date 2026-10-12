@@ -59,6 +59,7 @@ interface FormState {
     num?: number
     amount?: number
     remark?: string
+    link?: string
     content?: string
     type?: number
     show?: number
@@ -120,9 +121,16 @@ function initCheckInRewards() {
 }
 
 async function onSubmit() {
+  // 跳转链接：站内路径（/ 开头）或 https 外链，≤255；留空表示清空（H5 按任务编码处理）
+  const link = (state.form.link || '').trim()
+  if (link && (!((link.startsWith('/') && !link.startsWith('//')) || link.startsWith('https://')) || link.length > 255)) {
+    toast.add({ title: '跳转链接需为站内路径（以 / 开头）或 https 链接，255 字符以内', color: 'error' })
+    return
+  }
   state.loading = true
   try {
     const postForm = cloneDeep(state.form)
+    if (postForm.link !== undefined) postForm.link = link
 
     // 签到任务：将表单数据转为 JSON
     if (isCheckInTask.value) {
@@ -242,6 +250,9 @@ watch(
               :rows="2"
               class="w-full"
             />
+          </UFormField>
+          <UFormField label="跳转链接" name="link" hint="站内路径如 /my/invite，或 https:// 外链；留空按任务编码处理">
+            <UInput v-model="state.form.link" placeholder="/my/invite" class="w-full" />
           </UFormField>
         </div>
 

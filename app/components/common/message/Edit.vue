@@ -38,10 +38,11 @@ const stateOptions = [
   { label: '禁用', value: 4 }
 ]
 
+// 与后端、H5 一致：H5 消息中心“通知”页按 公告 / 活動 / 其他 分开显示
 const typeOptions = [
-  { label: '系统', value: 2 },
-  { label: '公告', value: 3 },
-  { label: '营销', value: 4 }
+  { label: '公告', value: 2 },
+  { label: '活动', value: 3 },
+  { label: '其他', value: 4 }
 ]
 
 interface FormState {

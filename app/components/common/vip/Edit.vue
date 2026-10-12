@@ -51,6 +51,12 @@ async function onSubmit() {
     return
   }
 
+  // 人民币通道按整数元下单，后端会拒绝带小数的人民币价格
+  if (!Number.isInteger(toNumber(state.form.amount))) {
+    toast.add({ title: '人民币价格须为整数元', color: 'error' })
+    return
+  }
+
   state.loading = true
   try {
     const postForm = {
@@ -158,13 +164,13 @@ watch(
           </div>
 
           <div class="grid grid-cols-2 gap-4">
-            <UFormField label="价格 - 人民币（元）" name="amount">
+            <UFormField label="价格 - 人民币（元）" name="amount" hint="须为整数元">
               <UInput
                 v-model.number="state.form.amount"
                 type="number"
                 min="0"
-                step="0.01"
-                placeholder="0.00"
+                step="1"
+                placeholder="0"
                 class="w-full"
               />
             </UFormField>
@@ -181,7 +187,7 @@ watch(
           </div>
 
           <div class="grid grid-cols-2 gap-4">
-            <UFormField label="首次赠送妖力" name="free_battery">
+            <UFormField label="赠送萝卜（首次）" name="free_battery" hint="两项合计在付款到账时一次性发放为萝卜，30 天有效">
               <UInput
                 v-model.number="state.form.free_battery"
                 type="number"
@@ -201,7 +207,7 @@ watch(
                 class="w-full"
               />
             </UFormField>
-            <UFormField label="每月赠送妖力" name="battery">
+            <UFormField label="赠送萝卜（附加）" name="battery" hint="不按月发放，与上一项合计一次性发放">
               <UInput
                 v-model.number="state.form.battery"
                 type="number"

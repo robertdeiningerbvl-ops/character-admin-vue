@@ -48,7 +48,7 @@ export const baseColumns: TableColumnList = [
   },
   {
     accessorKey: 'free_battery',
-    header: '首次赠送妖力',
+    header: '赠送萝卜（首次）',
     meta: { class: { th: 'w-[100]', td: 'w-[100]' } },
     cell: ({ row }) => h('div', { class: 'flex items-center gap-1' }, [
       h(UIcon, { name: 'i-lucide-zap', class: 'w-4 h-4 text-(--ui-warning)' }),
@@ -57,7 +57,7 @@ export const baseColumns: TableColumnList = [
   },
   {
     accessorKey: 'battery',
-    header: '每月赠送妖力',
+    header: '赠送萝卜（附加）',
     meta: { class: { th: 'w-[140px]', td: 'w-[140px]' } },
     cell: ({ row }) => h('div', { class: 'flex items-center gap-1' }, [
       h(UIcon, { name: 'i-lucide-battery-charging', class: 'w-4 h-4 text-(--ui-success)' }),
