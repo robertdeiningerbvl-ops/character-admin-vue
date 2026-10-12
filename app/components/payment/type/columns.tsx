@@ -91,7 +91,7 @@ export const baseColumns: TableColumnList = [
   },
   {
     accessorKey: 'weights',
-    header: '权重',
+    header: '权重(TG)',
     meta: { class: { th: 'w-[60px]', td: 'w-[60px]' } },
     cell: ({ row }) => h('span', { class: 'text-sm font-medium' }, row.original.weights ?? '-')
   },
