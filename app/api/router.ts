@@ -24,6 +24,9 @@ export const apiRoute = {
   memberWithdrawList: 'member-withdrawal-list',
   memberWithdrawAudit: 'member-withdrawal-audit',
   memberWithdrawApply: 'member-withdrawal-apply',
+  lingdanWithdrawList: 'lingdan-withdraw-list',
+  lingdanWithdrawComplete: 'lingdan-withdraw-complete',
+  lingdanWithdrawReject: 'lingdan-withdraw-reject',
 
   // 资金流水
   memberFundLogList: 'member-income-list',
