@@ -17,7 +17,7 @@ const state = reactive({
 })
 
 const openEditModal = (record?: any) => {
-  state.currentForm = record ? cloneDeep(record) : { state: 2, limit_type: 1 }
+  state.currentForm = record ? cloneDeep(record) : { state: 2, limit_type: 2 }
   state.isDialog = true
 }
 

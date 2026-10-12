@@ -9,6 +9,7 @@ const UTooltip = resolveComponent('UTooltip')
 
 const stateEnum: any = {
   0: ['待支付', 'warning'],
+  1: ['到账处理中', 'info'], // 已付款、余额入账中；正常几秒内变为已支付
   2: ['已支付', 'success']
 }
 
@@ -211,6 +212,7 @@ export const baseColumns: TableColumnList = [
       componentProps: {
         options: [
           { label: '待支付', value: 0 },
+          { label: '到账处理中', value: 1 },
           { label: '已支付', value: 2 }
         ]
       }

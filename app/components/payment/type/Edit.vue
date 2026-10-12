@@ -61,7 +61,30 @@ const state = reactive({
 })
 
 const toast = useToast()
+
+// 金额限制：固定金额填一个正数（如 100）；范围金额填“最小-最大”（如 10-5000，也接受 ~ , 到）
+// 填错的限额后端会当作“不限额”，所以提交前先校验
+const limitIsFixed = computed(() => Number(state.form.limit_type) === 1)
+function limitError(limit: string, limitType: number): string {
+  const v = (limit || '').trim()
+  if (!v) return '请填写金额限制'
+  if (Number(limitType) === 1) {
+    return /^\d+(\.\d{1,2})?$/.test(v) && Number(v) > 0 ? '' : '固定金额只能填一个正数，如 100'
+  }
+  const m = v.replace(/^\[|\]$/g, '').match(/^\s*(\d+(?:\.\d{1,2})?)\s*(?:-|~|～|—|,|，|到|至)\s*(\d+(?:\.\d{1,2})?)\s*$/)
+  if (!m) return '金额范围格式：最小-最大，如 10-5000'
+  const min = Number(m[1])
+  const max = Number(m[2])
+  if (min <= 0 || max < min) return '金额范围须满足 0 < 最小 ≤ 最大'
+  return ''
+}
+
 async function onSubmit() {
+  const err = limitError(state.form.limit, state.form.limit_type)
+  if (err) {
+    toast.add({ title: err, color: 'error' })
+    return
+  }
   state.loading = true
   const postForm = cloneDeep(state.form)
   const { error } = await (postForm.id ? updatePaymentType : addPaymentType)(postForm)
@@ -76,7 +99,7 @@ const loadPaymentTypes = async () => {
   const { data } = await getPaymentList()
   tyOptions.value = (data?.list || []).map((item: any) => ({
     label: item.name,
-    value: item.id
+    value: item.ty // 通道的 ty 要等于支付方式的 ty（不是支付方式的 id）
   }))
 }
 
@@ -206,7 +229,7 @@ watch(
                 class="w-full"
               />
             </UFormField>
-            <UFormField label="支付权重" name="weights" required>
+            <UFormField label="支付权重" name="weights" description="仅 Telegram 机器人下单时按权重选通道；H5 由用户自己选通道">
               <UInput
                 v-model.trim="state.form.weights"
                 placeholder="数值越大优先级越高"
@@ -218,12 +241,12 @@ watch(
             </UFormField>
           </div>
           <UFormField
-            label="金额范围"
+            :label="limitIsFixed ? '固定金额（元）' : '金额范围（元）'"
             name="limit"
             required
-            description="格式：最小金额-最大金额，如：1-10000"
+            :description="(limitIsFixed ? '只填一个正数，如 100。' : '格式：最小-最大，如 10-5000（也接受 ~ 、逗号、到）。') + '用户下单金额必须符合这里的限制，否则提示“该通道只支持 X–Y 元，请更换支付通道”'"
           >
-            <UInput v-model.trim="state.form.limit" placeholder="例如：1-10000" class="w-full" />
+            <UInput v-model.trim="state.form.limit" :placeholder="limitIsFixed ? '例如：100' : '例如：10-5000'" class="w-full" />
           </UFormField>
         </div>
 

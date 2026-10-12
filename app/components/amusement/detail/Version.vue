@@ -508,6 +508,9 @@ const getVersionInfo = (versionId: number | null) => {
             :rows="3"
             class="w-full"
           />
+          <p class="mt-1 text-xs text-gray-500">
+            拒绝理由会作为“审核结果”消息推送给作者，请使用面向用户的措辞。
+          </p>
         </div>
       </div>
     </template>

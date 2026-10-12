@@ -134,10 +134,10 @@ watch(
             </UFormField>
           </div>
           <div class="grid grid-cols-2 gap-4">
-            <UFormField label="妖力值" name="coins" required>
+            <UFormField label="萝卜数量" name="coins" required hint="兑换后发放为萝卜，30 天有效">
               <UInput
                 v-model.number="state.form.coins"
-                placeholder="请输入妖力值"
+                placeholder="请输入萝卜数量"
                 type="number"
                 min="0"
                 class="w-full"

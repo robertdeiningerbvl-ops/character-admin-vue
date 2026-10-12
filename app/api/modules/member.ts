@@ -99,3 +99,18 @@ export function getMemberInviteStatisticalList(params?: any) {
 export function getMemberInviteChannelStatisticsList(params?: any) {
   return request.get<any>(apiRoute.memberInviteChannelStatisticsList, params)
 }
+
+/** 灵丹提取单列表（state：0 待打款 / 1 已打款 / 2 已驳回） */
+export function getLingdanWithdrawList(params?: any) {
+  return request.get<any>(apiRoute.lingdanWithdrawList, params)
+}
+
+/** 灵丹提取单标记已打款（id、tx_hash 必填，remark 可选） */
+export function completeLingdanWithdraw(data: { id: number, tx_hash: string, remark?: string }) {
+  return request.post<any>(apiRoute.lingdanWithdrawComplete, data)
+}
+
+/** 灵丹提取单驳回（reason 必填，≤100 字，会展示给用户；灵丹自动退回） */
+export function rejectLingdanWithdraw(data: { id: number, reason: string }) {
+  return request.post<any>(apiRoute.lingdanWithdrawReject, data)
+}
