@@ -83,8 +83,176 @@ const configGroups = reactive([
       { key: 'RIGHT_NAV', label: '右侧导航标记', icon: 'lucide:navigation' },
       { key: 'PRO_DOMAIN', label: '推广域名', icon: 'lucide:link' }
     ]
+  },
+  {
+    label: '运营与风控',
+    items: [
+      { key: 'SITE_CONFIG', label: 'H5 站点配置', icon: 'lucide:globe' },
+      { key: 'LINGDAN_EXCHANGE_BONUS', label: '灵丹换妖力活动', icon: 'lucide:gift' },
+      { key: 'AUTHOR_COMMISSION', label: '作者分成', icon: 'lucide:percent' },
+      { key: 'CHAT_CONTEXT', label: '聊天上下文', icon: 'lucide:messages-square' },
+      { key: 'DEVICE_LOGIN', label: '设备登录', icon: 'lucide:smartphone' },
+      { key: 'RISK_CONFIG', label: '关联账号判断', icon: 'lucide:shield-alert' },
+      { key: 'IDEMPOTENCY', label: '防重复提交', icon: 'lucide:copy-check' }
+    ]
   }
 ])
+
+/* ================= 运营与风控：按字段定义编辑，保存时只写这些字段（保留库里其他字段） ================= */
+type AdvField = {
+  k: string
+  label: string
+  type: 'switch01' | 'switch02' | 'number' | 'text'
+  hint?: string
+  min?: number
+  max?: number
+  step?: number
+  def?: any // 库里没有该字段时显示的值（与后端默认一致）
+}
+const advancedSchemas: Record<string, { desc: string[], fields: AdvField[] }> = {
+  SITE_CONFIG: {
+    desc: [
+      'H5 通过 GET /x/common-site-config 读取，所有值对访客公开，不要填任何密钥（bot token 等）。',
+      '保存时后端逐项校验，填错会提示“以下字段格式不正确：…”。开关未填写时按各自默认处理。'
+    ],
+    fields: [
+      { k: 'lingdan_withdraw_enabled', label: '灵丹提取（兑换 USDT）入口', type: 'switch01', def: 1, hint: '关闭后 H5 入口禁用，后端也拒绝提取（提示“提取暂未开放”）' },
+      { k: 'lingdan_exchange_enabled', label: '灵丹换妖力入口', type: 'switch01', def: 1, hint: '关闭后 H5 隐藏“換妖力”按钮，后端也拒绝兑换（提示“兑换暂未开放”）' },
+      { k: 'telegram_login_enabled', label: 'Telegram 登录', type: 'switch01', def: 0 },
+      { k: 'telegram_bind_enabled', label: 'Telegram 绑定', type: 'switch01', def: 0 },
+      { k: 'message_estimate_enabled', label: '聊天消耗预估', type: 'switch01', def: 0 },
+      { k: 'attribution_login_params_enabled', label: '登录携带渠道参数', type: 'switch01', def: 0 },
+      { k: 'telegram_bot_id', label: 'Telegram 机器人 ID', type: 'text', hint: '纯数字（不是 token）' },
+      { k: 'telegram_bot_name', label: 'Telegram 机器人用户名', type: 'text', hint: '字母数字下划线，可带 @' },
+      { k: 'posthog_key', label: 'PostHog Key', type: 'text', hint: 'phc_ 开头的公开 key' },
+      { k: 'posthog_host', label: 'PostHog Host', type: 'text', hint: 'https:// 地址' },
+      { k: 'sentry_dsn', label: 'Sentry DSN', type: 'text' },
+      { k: 'sentry_environment', label: 'Sentry 环境名', type: 'text', def: 'production' },
+      { k: 'sentry_sample_rate', label: 'Sentry 采样率', type: 'number', min: 0, max: 1, step: 0.1, def: 1, hint: '0–1' },
+      { k: 'web_vitals_sample_rate', label: 'Web Vitals 采样率', type: 'number', min: 0, max: 1, step: 0.1, def: 1, hint: '0–1' }
+    ]
+  },
+  LINGDAN_EXCHANGE_BONUS: {
+    desc: [
+      '用户用灵丹换妖力时（1 灵丹 = 10 妖力，比例不变），按换得的妖力额外加赠萝卜。',
+      '加赠的萝卜 30 天后过期，只能站内消费，不能提现 / 转让。H5 从站点配置读取当前加赠比例显示活动文案。'
+    ],
+    fields: [
+      { k: 'open', label: '开启活动', type: 'switch01', def: 0 },
+      { k: 'rate', label: '加赠比例（%）', type: 'number', min: 0, max: 50, step: 1, def: 5, hint: '0–50。如 5 表示换 100 妖力加赠 5 萝卜' },
+      { k: 'daily_cap', label: '每人每天上限（萝卜）', type: 'number', min: 0, step: 1, def: 0, hint: '整数，0 = 不限' }
+    ]
+  },
+  AUTHOR_COMMISSION: {
+    desc: [
+      '用户在角色卡里聊天消费时，按比例给作者发灵丹（灵丹 = 消费 × 0.1 × 比例%）。',
+      'H5 创作收益页从站点配置读取这两个比例显示分成标签；关闭时不显示。'
+    ],
+    fields: [
+      { k: 'open', label: '开启作者分成', type: 'switch02', def: 0 },
+      { k: 'rate', label: '妖力消费分成比例（%）', type: 'number', min: 0, max: 100, step: 0.5, def: 6 },
+      { k: 'radish_rate', label: '萝卜消费分成比例（%）', type: 'number', min: 0, max: 100, step: 0.5, def: 4 }
+    ]
+  },
+  CHAT_CONTEXT: {
+    desc: ['聊天时发给模型的上下文长度与回复长度上限（token）。超出范围的值不生效，按默认处理。'],
+    fields: [
+      { k: 'max_context', label: '输入上限（token）', type: 'number', min: 1024, max: 1048576, step: 1024, def: 8192, hint: '1024–1048576，默认 8192' },
+      { k: 'max_tokens', label: '回复上限（token）', type: 'number', min: 100, max: 65536, step: 100, def: 5000, hint: '100–65536，默认 5000' }
+    ]
+  },
+  DEVICE_LOGIN: {
+    desc: [
+      '访客设备登录。强制校验设备密钥要等新版 H5 上线、老访客补发密钥后再开（约上线 2 周后），开之前请通知前端。'
+    ],
+    fields: [
+      { k: 'enforce_secret', label: '强制校验设备密钥', type: 'switch01', def: 0 },
+      { k: 'ip_login_per_min', label: '同 IP 每分钟登录次数上限', type: 'number', min: 1, step: 1, def: 20 },
+      { k: 'ip_register_per_hour', label: '同 IP 每小时注册次数上限', type: 'number', min: 1, step: 1, def: 10 }
+    ]
+  },
+  RISK_CONFIG: {
+    desc: ['判断“关联账号”（疑似同一人多号）时使用的条件。'],
+    fields: [
+      { k: 'match_ip', label: '同 IP 视为关联', type: 'switch01', def: 1 },
+      { k: 'match_device', label: '同设备视为关联', type: 'switch01', def: 1 }
+    ]
+  },
+  IDEMPOTENCY: {
+    desc: ['前端带 X-Request-Id 的写请求，在保留时间内重复提交会直接返回第一次的结果，不会重复执行。'],
+    fields: [
+      { k: 'payment_ttl', label: '下单保留时间（秒）', type: 'number', min: 60, step: 60, def: 86400, hint: '默认 86400（24 小时）' },
+      { k: 'default_ttl', label: '其他接口保留时间（秒）', type: 'number', min: 60, step: 60, def: 600, hint: '默认 600（10 分钟）' }
+    ]
+  }
+}
+const isAdvancedKey = (key: string) => key in advancedSchemas
+
+const adv = reactive({
+  raw: {} as Record<string, any>, // 库里原有内容（保存时保留不认识的字段）
+  form: {} as Record<string, any>,
+  missing: false
+})
+
+const fetchAdvanced = async (key: string) => {
+  adv.raw = {}
+  adv.form = {}
+  adv.missing = false
+  state.currentForm = { remarks: '' }
+  const { data, error } = await getConfig({ key })
+  if (error || !data) {
+    adv.missing = true
+    return
+  }
+  const raw = cloneDeep(data)
+  const remarks = raw.remarks || ''
+  delete raw.id
+  delete raw.remarks
+  adv.raw = raw
+  const form: Record<string, any> = {}
+  for (const f of advancedSchemas[key]!.fields) {
+    const v = raw[f.k]
+    const has = v !== undefined && v !== null && v !== ''
+    if (f.type === 'switch01') form[f.k] = has ? (v === true || Number(v) === 1) : Number(f.def) === 1
+    else if (f.type === 'switch02') form[f.k] = has ? Number(v) === 2 : Number(f.def) === 2
+    else if (f.type === 'number') form[f.k] = has ? Number(v) : f.def
+    else form[f.k] = has ? String(v) : (f.def ?? '')
+  }
+  adv.form = form
+  state.currentForm = { remarks }
+}
+
+const saveAdvanced = async () => {
+  const key = state.activeConfigKey
+  const out: Record<string, any> = { ...adv.raw }
+  for (const f of advancedSchemas[key]!.fields) {
+    const v = adv.form[f.k]
+    if (f.type === 'switch01') out[f.k] = v ? 1 : 0
+    else if (f.type === 'switch02') out[f.k] = v ? 2 : 0
+    else if (f.type === 'number') {
+      const n = Number(v)
+      if (v === '' || v === null || v === undefined || !Number.isFinite(n)) {
+        toast.add({ title: `请填写${f.label}`, color: 'error' })
+        return
+      }
+      if ((f.min !== undefined && n < f.min) || (f.max !== undefined && n > f.max)) {
+        toast.add({ title: `${f.label}须在 ${f.min ?? '-∞'}–${f.max ?? '∞'} 之间`, color: 'error' })
+        return
+      }
+      out[f.k] = n
+    } else out[f.k] = String(v ?? '').trim()
+  }
+  saving.value = true
+  try {
+    const { error } = await updateConfig({ key, content: JSON.stringify(out), remarks: state.currentForm.remarks || '' })
+    if (!error) {
+      adv.raw = out
+      toast.add({ title: '操作成功', color: 'success' })
+    }
+  } finally {
+    saving.value = false
+  }
+}
 
 const communityGroups = [
   { key: 'tg_group', label: 'Telegram 群组' },
@@ -200,6 +368,7 @@ const fetchConfig = async (key: string) => {
 /* ================= 保存配置 ================= */
 const saving = ref(false)
 const saveConfig = async () => {
+  if (isAdvancedKey(state.activeConfigKey)) return saveAdvanced()
   try {
     saving.value = true
 
@@ -242,6 +411,10 @@ const saveConfig = async () => {
 /* ================= 切换配置 ================= */
 const selectConfig = async (key: string) => {
   state.activeConfigKey = key
+  if (isAdvancedKey(key)) {
+    await fetchAdvanced(key)
+    return
+  }
   if (!state.configs[key]) {
     await fetchConfig(key)
   } else {
@@ -1165,6 +1338,59 @@ onActivated(() => init())
               <UInput v-model="item.content" placeholder="标记内容（如：热、新）" class="flex-1" />
             </div>
           </div>
+        </div>
+
+        <!-- 运营与风控（按字段定义渲染） -->
+        <div v-if="isAdvancedKey(state.activeConfigKey)" class="space-y-5">
+          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
+              <div class="text-sm text-(--ui-text-muted) space-y-1">
+                <p v-for="(line, i) in advancedSchemas[state.activeConfigKey]?.desc" :key="i">
+                  {{ line }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="adv.missing" class="p-4 rounded-lg border border-(--ui-warning) text-sm text-(--ui-warning)">
+            库里还没有 {{ state.activeConfigKey }} 这项配置（后端未执行对应的上线 SQL），目前按默认值运行；执行 SQL 后再来修改。
+          </div>
+
+          <template v-else>
+            <template v-for="f in advancedSchemas[state.activeConfigKey]?.fields" :key="f.k">
+              <div
+                v-if="f.type === 'switch01' || f.type === 'switch02'"
+                class="flex items-center justify-between p-4 rounded-lg border border-(--ui-border)"
+              >
+                <div>
+                  <p class="font-medium text-(--ui-text-highlighted)">
+                    {{ f.label }}
+                  </p>
+                  <p v-if="f.hint" class="text-xs text-(--ui-text-muted)">
+                    {{ f.hint }}
+                  </p>
+                </div>
+                <USwitch v-model="adv.form[f.k]" />
+              </div>
+              <UFormField v-else :label="f.label" :hint="f.hint">
+                <UInput
+                  v-if="f.type === 'number'"
+                  v-model.number="adv.form[f.k]"
+                  type="number"
+                  :min="f.min"
+                  :max="f.max"
+                  :step="f.step"
+                  class="w-full"
+                />
+                <UInput v-else v-model.trim="adv.form[f.k]" class="w-full" />
+              </UFormField>
+            </template>
+
+            <UFormField label="备注">
+              <UInput v-model="state.currentForm.remarks" placeholder="备注信息" class="w-full" />
+            </UFormField>
+          </template>
         </div>
 
         <!-- PRO_DOMAIN 推广域名配置 -->
