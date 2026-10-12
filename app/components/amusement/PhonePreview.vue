@@ -1,5 +1,9 @@
 <script setup lang="ts">
+import DOMPurify from 'dompurify'
 import { createRenderer } from '@/utils/messageRenderer'
+
+// 角色卡内容由用户填写：v-html 前必须净化，防止 <img onerror> 之类在管理员浏览器里执行（可读到后台 token）
+const sanitize = (html: string) => DOMPurify.sanitize(html || '')
 
 interface ChatMessage {
   role: string
@@ -34,11 +38,6 @@ const showPreview = ref(!props.showToggle)
 // 显示的头像
 const displayAvatar = computed(() => props.avatarImage || props.backgroundImage)
 
-// 创建 blob URL 用于 iframe 完全隔离
-const createBlobUrl = (html: string) => {
-  const blob = new Blob([html], { type: 'text/html' })
-  return URL.createObjectURL(blob)
-}
 
 // 渲染后的消息
 const renderedMessages = computed(() => {
@@ -52,19 +51,32 @@ const renderedMessages = computed(() => {
         raw: msg.content,
         kind: result.kind,
         html: result.html,
-        blobUrl: createBlobUrl(result.html),
-        text: result.text || ''
+        text: sanitize(result.text || '')
       }
     }
     return {
       role: msg.role,
       raw: msg.content,
       kind: result.kind,
-      html: result.html,
-      text: result.text || ''
+      html: sanitize(result.html),
+      text: sanitize(result.text || '')
     }
   })
 })
+
+// iframe 用 srcdoc 且不带 allow-same-origin（否则 iframe 与后台同源，等于没有沙箱），父页面读不到 iframe 内容高度；
+// 改为接收 iframe 内高度脚本 postMessage 的 { type: 'iframe-height', height }
+const rootRef = ref<HTMLElement | null>(null)
+const onIframeMessage = (e: MessageEvent) => {
+  if (!e.data || e.data.type !== 'iframe-height') return
+  const h = Number(e.data.height)
+  if (!Number.isFinite(h) || h <= 0) return
+  rootRef.value?.querySelectorAll<HTMLIFrameElement>('iframe.iframe').forEach((f) => {
+    if (f.contentWindow === e.source) f.style.height = Math.min(Math.max(h, 400), 4000) + 'px'
+  })
+}
+onMounted(() => window.addEventListener('message', onIframeMessage))
+onBeforeUnmount(() => window.removeEventListener('message', onIframeMessage))
 
 // 点击预览
 const handlePreview = () => {
@@ -89,7 +101,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="shrink-0 flex flex-col h-full max-h-full overflow-hidden">
+  <div ref="rootRef" class="shrink-0 flex flex-col h-full max-h-full overflow-hidden">
     <!-- 未预览状态（仅在 showToggle 为 true 时显示） -->
     <div
       v-if="showToggle && !showPreview"
@@ -164,18 +176,10 @@ defineExpose({
                 <div v-if="msg.kind === 'iframe'" class="iframe-wrap flex-1">
                   <iframe
                     class="iframe"
-                    :src="msg.blobUrl"
-                    sandbox="allow-scripts allow-same-origin allow-modals allow-forms"
+                    :srcdoc="msg.html"
+                    sandbox="allow-scripts allow-modals allow-forms"
                     allow="autoplay"
                     referrerpolicy="no-referrer"
-                    @load="(e: Event) => {
-                      const iframe = e.target as HTMLIFrameElement
-                      try {
-                        const h = iframe.contentWindow?.document?.body?.scrollHeight || 400
-                        iframe.style.height = Math.max(h, 400) + 'px'
-                      }
-                      catch {}
-                    }"
                   />
                 </div>
 
@@ -185,18 +189,10 @@ defineExpose({
                   <div class="iframe-wrap">
                     <iframe
                       class="iframe"
-                      :src="msg.blobUrl"
-                      sandbox="allow-scripts allow-same-origin allow-modals allow-forms"
+                      :srcdoc="msg.html"
+                      sandbox="allow-scripts allow-modals allow-forms"
                       allow="autoplay"
                       referrerpolicy="no-referrer"
-                      @load="(e: Event) => {
-                        const iframe = e.target as HTMLIFrameElement
-                        try {
-                          const h = iframe.contentWindow?.document?.body?.scrollHeight || 400
-                          iframe.style.height = Math.max(h, 400) + 'px'
-                        }
-                        catch {}
-                      }"
                     />
                   </div>
                 </div>
