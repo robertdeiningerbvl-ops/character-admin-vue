@@ -77,9 +77,9 @@ onMounted(() => loadData())
         <!-- 奖励信息 -->
         <div class="flex items-center gap-4 mb-3">
           <div v-if="item.battery" class="flex items-center gap-1">
-            <UIcon name="i-lucide-battery-charging" class="w-4 h-4 text-(--ui-warning)" />
+            <UIcon name="i-lucide-carrot" class="w-4 h-4 text-(--ui-warning)" />
             <span class="font-bold text-(--ui-text-highlighted)">{{ item.battery }}</span>
-            <span class="text-xs text-(--ui-text-muted)">妖力</span>
+            <span class="text-xs text-(--ui-text-muted)">萝卜</span>
           </div>
           <div v-if="item.amount" class="flex items-center gap-1">
             <UIcon name="i-lucide-coins" class="w-4 h-4 text-(--ui-success)" />

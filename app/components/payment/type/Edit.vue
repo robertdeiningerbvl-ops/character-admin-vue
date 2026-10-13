@@ -69,7 +69,10 @@ function limitError(limit: string, limitType: number): string {
   const v = (limit || '').trim()
   if (!v) return '请填写金额限制'
   if (Number(limitType) === 1) {
-    return /^\d+(\.\d{1,2})?$/.test(v) && Number(v) > 0 ? '' : '固定金额只能填一个正数，如 100'
+    const parts = v.split(/[,，]/).map(item => item.trim()).filter(Boolean)
+    if (parts.length === 0) return '固定金额需填写一个或多个正数'
+    const invalid = parts.some(item => !/^\d+(\.\d{1,2})?$/.test(item) || Number(item) <= 0)
+    return invalid ? '固定金额需填写一个或多个正数，用逗号隔开，如 10, 30, 100' : ''
   }
   const m = v.replace(/^\[|\]$/g, '').match(/^\s*(\d+(?:\.\d{1,2})?)\s*(?:-|~|～|—|,|，|到|至)\s*(\d+(?:\.\d{1,2})?)\s*$/)
   if (!m) return '金额范围格式：最小-最大，如 10-5000'
@@ -87,6 +90,13 @@ async function onSubmit() {
   }
   state.loading = true
   const postForm = cloneDeep(state.form)
+  if (limitIsFixed.value) {
+    postForm.limit = String(state.form.limit || '')
+      .split(/[,，]/)
+      .map(item => item.trim())
+      .filter(Boolean)
+      .join(',')
+  }
   const { error } = await (postForm.id ? updatePaymentType : addPaymentType)(postForm)
   if (!error) {
     toast.add({ title: `操作成功`, color: 'success' })
@@ -244,9 +254,9 @@ watch(
             :label="limitIsFixed ? '固定金额（元）' : '金额范围（元）'"
             name="limit"
             required
-            :description="(limitIsFixed ? '只填一个正数，如 100。' : '格式：最小-最大，如 10-5000（也接受 ~ 、逗号、到）。') + '用户下单金额必须符合这里的限制，否则提示“该通道只支持 X–Y 元，请更换支付通道”'"
+            :description="(limitIsFixed ? '可填多个金额，用逗号隔开，如 10, 30, 100。' : '格式：最小-最大，如 10-5000（也接受 ~ 、逗号、到）。') + '用户下单金额必须符合这里的限制，否则提示“该通道只支持 X–Y 元，请更换支付通道”'"
           >
-            <UInput v-model.trim="state.form.limit" :placeholder="limitIsFixed ? '例如：100' : '例如：10-5000'" class="w-full" />
+            <UInput v-model.trim="state.form.limit" :placeholder="limitIsFixed ? '例如：10, 30, 100' : '例如：10-5000'" class="w-full" />
           </UFormField>
         </div>
 
