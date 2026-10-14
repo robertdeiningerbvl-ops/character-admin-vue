@@ -218,7 +218,14 @@ export const apiRoute = {
   agentWithdrawalList: 'agent-withdrawal-list',
   agentWithdrawalGet: 'agent-withdrawal-get',
   agentWithdrawalApprove: 'agent-withdrawal-approve',
-  agentWithdrawalReject: 'agent-withdrawal-reject'
+  agentWithdrawalReject: 'agent-withdrawal-reject',
+
+  // 视频管理
+  videoList: 'video-list',
+  videoAdd: 'video-add',
+  videoEdit: 'video-edit',
+  videoState: 'video-state',
+  videoUpload: 'video-upload'
 
 } as const
 export const values = Object.values(apiRoute)
