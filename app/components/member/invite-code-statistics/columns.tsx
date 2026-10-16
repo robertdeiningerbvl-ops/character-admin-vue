@@ -31,6 +31,12 @@ export const baseColumns: TableColumnList = [
     cell: ({ row }) => h('span', { class: 'font-mono text-sm text-gray-700 dark:text-gray-300' }, row.original.invite_code)
   },
   {
+    accessorKey: 'register_user_count',
+    header: '注册用户数',
+    meta: { class: { th: 'w-[120px]', td: 'w-[120px]' } },
+    cell: ({ row }) => h('span', { class: 'font-semibold' }, row.original.register_user_count ?? 0)
+  },
+  {
     accessorKey: 'consume_battery',
     header: '日消耗积分',
     meta: { class: { th: 'w-[120px]', td: 'w-[120px]' } },

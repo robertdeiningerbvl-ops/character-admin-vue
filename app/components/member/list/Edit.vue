@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { cloneDeep } from 'lodash-es'
-import { uploadFile, updateMember, getMemberLevelList } from '@/api'
+import { uploadFile, updateMember, getMemberLevelList, getCommonVipList } from '@/api'
 
 const props = withDefaults(defineProps<{
   dialog?: boolean
@@ -54,7 +54,12 @@ const state = reactive({
   loading: false,
   avatarLoading: false,
   form: {} as any,
-  levelOptions: [] as any[]
+  levelOptions: [] as any[],
+  vipOptions: [] as any[],
+  initialVip: {
+    lv: 0,
+    expireAt: ''
+  }
 })
 
 async function onFileChange(e: Event) {
@@ -81,10 +86,86 @@ async function fetchLevelList() {
   }
 }
 
+async function fetchVipList() {
+  const { data, error } = await getCommonVipList()
+  if (!error && data?.list) {
+    state.vipOptions = [
+      { label: '无（取消 VIP）', value: 0 },
+      ...data.list.map((item: any) => ({ label: item.title, value: item.id }))
+    ]
+  }
+}
+
+const vipExpired = computed(() => {
+  const expireAt = state.form.vip_expire_at
+  if (!expireAt) return false
+  const time = new Date(String(expireAt).replace(' ', 'T')).getTime()
+  return Number.isFinite(time) && time < Date.now()
+})
+
+const vipStatus = computed<{ label: string, color: 'success' | 'error' | 'neutral' | 'warning' }>(() => {
+  if (!Number(state.form.vip_lv)) return { label: '未开通', color: 'neutral' }
+  if (vipExpired.value) return { label: '已过期', color: 'error' }
+  return { label: '生效中', color: 'success' }
+})
+
+function cleanExpireString(value: any) {
+  return String(value || '').trim()
+    .replace('T', ' ')
+    .replace(/\s*[+-]\d{2}:\d{2}$/, '')
+    .replace(/\.\d+Z$/, '')
+}
+
+const displayVipExpire = computed(() => {
+  const value = cleanExpireString(state.form.vip_expire_at)
+  return value || '未设置'
+})
+
+const vipExpireInput = computed({
+  get: () => {
+    const value = cleanExpireString(state.form.vip_expire_at)
+    if (!value) return ''
+    const [date, time = '00:00'] = value.split(' ')
+    return `${date}T${time.slice(0, 5)}`
+  },
+  set: (value: string) => {
+    state.form.vip_expire_at = value
+  }
+})
+
+function normalizeExpire(value: any) {
+  let v = cleanExpireString(value)
+  if (!v) return ''
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(v)) v += ':00'
+  return v
+}
+
 async function onSubmit() {
-  state.loading = true
   const postForm = cloneDeep(state.form)
   delete postForm.vip_name
+
+  const vipLv = Number(state.form.vip_lv || 0)
+  const vipExpireAt = normalizeExpire(state.form.vip_expire_at)
+  const vipDays = String(state.form.vip_days || '').trim()
+
+  if (vipExpireAt && vipDays) {
+    toast.add({ title: '到期时间和增加天数只能填写一个', color: 'error' })
+    return
+  }
+
+  const expireChanged = vipExpireAt !== normalizeExpire(state.initialVip.expireAt)
+  const vipTouched = vipLv !== state.initialVip.lv || expireChanged || Boolean(vipDays)
+  delete postForm.vip_lv
+  delete postForm.vip_expire_at
+  delete postForm.vip_days
+
+  if (vipTouched) {
+    postForm.vip_lv = vipLv
+    if (expireChanged && vipExpireAt) postForm.vip_expire_at = vipExpireAt
+    if (vipDays) postForm.vip_days = vipDays
+  }
+
+  state.loading = true
   const { error } = await updateMember(postForm)
   if (!error) {
     toast.add({ title: '操作成功', color: 'success' })
@@ -97,7 +178,16 @@ watch(() => props.dialog, (newValue) => {
   if (newValue) {
     state.loading = false
     state.form = cloneDeep(props.currentForm)
+    const currentVipLv = Number(state.form.vip_lv ?? state.form.lv ?? 0)
+    state.form.vip_lv = currentVipLv
+    state.form.vip_expire_at = state.form.vip_expire_at || ''
+    state.form.vip_days = ''
+    state.initialVip = {
+      lv: currentVipLv,
+      expireAt: props.currentForm.vip_expire_at || ''
+    }
     fetchLevelList()
+    fetchVipList()
   }
 })
 </script>
@@ -320,17 +410,65 @@ watch(() => props.dialog, (newValue) => {
           </UFormField>
         </div>
 
+        <!-- VIP 会员 -->
+        <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border) space-y-4">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-crown" class="w-4 h-4 text-(--ui-warning)" />
+            <span class="text-sm font-medium">VIP 会员</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-4 p-3 rounded-lg bg-(--ui-bg) border border-(--ui-border)">
+            <div class="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:gap-6">
+              <div>
+                <span class="text-(--ui-text-muted)">当前档位：</span>
+                <span class="font-medium text-(--ui-text-highlighted)">{{ state.form.vip_name || '-' }}</span>
+              </div>
+              <div>
+                <span class="text-(--ui-text-muted)">当前到期：</span>
+                <span class="font-medium text-(--ui-text-highlighted)">{{ displayVipExpire }}</span>
+              </div>
+            </div>
+            <UBadge :color="vipStatus.color" variant="subtle">{{ vipStatus.label }}</UBadge>
+          </div>
+
+          <UFormField label="VIP 档位" name="vip_lv">
+            <USelect
+              v-model="state.form.vip_lv"
+              :items="state.vipOptions"
+              placeholder="请选择 VIP 套餐"
+              class="w-full"
+            />
+          </UFormField>
+
+          <div class="grid grid-cols-2 gap-4">
+            <UFormField label="到期时间" name="vip_expire_at">
+              <UInput
+                v-model="vipExpireInput"
+                type="datetime-local"
+                step="1"
+                class="w-full"
+              />
+            </UFormField>
+            <UFormField label="增加天数" name="vip_days">
+              <UInput
+                v-model.trim="state.form.vip_days"
+                type="number"
+                placeholder="正数增加，负数扣减"
+                class="w-full"
+              />
+            </UFormField>
+          </div>
+          <p class="text-xs text-(--ui-text-muted)">
+            到期时间和增加天数只能填写一个；选择「无（取消 VIP）」可取消当前 VIP。
+          </p>
+        </div>
+
         <!-- 详细信息 -->
         <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border) space-y-4">
           <div class="flex items-center gap-2">
             <UIcon name="i-lucide-file-text" class="w-4 h-4 text-(--ui-primary)" />
             <span class="text-sm font-medium">详细信息</span>
           </div>
-          <UFormField label="VIP等级" name="vip_name">
-            <div class="w-full min-h-9 px-3 py-2 rounded-md bg-(--ui-bg) border border-(--ui-border) text-sm text-(--ui-text-highlighted)">
-              {{ state.form.vip_name || '-' }}
-            </div>
-          </UFormField>
           <UFormField label="简介" name="summary">
             <UTextarea
               v-model.trim="state.form.summary"
