@@ -106,6 +106,13 @@ export const apiRoute = {
   commonInviteStatistics: 'common-invite-statistics',
   memberInviteStatisticalList: 'member-invite-statistical-list',
   memberInviteChannelStatisticsList: 'member-invite-channel-statistics-list',
+  // 运营统计（2026-10-19）
+  modelUsageStats: 'model-usage-stats',
+  retentionStats: 'retention-stats',
+  activeDaily: 'active-daily',
+  paymentFunnel: 'payment-funnel',
+  paymentConversion: 'payment-conversion',
+  opsReportPreview: 'ops-report-preview',
 
   /** common  end */
 
