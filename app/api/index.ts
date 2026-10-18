@@ -1,6 +1,7 @@
 export * from './modules/auth'
 export * from './modules/account'
 export * from './modules/statistics'
+export * from './modules/ops'
 export * from './modules/translate'
 export * from './modules/config'
 export * from './modules/menu'
