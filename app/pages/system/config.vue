@@ -652,6 +652,13 @@ onActivated(() => init())
 
         <!-- GOOGLE_AUTH -->
         <div v-if="state.activeConfigKey === 'GOOGLE_AUTH'" class="space-y-4">
+          <UFormField label="Client ID" hint="Google OAuth 2.0 客户端 ID">
+            <UInput
+              v-model="state.currentForm.content"
+              placeholder="例如: xxxxx.apps.googleusercontent.com"
+              class="w-full"
+            />
+          </UFormField>
           <UFormField label="Secret" hint="Google OAuth 2.0 客户端密钥">
             <UInput
               v-model="state.currentForm.secret"
