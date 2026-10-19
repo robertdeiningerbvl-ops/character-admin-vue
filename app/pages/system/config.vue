@@ -652,41 +652,11 @@ onActivated(() => init())
 
         <!-- GOOGLE_AUTH -->
         <div v-if="state.activeConfigKey === 'GOOGLE_AUTH'" class="space-y-4">
-          <!-- 说明卡片 -->
-          <div class="p-4 rounded-lg bg-(--ui-bg-elevated) border border-(--ui-border)">
-            <div class="flex items-start gap-3">
-              <UIcon name="i-lucide-info" class="w-5 h-5 text-(--ui-primary) shrink-0 mt-0.5" />
-              <div class="text-sm text-(--ui-text-muted) space-y-2">
-                <p class="font-medium text-(--ui-text-highlighted)">
-                  Google 认证配置说明
-                </p>
-                <p>用于实现 Google 第三方登录功能。需要在 Google Cloud Console 创建 OAuth 2.0 凭据获取 Client ID。</p>
-                <div class="mt-2 p-3 rounded bg-(--ui-bg) text-xs space-y-1">
-                  <p class="font-medium text-(--ui-text)">
-                    获取步骤：
-                  </p>
-                  <p>1. 访问 Google Cloud Console (console.cloud.google.com)</p>
-                  <p>2. 创建项目或选择已有项目</p>
-                  <p>3. 进入「API 和服务」→「凭据」</p>
-                  <p>4. 创建 OAuth 2.0 客户端 ID</p>
-                  <p>5. 配置授权重定向 URI</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <UFormField label="Client ID" hint="Google OAuth 2.0 客户端 ID">
+          <UFormField label="Secret" hint="Google OAuth 2.0 客户端密钥">
             <UInput
-              v-model="state.currentForm.content"
-              placeholder="例如: xxxxx.apps.googleusercontent.com"
-              class="w-full"
-            />
-          </UFormField>
-          <UFormField label="说明">
-            <UTextarea
-              v-model="state.currentForm.remarks"
-              placeholder="请输入说明内容"
-              :rows="3"
+              v-model="state.currentForm.secret"
+              type="password"
+              placeholder="请输入 Secret"
               class="w-full"
             />
           </UFormField>
