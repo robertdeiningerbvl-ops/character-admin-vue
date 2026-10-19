@@ -24,7 +24,7 @@ const typeEnum: any = {
   11: '额度转换（灵丹换妖力）',
   12: '文生图',
   13: '标签转图片',
-  14: '图片转图片',
+  14: '图生图',
   15: '文生语音',
   16: '画廊文生图',
   18: '萝卜过期'
@@ -89,6 +89,7 @@ export const baseColumns: TableColumnList = [
           { label: '角色卡创造', value: 9 },
           { label: '额度转换', value: 11 },
           { label: '文生图', value: 12 },
+          { label: '图生图', value: 14 },
           { label: '文生语音', value: 15 },
           { label: '画廊文生图', value: 16 }
         ]
