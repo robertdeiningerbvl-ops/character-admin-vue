@@ -327,7 +327,7 @@ watch(() => props.dialog, (newValue) => {
             </div>
             <div class="p-2 rounded bg-(--ui-bg) border border-(--ui-border)">
               <div class="text-lg font-semibold text-gray-500">
-                ¥{{ (state.form.income_amount || 0) / 100 }}
+                {{ ((state.form.income_amount || 0) / 10000).toFixed(4) }}
               </div>
               <div class="text-xs text-(--ui-text-muted)">
                 累计收益
@@ -335,7 +335,7 @@ watch(() => props.dialog, (newValue) => {
             </div>
             <div class="p-2 rounded bg-(--ui-bg) border border-(--ui-border)">
               <div class="text-lg font-semibold text-green-600">
-                ¥{{ (state.form.amount || 0) / 100 }}
+                {{ ((state.form.amount || 0) / 10000).toFixed(4) }}
               </div>
               <div class="text-xs text-(--ui-text-muted)">
                 可提现

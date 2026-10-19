@@ -69,7 +69,7 @@ export const baseColumns: TableColumnList = [
     cell: ({ row }) => {
       const { amount, radish, battery } = row.original
       return h('div', { class: 'flex flex-col text-xs' }, [
-        h('span', { class: 'inline-flex items-center gap-1 text-violet-500' }, [h(UIcon, { name: 'i-lucide-gem', class: 'w-3 h-3' }), '灵丹 ', ((amount || 0) / 100).toFixed(2)]),
+        h('span', { class: 'inline-flex items-center gap-1 text-violet-500' }, [h(UIcon, { name: 'i-lucide-gem', class: 'w-3 h-3' }), '灵丹 ', ((amount || 0) / 10000).toFixed(4)]),
         h('span', { class: 'inline-flex items-center gap-1 text-orange-500' }, [h(UIcon, { name: 'i-lucide-carrot', class: 'w-3 h-3' }), '萝卜 ', ((radish || 0) / 100).toFixed(2)]),
         h('span', { class: 'inline-flex items-center gap-1 text-yellow-500' }, [h(UIcon, { name: 'i-lucide-zap', class: 'w-3 h-3' }), '妖力 ', ((battery || 0) / 100).toFixed(2)])
       ])
@@ -87,10 +87,10 @@ export const baseColumns: TableColumnList = [
     meta: { class: { th: 'w-[100px]', td: 'w-[100px]' } },
     cell: ({ row }) => {
       const { income_amount, amount } = row.original
-      const total = ((income_amount || 0) + (amount || 0)) / 100
+      const total = ((income_amount || 0) + (amount || 0)) / 10000
       return h('div', { class: 'text-xs' }, [
-        h('div', { class: 'text-(--ui-text-muted)' }, `累计 ¥${total}`),
-        h('div', { class: 'font-medium text-green-600' }, `可提 ¥${(amount || 0) / 100}`)
+        h('div', { class: 'text-(--ui-text-muted)' }, `累计 ${total.toFixed(4)}`),
+        h('div', { class: 'font-medium text-green-600' }, `可提 ${((amount || 0) / 10000).toFixed(4)}`)
       ])
     }
   },
