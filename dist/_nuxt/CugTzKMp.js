@@ -1,0 +1,1 @@
+import{F as e,ot as t,ut as n}from"./D0SouXmM.js";import{t as r}from"./BDNMzG2s.js";var i={};function a(r,i){return t(),e(`div`,null,[n(r.$slots,`default`)])}var o=r(i,[[`render`,a]]);export{o as default};

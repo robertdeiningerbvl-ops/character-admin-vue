@@ -47,6 +47,7 @@ const configGroups = reactive([
     items: [
       { key: 'SMS', label: '短信服务', icon: 'lucide:message-square' },
       { key: 'GOOGLE_AUTH', label: 'Google 认证', icon: 'lucide:shield-check' },
+      { key: 'DISCORD_AUTH', label: 'Discord 认证', icon: 'lucide:message-circle' },
       { key: 'TELEGRAM_AUTH', label: 'Telegram 认证', icon: 'lucide:send' }
     ]
   },
@@ -660,6 +661,25 @@ onActivated(() => init())
             />
           </UFormField>
           <UFormField label="Secret" hint="Google OAuth 2.0 客户端密钥">
+            <UInput
+              v-model="state.currentForm.secret"
+              type="password"
+              placeholder="请输入 Secret"
+              class="w-full"
+            />
+          </UFormField>
+        </div>
+
+        <!-- TELEGRAM_AUTH -->
+        <div v-if="state.activeConfigKey === 'DISCORD_AUTH'" class="space-y-4">
+          <UFormField label="Client ID" hint="Discord OAuth 2.0 客户端 ID">
+            <UInput
+              v-model="state.currentForm.client_id"
+              placeholder="请输入 Client ID"
+              class="w-full"
+            />
+          </UFormField>
+          <UFormField label="Secret" hint="Discord OAuth 2.0 客户端密钥">
             <UInput
               v-model="state.currentForm.secret"
               type="password"

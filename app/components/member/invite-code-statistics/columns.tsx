@@ -41,8 +41,8 @@ export const baseColumns: TableColumnList = [
     header: '日消耗积分',
     meta: { class: { th: 'w-[120px]', td: 'w-[120px]' } },
     cell: ({ row }) => {
-      const v = row.original.consume_battery
-      return h('span', { class: v > 0 ? 'font-semibold text-blue-600 dark:text-blue-400' : 'text-gray-400' }, v || '-')
+      const v = (row.original.consume_battery || 0) / 100
+      return h('span', { class: v > 0 ? 'font-semibold text-blue-600 dark:text-blue-400' : 'text-gray-400' }, v > 0 ? v.toFixed(2) : '-')
     }
   },
   {

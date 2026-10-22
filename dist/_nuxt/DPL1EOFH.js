@@ -1,0 +1,1 @@
+import{u as e}from"./epTunAMA.js";import{F as t,V as n,ot as r,wt as i}from"./D0SouXmM.js";import{t as a}from"./CNs_Ozdc.js";var o=n({__name:`vip`,async setup(n){let o,s;return a({layout:`app`}),[o,s]=i(()=>e(`/vip`,{replace:!0})),await o,s(),(e,n)=>(r(),t(`div`))}});export{o as default};
