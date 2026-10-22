@@ -55,7 +55,7 @@ export function opsRateClass(rate: number | null | undefined, thresholds: [numbe
   return 'text-amber-600 dark:text-amber-400'
 }
 
-export const opsFeatureLabel: Record<string, string> = { chat: '聊天', tts: '语音', scene_image: '插图' }
+export const opsFeatureLabel: Record<string, string> = { chat: '聊天', tts: '语音', scene_image: '插图', asr: '语音识别' }
 
 export const opsOutcomeLabel: Record<string, string> = {
   ok: '成功', error: '失败', refusal: '拒答', empty: '空回复', format_error: '格式错误', cancelled: '中途停止', balance: '余额不足'

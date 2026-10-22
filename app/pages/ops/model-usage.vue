@@ -21,7 +21,8 @@ const featureOptions = [
   { label: '全部功能', value: 'all' },
   { label: '聊天', value: 'chat' },
   { label: '语音朗读', value: 'tts' },
-  { label: '场景插图', value: 'scene_image' }
+  { label: '场景插图', value: 'scene_image' },
+  { label: '语音识别', value: 'asr' }
 ]
 const groupOptions = [
   { label: '按模型（语音按音色）', value: 'model' },
@@ -50,6 +51,7 @@ function rowName(r: any): string {
   if (state.groupBy === 'day') return r.day
   if (state.groupBy === 'backend') return r.backend_name || (r.backend_id ? `渠道 ${r.backend_id}` : '未知渠道（调用失败 / 语音）')
   if (r.feature === 'tts') return r.voice_name || `音色 ${r.voice_id}`
+  if (r.feature === 'asr') return 'transcribe-1-pro'
   return r.model_name || (r.model_id ? `模型 ${r.model_id}` : '—')
 }
 
