@@ -106,6 +106,8 @@ export const apiRoute = {
   commonInviteStatistics: 'common-invite-statistics',
   memberInviteStatisticalList: 'member-invite-statistical-list',
   memberInviteChannelStatisticsList: 'member-invite-channel-statistics-list',
+  memberInviteChannelCohortList: 'member-invite-channel-cohort-list',
+  memberInviteChannelCohortDetail: 'member-invite-channel-cohort-detail',
   // 运营统计（2026-10-19）
   modelUsageStats: 'model-usage-stats',
   retentionStats: 'retention-stats',

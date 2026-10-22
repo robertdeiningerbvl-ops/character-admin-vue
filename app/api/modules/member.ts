@@ -100,6 +100,16 @@ export function getMemberInviteChannelStatisticsList(params?: any) {
   return request.get<any>(apiRoute.memberInviteChannelStatisticsList, params)
 }
 
+/** 邀请码渠道质量列表（按注册日分组汇总 + 评级）：start / end / invite_code / uid / sort / page / pagesize */
+export function getMemberInviteChannelCohortList(params?: any) {
+  return request.get<any>(apiRoute.memberInviteChannelCohortList, params)
+}
+
+/** 单个渠道的每日数据 + 质量评估：invite_code / start / end */
+export function getMemberInviteChannelCohortDetail(params: { invite_code: string, start?: string, end?: string }) {
+  return request.get<any>(apiRoute.memberInviteChannelCohortDetail, params)
+}
+
 /** 灵丹提取单列表（state：0 待打款 / 1 已打款 / 2 已驳回） */
 export function getLingdanWithdrawList(params?: any) {
   return request.get<any>(apiRoute.lingdanWithdrawList, params)
