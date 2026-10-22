@@ -6,7 +6,7 @@ import apiRoute from '../router'
  * 时间参数统一为 start_time / end_time：YYYY-MM-DD（包含结束当天）
  */
 
-/** 模型使用统计 group_by: model | backend | day；feature: chat | tts | scene_image（空为全部）；最多 31 天 */
+/** 模型使用统计 group_by: model | backend | day；feature: chat | tts | scene_image | asr（空为全部）；最多 31 天 */
 export function getModelUsageStats(params: { start_time: string, end_time: string, feature?: string, group_by?: string }) {
   return request.get<any>(apiRoute.modelUsageStats, params)
 }
