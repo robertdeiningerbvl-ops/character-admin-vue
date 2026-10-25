@@ -123,7 +123,7 @@ const advancedSchemas: Record<string, { desc: string[], fields: AdvField[] }> = 
       { k: 'telegram_bind_enabled', label: 'Telegram 绑定', type: 'switch01', def: 0 },
       { k: 'message_estimate_enabled', label: '聊天消耗预估', type: 'switch01', def: 0 },
       { k: 'attribution_login_params_enabled', label: '登录携带渠道参数', type: 'switch01', def: 0 },
-      { k: 'telegram_bot_id', label: 'Telegram 机器人 ID', type: 'text', hint: '纯数字（不是 token）' },
+      { k: 'telegram_bot_id', label: 'Telegram 机器人 ID', type: 'text', hint: '纯数字（不是 token）。多个域名时在「Telegram 认证」的网页登录机器人里按域名配置，这里是没有配置的域名的默认值' },
       { k: 'telegram_bot_name', label: 'Telegram 机器人用户名', type: 'text', hint: '字母数字下划线，可带 @' },
       { k: 'google_login_enabled', label: 'Google 登录', type: 'switch01', def: 1 },
       { k: 'google_client_id', label: 'Google OAuth Client ID', type: 'text', hint: 'Google OAuth 公开 client id' },
@@ -481,6 +481,13 @@ const addIP = (): void => {
 }
 const delIP = (index: number) => state.currentForm.ip?.splice(index, 1)
 
+/* Telegram 网页登录：一个域名一个机器人（TELEGRAM_AUTH.web_bots） */
+const addWebBot = (): void => {
+  if (!Array.isArray(state.currentForm.web_bots)) state.currentForm.web_bots = []
+  state.currentForm.web_bots.push({ domain: '', key: '', name: '' })
+}
+const delWebBot = (index: number) => state.currentForm.web_bots?.splice(index, 1)
+
 const addHelpItem = (): void => {
   if (!state.currentForm.desc) state.currentForm.desc = []
   state.currentForm.desc.push({ id: Date.now(), title: '', content: '' })
@@ -713,6 +720,47 @@ onActivated(() => init())
             <UFormField label="网站链接 (app_url)" class="col-span-2">
               <UInput v-model="state.currentForm.app_url" placeholder="https://example.com" class="w-full" />
             </UFormField>
+          </div>
+          <!-- 网页登录机器人：一个域名一个 -->
+          <div class="space-y-3 rounded-lg border border-(--ui-border) p-4">
+            <div class="text-sm">
+              <p class="font-medium text-(--ui-text-highlighted)">
+                网页登录机器人（多域名）
+              </p>
+              <p class="mt-1 text-(--ui-text-muted)">
+                Telegram 一个机器人只能在一个域名上网页登录。每个 H5 域名在 BotFather 建一个机器人、用 /setdomain 绑定该域名，再在这里加一行。
+                H5 按当前域名选机器人；没有配置的域名用「H5 站点配置」里的 Telegram 机器人 ID。上面的「机器人密钥 (key)」仍用于小程序登录。
+              </p>
+            </div>
+            <div
+              v-for="(row, index) in state.currentForm.web_bots"
+              :key="index"
+              class="flex items-center gap-3"
+            >
+              <UInput v-model="row.domain" placeholder="域名，如 tuniang.online" class="flex-1" />
+              <UInput
+                v-model="row.key"
+                type="password"
+                placeholder="Bot Token（BotFather → API Token）"
+                class="flex-[2]"
+              />
+              <UInput v-model="row.name" placeholder="机器人用户名（可选）" class="flex-1" />
+              <UButton
+                size="sm"
+                color="error"
+                variant="soft"
+                icon="i-lucide-trash-2"
+                @click="delWebBot(index)"
+              />
+            </div>
+            <UButton
+              size="sm"
+              variant="soft"
+              icon="i-lucide-plus"
+              @click="addWebBot"
+            >
+              新增域名机器人
+            </UButton>
           </div>
           <UFormField label="备注">
             <UTextarea v-model="state.currentForm.remarks" placeholder="请输入说明内容" :rows="2" class="w-full" />
