@@ -95,7 +95,8 @@ const configGroups = reactive([
       { key: 'DEVICE_LOGIN', label: '设备登录', icon: 'lucide:smartphone' },
       { key: 'RISK_CONFIG', label: '关联账号判断', icon: 'lucide:shield-alert' },
       { key: 'IDEMPOTENCY', label: '防重复提交', icon: 'lucide:copy-check' },
-      { key: 'ALERT_TG', label: '错误告警', icon: 'lucide:siren' }
+      { key: 'ALERT_TG', label: '错误告警', icon: 'lucide:siren' },
+      { key: 'SFW_DOMAINS', label: '推广域名', icon: 'lucide:shield-check' }
     ]
   }
 ])
@@ -187,6 +188,17 @@ const advancedSchemas: Record<string, { desc: string[], fields: AdvField[] }> = 
     fields: [
       { k: 'match_ip', label: '同 IP 视为关联', type: 'switch01', def: 1 },
       { k: 'match_device', label: '同设备视为关联', type: 'switch01', def: 1 }
+    ]
+  },
+  SFW_DOMAINS: {
+    desc: [
+      '这些域名上不提供成人角色卡：首页、搜索、发现、个人作品 / 收藏列表都不返回，打开详情或开始聊天会提示“该角色在本站暂不提供”；H5 不显示成人内容开关与年龄确认。',
+      '其他域名照常。账号互通，聊天模型不变。填写域名会包含其子域名（填 tuniang.site 也匹配 www.tuniang.site），多个用逗号分隔。',
+      '内容对这些域名的所有访问者都一样，请勿用于只给审核看的“伪装”页面（会被推广平台封禁）。'
+    ],
+    fields: [
+      { k: 'open', label: '启用', type: 'switch01', def: 1 },
+      { k: 'domains', label: '推广域名', type: 'text', hint: '例如 tuniang.site, promo.tuniang.online（逗号分隔，不要带 https://）' }
     ]
   },
   ALERT_TG: {
