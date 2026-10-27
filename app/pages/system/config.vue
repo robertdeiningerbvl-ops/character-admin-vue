@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { cloneDeep } from 'lodash-es'
-import { getConfig, updateConfig, getCommonModelList, uploadFile } from '@/api'
+import { getConfig, updateConfig, getCommonModelList, uploadFile, sendAlertTestRequest } from '@/api'
 
 definePageMeta({ layout: 'app' })
 defineOptions({ name: 'SystemConfig' })
@@ -94,7 +94,8 @@ const configGroups = reactive([
       { key: 'CHAT_CONTEXT', label: '聊天上下文', icon: 'lucide:messages-square' },
       { key: 'DEVICE_LOGIN', label: '设备登录', icon: 'lucide:smartphone' },
       { key: 'RISK_CONFIG', label: '关联账号判断', icon: 'lucide:shield-alert' },
-      { key: 'IDEMPOTENCY', label: '防重复提交', icon: 'lucide:copy-check' }
+      { key: 'IDEMPOTENCY', label: '防重复提交', icon: 'lucide:copy-check' },
+      { key: 'ALERT_TG', label: '错误告警', icon: 'lucide:siren' }
     ]
   }
 ])
@@ -103,7 +104,7 @@ const configGroups = reactive([
 type AdvField = {
   k: string
   label: string
-  type: 'switch01' | 'switch02' | 'number' | 'text'
+  type: 'switch01' | 'switch02' | 'number' | 'text' | 'password'
   hint?: string
   min?: number
   max?: number
@@ -188,6 +189,18 @@ const advancedSchemas: Record<string, { desc: string[], fields: AdvField[] }> = 
       { k: 'match_device', label: '同设备视为关联', type: 'switch01', def: 1 }
     ]
   },
+  ALERT_TG: {
+    desc: [
+      '支付、接口崩溃、钱包 / 提现、聊天生成、语音 / 图片 / 视频出错时，后端发消息到 Telegram 告警群（同一种错误 5 分钟内只发一条，之后合并成“又出现 N 次”）。',
+      '在 BotFather 新建一个专用机器人，拉进告警群，填机器人 token 和群组 chat_id（-100 开头）。保存后点“发送测试告警”确认能收到。',
+      '只在正式环境开启；测试环境保持关闭（服务配置 [system] env = "test" 时也不会发）。'
+    ],
+    fields: [
+      { k: 'open', label: '开启错误告警', type: 'switch01', def: 0 },
+      { k: 'bot_token', label: '告警机器人 Token', type: 'password', hint: 'BotFather 给的完整 token（数字:字母串），只在服务端使用' },
+      { k: 'chat_id', label: '告警群 chat_id', type: 'text', hint: '群组 id，通常以 -100 开头' }
+    ]
+  },
   IDEMPOTENCY: {
     desc: ['前端带 X-Request-Id 的写请求，在保留时间内重复提交会直接返回第一次的结果，不会重复执行。'],
     fields: [
@@ -197,6 +210,18 @@ const advancedSchemas: Record<string, { desc: string[], fields: AdvField[] }> = 
   }
 }
 const isAdvancedKey = (key: string) => key in advancedSchemas
+
+/* 错误告警：发送测试消息（按已保存的配置） */
+const alertTesting = ref(false)
+const sendAlertTest = async () => {
+  alertTesting.value = true
+  try {
+    const { error } = await sendAlertTestRequest()
+    if (!error) toast.add({ title: '已发送，请到告警群查看', color: 'success' })
+  } finally {
+    alertTesting.value = false
+  }
+}
 
 const adv = reactive({
   raw: {} as Record<string, any>, // 库里原有内容（保存时保留不认识的字段）
@@ -1437,9 +1462,30 @@ onActivated(() => init())
                   :step="f.step"
                   class="w-full"
                 />
-                <UInput v-else v-model.trim="adv.form[f.k]" class="w-full" />
+                <UInput
+                  v-else
+                  v-model.trim="adv.form[f.k]"
+                  :type="f.type === 'password' ? 'password' : 'text'"
+                  autocomplete="off"
+                  class="w-full"
+                />
               </UFormField>
             </template>
+
+            <div v-if="state.activeConfigKey === 'ALERT_TG'" class="flex items-center gap-3">
+              <UButton
+                size="sm"
+                variant="soft"
+                icon="i-lucide-send"
+                :loading="alertTesting"
+                @click="sendAlertTest"
+              >
+                发送测试告警
+              </UButton>
+              <span class="text-xs text-(--ui-text-muted)">
+                按已保存的配置发送，修改后请先保存
+              </span>
+            </div>
 
             <UFormField label="备注">
               <UInput v-model="state.currentForm.remarks" placeholder="备注信息" class="w-full" />

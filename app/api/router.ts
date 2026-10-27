@@ -100,6 +100,7 @@ export const apiRoute = {
   // 配置项
   configList: 'system',
   configEdit: 'system-edit',
+  alertTest: 'alert-test',
   // 统计
   commonStatistics: 'common-statistics',
   commonStatisticsRefresh: 'common-statistics-refresh',
