@@ -11,6 +11,11 @@ export function getModelUsageStats(params: { start_time: string, end_time: strin
   return request.get<any>(apiRoute.modelUsageStats, params)
 }
 
+/** 角色卡聊天轮次：用户数、轮次、人均轮次、按天、分布、每个用户（分页）；最多 31 天 */
+export function getChatTurnStats(params: { start_time: string, end_time: string, page?: number, pagesize?: number }) {
+  return request.get<any>(apiRoute.chatTurnStats, params)
+}
+
 /** 新用户留存 group_by: day | login_type | channel | utm_source | host | platform | all；最多 92 天 */
 export function getRetentionStats(params: { start_time: string, end_time: string, group_by?: string }) {
   return request.get<any>(apiRoute.retentionStats, params)
