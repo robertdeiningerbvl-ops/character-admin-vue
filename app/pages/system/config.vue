@@ -92,6 +92,7 @@ const configGroups = reactive([
       { key: 'LINGDAN_EXCHANGE_BONUS', label: '灵丹换妖力活动', icon: 'lucide:gift' },
       { key: 'AUTHOR_COMMISSION', label: '作者分成', icon: 'lucide:percent' },
       { key: 'CHAT_CONTEXT', label: '聊天上下文', icon: 'lucide:messages-square' },
+      { key: 'MEMORY_CONFIG', label: '角色长期记忆', icon: 'lucide:book-heart' },
       { key: 'DEVICE_LOGIN', label: '设备登录', icon: 'lucide:smartphone' },
       { key: 'RISK_CONFIG', label: '关联账号判断', icon: 'lucide:shield-alert' },
       { key: 'IDEMPOTENCY', label: '防重复提交', icon: 'lucide:copy-check' },
@@ -211,6 +212,20 @@ const advancedSchemas: Record<string, { desc: string[], fields: AdvField[] }> = 
       { k: 'open', label: '开启错误告警', type: 'switch01', def: 0 },
       { k: 'bot_token', label: '告警机器人 Token', type: 'password', hint: 'BotFather 给的完整 token（数字:字母串），只在服务端使用' },
       { k: 'chat_id', label: '告警群 chat_id', type: 'text', hint: '群组 id，通常以 -100 开头' }
+    ]
+  },
+  MEMORY_CONFIG: {
+    desc: [
+      '角色在每段对话里自动整理要点（用户喜好、重要事件、约定），之后每次回复都会带上。按对话保存：同一张卡开新对话从头开始，删除对话时一起删除。',
+      '用户可在 H5 会话「⋯」›「角色記憶」查看、新增、编辑、删除；用户写过或改过的条目 AI 不会改动。',
+      '整理由 AI Core /internal/memory/extract 完成（每次调用一次小模型，不向用户扣费）；需先部署支持该接口的 dev-llm。'
+    ],
+    fields: [
+      { k: 'open', label: '开启长期记忆', type: 'switch01', def: 1, hint: '关闭后不再整理，也不再带入回复；已有记忆保留' },
+      { k: 'every_turns', label: '每几轮整理一次', type: 'number', min: 2, max: 50, step: 1, def: 6, hint: '默认 6（用户发一句、角色回一句算一轮）' },
+      { k: 'free_limit', label: '免费用户每段对话上限（条）', type: 'number', min: 0, max: 500, step: 1, def: 30, hint: '默认 30；0 为免费用户不使用长期记忆' },
+      { k: 'vip_limit', label: 'VIP 每段对话上限（条）', type: 'number', min: 0, max: 500, step: 1, def: 100, hint: '默认 100' },
+      { k: 'model', label: '整理用的模型', type: 'text', def: '', hint: '留空用 AI Core 默认（gemma）；可填路由里的模型名' }
     ]
   },
   IDEMPOTENCY: {
