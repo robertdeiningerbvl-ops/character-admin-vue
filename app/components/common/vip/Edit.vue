@@ -207,7 +207,7 @@ watch(
                 class="w-full"
               />
             </UFormField>
-            <UFormField label="赠送萝卜（附加）" name="battery" hint="不按月发放，与上一项合计一次性发放">
+            <UFormField label="赠送萝卜（附加）" name="battery" hint="充值时与上一项合计发放；之后 VIP 有效期内每月 1 号再按此数发放（30 天过期）">
               <UInput
                 v-model.number="state.form.battery"
                 type="number"

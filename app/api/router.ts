@@ -100,6 +100,7 @@ export const apiRoute = {
   // 配置项
   configList: 'system',
   configEdit: 'system-edit',
+  alertTest: 'alert-test',
   // 统计
   commonStatistics: 'common-statistics',
   commonStatisticsRefresh: 'common-statistics-refresh',
@@ -110,6 +111,7 @@ export const apiRoute = {
   memberInviteChannelCohortDetail: 'member-invite-channel-cohort-detail',
   // 运营统计（2026-10-19）
   modelUsageStats: 'model-usage-stats',
+  chatTurnStats: 'chat-turn-stats',
   retentionStats: 'retention-stats',
   activeDaily: 'active-daily',
   paymentFunnel: 'payment-funnel',

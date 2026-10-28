@@ -15,3 +15,8 @@ export function getConfig(params: any) {
 export function updateConfig(data: any) {
   return request.post<any>(apiRoute.configEdit, data)
 }
+
+/** 发送测试错误告警（按已保存的 ALERT_TG） */
+export function sendAlertTestRequest() {
+  return request.post<any>(apiRoute.alertTest, {})
+}

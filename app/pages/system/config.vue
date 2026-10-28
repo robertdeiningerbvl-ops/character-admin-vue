@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { cloneDeep } from 'lodash-es'
-import { getConfig, updateConfig, getCommonModelList, uploadFile } from '@/api'
+import { getConfig, updateConfig, getCommonModelList, uploadFile, sendAlertTestRequest } from '@/api'
 
 definePageMeta({ layout: 'app' })
 defineOptions({ name: 'SystemConfig' })
@@ -92,9 +92,12 @@ const configGroups = reactive([
       { key: 'LINGDAN_EXCHANGE_BONUS', label: '灵丹换妖力活动', icon: 'lucide:gift' },
       { key: 'AUTHOR_COMMISSION', label: '作者分成', icon: 'lucide:percent' },
       { key: 'CHAT_CONTEXT', label: '聊天上下文', icon: 'lucide:messages-square' },
+      { key: 'MEMORY_CONFIG', label: '角色长期记忆', icon: 'lucide:book-heart' },
       { key: 'DEVICE_LOGIN', label: '设备登录', icon: 'lucide:smartphone' },
       { key: 'RISK_CONFIG', label: '关联账号判断', icon: 'lucide:shield-alert' },
-      { key: 'IDEMPOTENCY', label: '防重复提交', icon: 'lucide:copy-check' }
+      { key: 'IDEMPOTENCY', label: '防重复提交', icon: 'lucide:copy-check' },
+      { key: 'ALERT_TG', label: '错误告警', icon: 'lucide:siren' },
+      { key: 'SFW_DOMAINS', label: '推广域名', icon: 'lucide:shield-check' }
     ]
   }
 ])
@@ -103,7 +106,7 @@ const configGroups = reactive([
 type AdvField = {
   k: string
   label: string
-  type: 'switch01' | 'switch02' | 'number' | 'text'
+  type: 'switch01' | 'switch02' | 'number' | 'text' | 'password'
   hint?: string
   min?: number
   max?: number
@@ -188,6 +191,43 @@ const advancedSchemas: Record<string, { desc: string[], fields: AdvField[] }> = 
       { k: 'match_device', label: '同设备视为关联', type: 'switch01', def: 1 }
     ]
   },
+  SFW_DOMAINS: {
+    desc: [
+      '这些域名上不提供成人角色卡：首页、搜索、发现、个人作品 / 收藏列表都不返回，打开详情或开始聊天会提示“该角色在本站暂不提供”；H5 不显示成人内容开关与年龄确认。',
+      '其他域名照常。账号互通，聊天模型不变。填写域名会包含其子域名（填 tuniang.site 也匹配 www.tuniang.site），多个用逗号分隔。',
+      '内容对这些域名的所有访问者都一样，请勿用于只给审核看的“伪装”页面（会被推广平台封禁）。'
+    ],
+    fields: [
+      { k: 'open', label: '启用', type: 'switch01', def: 1 },
+      { k: 'domains', label: '推广域名', type: 'text', hint: '例如 tuniang.site, promo.tuniang.online（逗号分隔，不要带 https://）' }
+    ]
+  },
+  ALERT_TG: {
+    desc: [
+      '支付、接口崩溃、钱包 / 提现、聊天生成、语音 / 图片 / 视频出错时，后端发消息到 Telegram 告警群（同一种错误 5 分钟内只发一条，之后合并成“又出现 N 次”）。',
+      '在 BotFather 新建一个专用机器人，拉进告警群，填机器人 token 和群组 chat_id（-100 开头）。保存后点“发送测试告警”确认能收到。',
+      '只在正式环境开启；测试环境保持关闭（服务配置 [system] env = "test" 时也不会发）。'
+    ],
+    fields: [
+      { k: 'open', label: '开启错误告警', type: 'switch01', def: 0 },
+      { k: 'bot_token', label: '告警机器人 Token', type: 'password', hint: 'BotFather 给的完整 token（数字:字母串），只在服务端使用' },
+      { k: 'chat_id', label: '告警群 chat_id', type: 'text', hint: '群组 id，通常以 -100 开头' }
+    ]
+  },
+  MEMORY_CONFIG: {
+    desc: [
+      '角色在每段对话里自动整理要点（用户喜好、重要事件、约定），之后每次回复都会带上。按对话保存：同一张卡开新对话从头开始，删除对话时一起删除。',
+      '用户可在 H5 会话「⋯」›「角色記憶」查看、新增、编辑、删除；用户写过或改过的条目 AI 不会改动。',
+      '整理由 AI Core /internal/memory/extract 完成（每次调用一次小模型，不向用户扣费）；需先部署支持该接口的 dev-llm。'
+    ],
+    fields: [
+      { k: 'open', label: '开启长期记忆', type: 'switch01', def: 1, hint: '关闭后不再整理，也不再带入回复；已有记忆保留' },
+      { k: 'every_turns', label: '每几轮整理一次', type: 'number', min: 2, max: 50, step: 1, def: 6, hint: '默认 6（用户发一句、角色回一句算一轮）' },
+      { k: 'free_limit', label: '免费用户每段对话上限（条）', type: 'number', min: 0, max: 500, step: 1, def: 30, hint: '默认 30；0 为免费用户不使用长期记忆' },
+      { k: 'vip_limit', label: 'VIP 每段对话上限（条）', type: 'number', min: 0, max: 500, step: 1, def: 100, hint: '默认 100' },
+      { k: 'model', label: '整理用的模型', type: 'text', def: '', hint: '留空用 AI Core 默认（gemma）；可填路由里的模型名' }
+    ]
+  },
   IDEMPOTENCY: {
     desc: ['前端带 X-Request-Id 的写请求，在保留时间内重复提交会直接返回第一次的结果，不会重复执行。'],
     fields: [
@@ -197,6 +237,18 @@ const advancedSchemas: Record<string, { desc: string[], fields: AdvField[] }> = 
   }
 }
 const isAdvancedKey = (key: string) => key in advancedSchemas
+
+/* 错误告警：发送测试消息（按已保存的配置） */
+const alertTesting = ref(false)
+const sendAlertTest = async () => {
+  alertTesting.value = true
+  try {
+    const { error } = await sendAlertTestRequest()
+    if (!error) toast.add({ title: '已发送，请到告警群查看', color: 'success' })
+  } finally {
+    alertTesting.value = false
+  }
+}
 
 const adv = reactive({
   raw: {} as Record<string, any>, // 库里原有内容（保存时保留不认识的字段）
@@ -1437,9 +1489,30 @@ onActivated(() => init())
                   :step="f.step"
                   class="w-full"
                 />
-                <UInput v-else v-model.trim="adv.form[f.k]" class="w-full" />
+                <UInput
+                  v-else
+                  v-model.trim="adv.form[f.k]"
+                  :type="f.type === 'password' ? 'password' : 'text'"
+                  autocomplete="off"
+                  class="w-full"
+                />
               </UFormField>
             </template>
+
+            <div v-if="state.activeConfigKey === 'ALERT_TG'" class="flex items-center gap-3">
+              <UButton
+                size="sm"
+                variant="soft"
+                icon="i-lucide-send"
+                :loading="alertTesting"
+                @click="sendAlertTest"
+              >
+                发送测试告警
+              </UButton>
+              <span class="text-xs text-(--ui-text-muted)">
+                按已保存的配置发送，修改后请先保存
+              </span>
+            </div>
 
             <UFormField label="备注">
               <UInput v-model="state.currentForm.remarks" placeholder="备注信息" class="w-full" />
